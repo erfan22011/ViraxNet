@@ -1,0 +1,288 @@
+name: ViraxNet Automated Build & Release
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - viraxnet-main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'GitHub Release Tag (e.g. v1.0.0). Leave empty for build only.'
+        required: false
+        default: ''
+        type: string
+      build_variant:
+        description: 'Build Variant to Assemble'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - 'both'
+          - 'debug'
+          - 'release'
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build ViraxNet APKs
+    runs-on: ubuntu-latest
+
+    env:
+      HAS_KEYSTORE: ${{ secrets.APP_KEYSTORE_BASE64 != '' }}
+
+    steps:
+      - name: Checkout Code with Submodules
+        uses: actions/checkout@v7
+        with:
+          submodules: 'recursive'
+          fetch-depth: '0'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          log-accepted-android-sdk-licenses: false
+          cmdline-tools-version: '14742923'
+          packages: 'platforms;android-37.0 build-tools;37.0.0 platform-tools'
+
+      - name: Install NDK
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            --channel=0 \
+            --install "ndk;30.0.16248370"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> $GITHUB_ENV
+          sed -i '10i\
+          \
+              ndkVersion = "30.0.16248370"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
+
+      - name: Restore Cached libhevtun
+        id: cache-libhevtun-restore
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ github.workspace }}/libs
+          key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
+
+      - name: Build libhevtun Native Library
+        if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
+        run: |
+          bash compile-hevtun.sh
+
+      - name: Cache libhevtun Native Library
+        if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ github.workspace }}/libs
+          key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
+
+      - name: Copy libhevtun to Project
+        run: |
+          cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/V2rayNG/app
+
+      - name: Fetch AndroidLibXrayLite Git Tag
+        run: |
+          pushd AndroidLibXrayLite
+          CURRENT_TAG=$(git describe --tags --abbrev=0)
+          echo "Current AndroidLibXrayLite tag: $CURRENT_TAG"
+          echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_ENV
+          popd
+
+      - name: Download libv2ray.aar
+        uses: robinraju/release-downloader@v1.13
+        with:
+          repository: '2dust/AndroidLibXrayLite'
+          tag: ${{ env.CURRENT_TAG }}
+          fileName: 'libv2ray.aar'
+          out-file-path: V2rayNG/app/libs/
+
+      - name: Setup Java 21 (Temurin)
+        uses: actions/setup-java@v6.1.0
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Decode Release Keystore
+        if: env.HAS_KEYSTORE == 'true'
+        uses: timheuer/base64-to-file@v2.0.0
+        id: android_keystore
+        with:
+          fileName: "android_keystore.jks"
+          encodedString: ${{ secrets.APP_KEYSTORE_BASE64 }}
+
+      - name: Build ViraxNet APKs with Gradle
+        run: |
+          cd ${{ github.workspace }}/V2rayNG
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          chmod 755 gradlew
+          
+          # License report
+          ./gradlew licensePlaystoreReleaseReport || ./gradlew licenseFdroidReleaseReport || true
+
+          # 1. Compile Debug APKs (Always built for instant testing unless release-only requested)
+          if [ "${{ github.event.inputs.build_variant }}" != "release" ]; then
+            echo "Building Playstore Debug APKs..."
+            ./gradlew assemblePlaystoreDebug
+          fi
+
+          # 2. Compile Release APKs
+          if [ "${{ github.event.inputs.build_variant }}" != "debug" ]; then
+            echo "Building Playstore Release APKs..."
+            if [ "${{ env.HAS_KEYSTORE }}" = "true" ]; then
+              ./gradlew assemblePlaystoreRelease \
+                -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} \
+                -Pandroid.injected.signing.store.password=${{ secrets.APP_KEYSTORE_PASSWORD }} \
+                -Pandroid.injected.signing.key.alias=${{ secrets.APP_KEYSTORE_ALIAS }} \
+                -Pandroid.injected.signing.key.password=${{ secrets.APP_KEY_PASSWORD }}
+            else
+              echo "Keystore secret not provided, building unsigned release APK..."
+              ./gradlew assemblePlaystoreRelease
+            fi
+          fi
+
+      - name: Organize & Rename ViraxNet APKs
+        run: |
+          mkdir -p ${{ github.workspace }}/viraxnet-apks/debug
+          mkdir -p ${{ github.workspace }}/viraxnet-apks/release
+          mkdir -p ${{ github.workspace }}/viraxnet-apks/arm64
+          mkdir -p ${{ github.workspace }}/viraxnet-apks/universal
+          mkdir -p ${{ github.workspace }}/viraxnet-apks/all
+
+          # Copy and rename Debug APKs
+          if [ -d "${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/debug" ]; then
+            find ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/debug -name "*.apk" | while read -r apk; do
+              fname=$(basename "$apk")
+              abi=$(echo "$fname" | sed -E 's/.*_([a-zA-Z0-9_-]+)\.apk/\1/')
+              target_name="ViraxNet-debug-${abi}.apk"
+              cp "$apk" "${{ github.workspace }}/viraxnet-apks/debug/${target_name}"
+              cp "$apk" "${{ github.workspace }}/viraxnet-apks/all/${target_name}"
+              if [ "$abi" = "arm64-v8a" ]; then
+                cp "$apk" "${{ github.workspace }}/viraxnet-apks/arm64/${target_name}"
+              elif [ "$abi" = "universal" ]; then
+                cp "$apk" "${{ github.workspace }}/viraxnet-apks/universal/${target_name}"
+              fi
+              echo "Processed: ${target_name}"
+            done
+          fi
+
+          # Copy and rename Release APKs
+          if [ -d "${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/release" ]; then
+            find ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/release -name "*.apk" | while read -r apk; do
+              fname=$(basename "$apk")
+              abi=$(echo "$fname" | sed -E 's/.*_([a-zA-Z0-9_-]+)\.apk/\1/')
+              target_name="ViraxNet-release-${abi}.apk"
+              cp "$apk" "${{ github.workspace }}/viraxnet-apks/release/${target_name}"
+              cp "$apk" "${{ github.workspace }}/viraxnet-apks/all/${target_name}"
+              if [ "$abi" = "arm64-v8a" ]; then
+                cp "$apk" "${{ github.workspace }}/viraxnet-apks/arm64/${target_name}"
+              elif [ "$abi" = "universal" ]; then
+                cp "$apk" "${{ github.workspace }}/viraxnet-apks/universal/${target_name}"
+              fi
+              echo "Processed: ${target_name}"
+            done
+          fi
+
+          echo "ViraxNet APK structure ready:"
+          ls -la ${{ github.workspace }}/viraxnet-apks/all/
+
+      # Artifact Uploads
+      - name: Upload ViraxNet Universal Debug APK
+        uses: actions/upload-artifact@v7
+        if: hashFiles('${{ github.workspace }}/viraxnet-apks/debug/*universal*.apk') != ''
+        with:
+          name: ViraxNet-Universal-Debug
+          path: ${{ github.workspace }}/viraxnet-apks/debug/*universal*.apk
+
+      - name: Upload ViraxNet ARM64 Debug APK
+        uses: actions/upload-artifact@v7
+        if: hashFiles('${{ github.workspace }}/viraxnet-apks/debug/*arm64-v8a*.apk') != ''
+        with:
+          name: ViraxNet-ARM64-Debug
+          path: ${{ github.workspace }}/viraxnet-apks/debug/*arm64-v8a*.apk
+
+      - name: Upload ViraxNet Debug APKs (All ABIs)
+        uses: actions/upload-artifact@v7
+        if: hashFiles('${{ github.workspace }}/viraxnet-apks/debug/*.apk') != ''
+        with:
+          name: ViraxNet-Debug-All-ABIs
+          path: ${{ github.workspace }}/viraxnet-apks/debug/*.apk
+
+      - name: Upload ViraxNet Universal Release APK
+        uses: actions/upload-artifact@v7
+        if: hashFiles('${{ github.workspace }}/viraxnet-apks/release/*universal*.apk') != ''
+        with:
+          name: ViraxNet-Universal-Release
+          path: ${{ github.workspace }}/viraxnet-apks/release/*universal*.apk
+
+      - name: Upload ViraxNet ARM64 Release APK
+        uses: actions/upload-artifact@v7
+        if: hashFiles('${{ github.workspace }}/viraxnet-apks/release/*arm64-v8a*.apk') != ''
+        with:
+          name: ViraxNet-ARM64-Release
+          path: ${{ github.workspace }}/viraxnet-apks/release/*arm64-v8a*.apk
+
+      - name: Upload ViraxNet Release APKs (All ABIs)
+        uses: actions/upload-artifact@v7
+        if: hashFiles('${{ github.workspace }}/viraxnet-apks/release/*.apk') != ''
+        with:
+          name: ViraxNet-Release-All-ABIs
+          path: ${{ github.workspace }}/viraxnet-apks/release/*.apk
+
+      - name: Upload All Built APKs
+        uses: actions/upload-artifact@v7
+        if: hashFiles('${{ github.workspace }}/viraxnet-apks/all/*.apk') != ''
+        with:
+          name: ViraxNet-All-Built-APKs
+          path: ${{ github.workspace }}/viraxnet-apks/all/*.apk
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: build-apk
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'workflow_dispatch' && inputs.release_tag != '') || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Download Built APK Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: ViraxNet-*
+          path: release-artifacts
+
+      - name: Prepare Release Directory
+        run: |
+          mkdir -p release-files
+          find release-artifacts -type f -name "*.apk" -exec cp {} release-files/ \;
+          ls -la release-files
+
+      - name: Determine Release Tag
+        id: get_tag
+        run: |
+          if [ -n "${{ inputs.release_tag }}" ]; then
+            echo "TAG=${{ inputs.release_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_tag.outputs.TAG }}
+          name: ViraxNet Release ${{ steps.get_tag.outputs.TAG }}
+          body: |
+            ## ViraxNet Release ${{ steps.get_tag.outputs.TAG }}
+            
+            Welcome to the official build of **ViraxNet**!
+            
+            ### Included Packages:
+            - **Universal APK**: Compatible with all Android architectures.
+            - **ARM64-v8a APK**: Optimized for modern Android smartphones (smaller size, peak performance).
+            - **ARMeabi-v7a & x86_64**: For legacy devices and emulators.
+            
+            ### SHA-256 Checksums:
+            Checksums are automatically generated for all attached APK files.
+          files: release-files/*.apk
+          draft: false
+          prerelease: false
