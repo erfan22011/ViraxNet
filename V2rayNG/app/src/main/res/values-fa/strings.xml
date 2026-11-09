@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">v2rayNG</string>
     <string name="app_widget_name">تعویض</string>
@@ -565,4 +565,49 @@
     <string name="sub_info_open_page">باز کردن صفحه اطلاعات اشتراک</string>
     <string name="sub_info_unlimited">نامحدود</string>
 
+    <!-- ViraxNet Strings -->
+    <string name="virax_brand_name" translatable="false">ViraxNet</string>
+    <string name="virax_premium" translatable="false">Premium</string>
+    <string name="virax_auto_connect">اتصال خودکار</string>
+    <string name="virax_subtitle_disconnected">بهترین سرور با کمترین پینگ</string>
+    <string name="virax_connection_time">زمان اتصال</string>
+    <string name="virax_download">دانلود</string>
+    <string name="virax_upload">آپلود</string>
+    <string name="virax_your_ip">IP شما</string>
+    <string name="virax_smart_server_selection">انتخاب هوشمند بهترین سرور</string>
+    <string name="virax_ping_prefix">پینگ: %s</string>
+    <string name="virax_tab_home">خانه</string>
+    <string name="virax_tab_servers">سرورها</string>
+    <string name="virax_tab_stats">آمار</string>
+    <string name="virax_tab_settings">تنظیمات</string>
+    <string name="virax_filter_all">همه</string>
+    <string name="virax_filter_high_speed">پرسرعت</string>
+    <string name="virax_filter_stable">پایدار</string>
+    <string name="virax_filter_favorites">علاقه‌مندی‌ها</string>
+    <string name="virax_connect_selected_server">اتصال به سرور انتخاب شده</string>
+    <string name="virax_select_fastest_server">انتخاب سریع‌ترین سرور</string>
+    <string name="virax_user_subscription">اشتراک کاربر</string>
+    <string name="virax_sub_active_valid">اشتراک شما فعال و معتبر است ✨</string>
+    <string name="virax_sub_expired">اشتراک شما منقضی شده است ⚠️</string>
+    <string name="virax_expiry_date">تاریخ انقضا</string>
+    <string name="virax_remaining_time">زمان باقی‌مانده</string>
+    <string name="virax_days_unit">%d روز</string>
+    <string name="virax_traffic_consumed">حجم مصرفی</string>
+    <string name="virax_manage_subscription">مدیریت اشتراک</string>
+    <string name="virax_sub_received_from_link">اشتراک شما از طریق لینک ساب کانفیگ دریافت شده است.</string>
+    <string name="virax_sub_info_unavailable">اطلاعات در دسترس نیست</string>
+    <string name="virax_routing_settings">Routing Settings</string>
+    <string name="virax_routing_subtitle">تنظیم مسیرهای ترافیک</string>
+    <string name="virax_local_dns">Local DNS</string>
+    <string name="virax_local_dns_subtitle">استفاده از DNS محلی</string>
+    <string name="virax_fake_dns">Fake DNS</string>
+    <string name="virax_fake_dns_subtitle">فعال‌سازی DNS جعلی</string>
+    <string name="virax_ping_test_url">لینک تست پینگ</string>
+    <string name="virax_ping_type_note">نوع پینگ‌گیری: مشابه V2rayNG (Ping = Google)</string>
+    <string name="virax_connecting">در حال اتصال...</string>
+    <string name="virax_connecting_subtitle">در حال اتصال به سرور لطفاً صبر کنید...</string>
+    <string name="virax_cancel">لغو</string>
+    <string name="virax_connected">متصل هستید</string>
+    <string name="virax_disconnect">قطع اتصال</string>
+    <string name="virax_ms_unit">%d میلی‌ثانیه</string>
 </resources>

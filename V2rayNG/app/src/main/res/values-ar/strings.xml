@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">v2rayNG</string>
     <string name="app_widget_name">التبديل</string>
@@ -573,4 +573,49 @@
     <string name="sub_info_open_page">فتح صفحة معلومات الاشتراك</string>
     <string name="sub_info_unlimited">غير محدود</string>
 
+    <!-- ViraxNet Strings -->
+    <string name="virax_brand_name" translatable="false">ViraxNet</string>
+    <string name="virax_premium" translatable="false">Premium</string>
+    <string name="virax_auto_connect">Auto Connect</string>
+    <string name="virax_subtitle_disconnected">Best server with lowest ping</string>
+    <string name="virax_connection_time">Connection Time</string>
+    <string name="virax_download">Download</string>
+    <string name="virax_upload">Upload</string>
+    <string name="virax_your_ip">Your IP</string>
+    <string name="virax_smart_server_selection">Smart Best Server Selection</string>
+    <string name="virax_ping_prefix">Ping: %s</string>
+    <string name="virax_tab_home">Home</string>
+    <string name="virax_tab_servers">Servers</string>
+    <string name="virax_tab_stats">Stats</string>
+    <string name="virax_tab_settings">Settings</string>
+    <string name="virax_filter_all">All</string>
+    <string name="virax_filter_high_speed">High Speed</string>
+    <string name="virax_filter_stable">Stable</string>
+    <string name="virax_filter_favorites">Favorites</string>
+    <string name="virax_connect_selected_server">Connect to Selected Server</string>
+    <string name="virax_select_fastest_server">Select fastest server</string>
+    <string name="virax_user_subscription">User Subscription</string>
+    <string name="virax_sub_active_valid">Your subscription is active and valid ✨</string>
+    <string name="virax_sub_expired">Your subscription has expired ⚠️</string>
+    <string name="virax_expiry_date">Expiry Date</string>
+    <string name="virax_remaining_time">Remaining Time</string>
+    <string name="virax_days_unit">%d days</string>
+    <string name="virax_traffic_consumed">Data Consumed</string>
+    <string name="virax_manage_subscription">Manage Subscription</string>
+    <string name="virax_sub_received_from_link">Your subscription was received via sub config link.</string>
+    <string name="virax_sub_info_unavailable">Information not available</string>
+    <string name="virax_routing_settings">Routing Settings</string>
+    <string name="virax_routing_subtitle">Traffic routing configuration</string>
+    <string name="virax_local_dns">Local DNS</string>
+    <string name="virax_local_dns_subtitle">Use local DNS</string>
+    <string name="virax_fake_dns">Fake DNS</string>
+    <string name="virax_fake_dns_subtitle">Enable Fake DNS</string>
+    <string name="virax_ping_test_url">Ping Test URL</string>
+    <string name="virax_ping_type_note">Ping type: Similar to V2rayNG (Ping = Google)</string>
+    <string name="virax_connecting">Connecting...</string>
+    <string name="virax_connecting_subtitle">Connecting to server, please wait...</string>
+    <string name="virax_cancel">Cancel</string>
+    <string name="virax_connected">Connected</string>
+    <string name="virax_disconnect">Disconnect</string>
+    <string name="virax_ms_unit">%d ms</string>
 </resources>

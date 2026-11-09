@@ -1,4 +1,4 @@
-package com.v2ray.ang.ui.main
+﻿package com.v2ray.ang.ui.main
 
 import android.content.Intent
 import android.net.VpnService
@@ -47,6 +47,7 @@ import com.v2ray.ang.ui.server.ServerWireguardActivity
 import com.v2ray.ang.ui.settings.SettingsActivity
 import com.v2ray.ang.ui.subscription.SubSettingActivity
 import com.v2ray.ang.ui.userasset.UserAssetActivity
+import com.v2ray.ang.ui.virax.ViraxMainScreen
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
@@ -101,7 +102,7 @@ class MainActivity : HelperBaseComponentActivity() {
     @Composable
     override fun ScreenContent() {
         BackHandler { moveTaskToBack(false) }
-        MainScreen(
+        ViraxMainScreen(
             mainViewModel = mainViewModel,
             onAction = { action ->
                 when (action) {
