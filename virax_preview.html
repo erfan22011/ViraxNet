@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ViraxNet Interactive UI Preview</title>
+    <title>ViraxNet - Interactive Mobile UI Preview</title>
     <style>
         :root {
             --bg-color: #0c0a19;
@@ -18,6 +18,7 @@
             --gold-light: #fde68a;
             --green-neon: #10b981;
             --green-glow: #34d399;
+            --disconnect-red: #ef4444;
             --text-primary: #ffffff;
             --text-secondary: #9ca3af;
             --text-muted: #6b7280;
@@ -37,6 +38,7 @@
             --gold-light: #fbbf24;
             --green-neon: #059669;
             --green-glow: #10b981;
+            --disconnect-red: #dc2626;
             --text-primary: #1e1b2e;
             --text-secondary: #6b7280;
             --text-muted: #9ca3af;
@@ -47,6 +49,7 @@
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
@@ -61,9 +64,9 @@
 
         .phone-frame {
             width: 390px;
-            height: 800px;
+            height: 820px;
             background: var(--bg-color);
-            border-radius: 44px;
+            border-radius: 46px;
             border: 4px solid #2d2650;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
             overflow: hidden;
@@ -73,12 +76,13 @@
             transition: background 0.3s;
         }
 
-        /* Top Bar */
+        /* Top Header */
         .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px 8px;
+            z-index: 10;
         }
 
         .top-brand {
@@ -104,15 +108,30 @@
             border: none;
             cursor: pointer;
             color: var(--text-primary);
-            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background 0.2s;
         }
 
-        /* Screen Container */
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Screens */
         .screen-container {
             flex: 1;
             overflow-y: auto;
-            padding: 12px 20px 80px;
+            padding: 10px 20px 84px;
             display: none;
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+
+        .screen-container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
         }
 
         .screen-container.active {
@@ -124,15 +143,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 20px 0;
+            margin: 20px 0 16px;
         }
 
         .power-ring-outer {
-            width: 170px;
-            height: 170px;
+            width: 175px;
+            height: 175px;
             border-radius: 50%;
             background: radial-gradient(circle, rgba(124, 58, 237, 0.25) 0%, rgba(12, 10, 25, 0) 70%);
-            border: 2px solid rgba(139, 92, 246, 0.3);
+            border: 2px solid rgba(139, 92, 246, 0.35);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -142,48 +161,47 @@
 
         .power-ring-outer:hover {
             transform: scale(1.03);
-            box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+            box-shadow: 0 0 35px rgba(124, 58, 237, 0.6);
         }
 
         .power-ring-inner {
-            width: 130px;
-            height: 130px;
+            width: 135px;
+            height: 135px;
             border-radius: 50%;
             background: radial-gradient(circle, #6d28d9 0%, #3b1874 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            font-size: 46px;
-            border: 2px solid rgba(167, 139, 250, 0.7);
+            color: #ffffff;
+            border: 2px solid rgba(167, 139, 250, 0.8);
         }
 
         .shield-outer {
-            width: 170px;
-            height: 170px;
+            width: 175px;
+            height: 175px;
             border-radius: 50%;
             background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(12, 10, 25, 0) 70%);
-            border: 2px solid rgba(16, 185, 129, 0.4);
+            border: 2px solid rgba(16, 185, 129, 0.45);
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
         }
 
         .shield-inner {
-            width: 130px;
-            height: 130px;
+            width: 135px;
+            height: 135px;
             border-radius: 50%;
             background: radial-gradient(circle, #059669 0%, #064e3b 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            font-size: 52px;
+            color: #ffffff;
             border: 2px solid var(--green-glow);
         }
 
         .status-title {
-            font-size: 20px;
+            font-size: 21px;
             font-weight: bold;
             color: var(--text-primary);
             margin-top: 14px;
@@ -206,16 +224,18 @@
         }
 
         .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            text-align: center;
+            display: flex;
+            justify-content: space-around;
             align-items: center;
+            text-align: center;
         }
 
         .stat-item {
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 4px;
+            flex: 1;
         }
 
         .stat-val {
@@ -231,16 +251,15 @@
 
         .divider-v {
             width: 1px;
-            height: 32px;
+            height: 36px;
             background: var(--card-border);
-            margin: 0 auto;
         }
 
         /* Buttons */
         .btn-purple {
             width: 100%;
-            height: 52px;
-            border-radius: 18px;
+            height: 54px;
+            border-radius: 20px;
             background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
             color: #ffffff;
             border: none;
@@ -256,7 +275,7 @@
         }
 
         .btn-purple:hover {
-            opacity: 0.9;
+            opacity: 0.92;
         }
 
         /* Bottom Nav */
@@ -272,6 +291,7 @@
             justify-content: space-around;
             align-items: center;
             padding-bottom: 8px;
+            z-index: 20;
         }
 
         .nav-item {
@@ -282,6 +302,7 @@
             gap: 3px;
             color: var(--text-muted);
             font-size: 11px;
+            transition: color 0.2s;
         }
 
         .nav-item.active {
@@ -293,7 +314,10 @@
             padding: 4px 14px;
             border-radius: 12px;
             background: transparent;
-            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
         }
 
         .nav-item.active .nav-icon-pill {
@@ -301,7 +325,24 @@
             color: var(--primary-purple);
         }
 
-        /* Controls Floating Panel */
+        /* Signal Bars Component */
+        .signal-bars {
+            display: inline-flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 16px;
+        }
+        .signal-bars span {
+            width: 3px;
+            background: var(--green-neon);
+            border-radius: 1px;
+        }
+        .signal-bars span:nth-child(1) { height: 4px; }
+        .signal-bars span:nth-child(2) { height: 7px; }
+        .signal-bars span:nth-child(3) { height: 11px; }
+        .signal-bars span:nth-child(4) { height: 15px; }
+
+        /* Floating Live Control Panel for User Testing */
         .preview-controls {
             position: fixed;
             top: 20px;
@@ -326,6 +367,10 @@
             color: #fff;
             font-weight: bold;
             cursor: pointer;
+            transition: background 0.2s;
+        }
+        .preview-controls button:hover {
+            background: #7c3aed;
         }
     </style>
 </head>
@@ -335,12 +380,17 @@
     <div class="phone-frame">
         <!-- Top Bar -->
         <div class="top-bar">
-            <button class="icon-btn" onclick="toggleConnected()">☰</button>
+            <button class="icon-btn" onclick="toggleDrawer()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
             <div class="top-brand">
-                <span>🚀 ViraxNet</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#a78bfa"><path d="M13.13 2.51C11.66 3.08 10.37 4.01 9.35 5.23L11.5 7.38C12.33 6.56 13.33 5.97 14.44 5.65C15.55 5.33 16.73 5.31 17.85 5.6L18.4 5.05C17.06 3.74 15.2 2.83 13.13 2.51M18.77 6.15L17.85 7.07C18.25 8.39 18.2 9.81 17.7 11.1L20.25 13.65C21.47 11.83 22 9.63 21.75 7.41C21.43 7.07 20.22 6.34 18.77 6.15M10.08 8.8L3 15.88V21H8.12L15.2 13.92C14.7 13.97 14.2 13.97 13.7 13.92C12.42 13.79 11.2 13.26 10.22 12.4C9.24 11.54 8.54 10.39 8.2 9.11C8.07 8.61 8.03 8.1 8.08 7.6L10.08 8.8M6 17.5A1.5 1.5 0 0 1 7.5 19A1.5 1.5 0 0 1 6 20.5A1.5 1.5 0 0 1 4.5 19A1.5 1.5 0 0 1 6 17.5M2.5 21.5L4.5 19.5"/></svg>
+                <span>ViraxNet</span>
                 <span class="badge-premium">Premium</span>
             </div>
-            <button class="icon-btn" onclick="switchTab('stats')"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5m14 3a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1h14v1z\"/></svg></button>
+            <button class="icon-btn" onclick="switchTab('stats')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fbbf24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5m14 3a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1h14v1z"/></svg>
+            </button>
         </div>
 
         <!-- SCREEN 1: HOME -->
@@ -349,7 +399,9 @@
             <div id="view-disconnected">
                 <div class="power-area">
                     <div class="power-ring-outer" onclick="toggleConnected()">
-                        <div class="power-ring-inner"><svg width=\"50\" height=\"50\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M12 3v9\"/><path d=\"M18.36 6.64A9 9 0 1 1 5.64 6.64\"/></svg></div>
+                        <div class="power-ring-inner">
+                            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"><path d="M12 3v9"/><path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/></svg>
+                        </div>
                     </div>
                     <div class="status-title" data-i18n="autoConnect">اتصال خودکار</div>
                     <div class="status-subtitle" data-i18n="bestServerSubtitle">بهترین سرور با کمترین پینگ</div>
@@ -357,23 +409,26 @@
 
                 <div class="card stats-grid">
                     <div class="stat-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         <span class="stat-val">00:00:00</span>
                         <span class="stat-lbl" data-i18n="connTime">زمان اتصال</span>
                     </div>
                     <div class="divider-v"></div>
                     <div class="stat-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
                         <span class="stat-val">0 B/s</span>
                         <span class="stat-lbl" data-i18n="download">دانلود</span>
                     </div>
                     <div class="divider-v"></div>
                     <div class="stat-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green-neon)" stroke-width="2.2" stroke-linecap="round"><path d="M12 16V4m0 0l-5 5m5-5l5 5M4 20h16"/></svg>
                         <span class="stat-val">0 B/s</span>
                         <span class="stat-lbl" data-i18n="upload">آپلود</span>
                     </div>
                 </div>
 
                 <div class="card" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <span>🌐</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                     <div style="text-align: center;">
                         <div style="font-size: 11px; color: var(--text-secondary);" data-i18n="yourIp">IP شما</div>
                         <div style="font-size: 14px; font-weight: bold; color: var(--text-primary);">-</div>
@@ -382,13 +437,13 @@
 
                 <div class="card" onclick="switchTab('servers')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="color: var(--gold); font-size: 20px;">⚡</span>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--gold)"><path d="M7 2v11h3v9l7-12h-4l3-8z"/></svg>
                         <div>
                             <div style="font-size: 14px; font-weight: bold; color: var(--text-primary);" data-i18n="smartSelect">انتخاب هوشمند بهترین سرور</div>
                             <div style="font-size: 12px; color: var(--text-secondary);">پینگ: ... ms</div>
                         </div>
                     </div>
-                    <span style="color: var(--text-muted);">❯</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
             </div>
 
@@ -396,38 +451,51 @@
             <div id="view-connected" style="display: none;">
                 <div class="power-area">
                     <div class="shield-outer" onclick="toggleConnected()">
-                        <div class="shield-inner"><svg width=\"56\" height=\"56\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z\"/><path d=\"M9 12l2 2 4-5\"/></svg></div>
+                        <div class="shield-inner">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/><path d="M9 12l2 2 4-5"/></svg>
+                        </div>
                     </div>
-                    <div class="status-title" style="color: var(--green-neon);" data-i18n="connected">متصل هستید ✓</div>
+                    <div class="status-title" style="color: var(--green-neon); display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span data-i18n="connected">متصل هستید</span>
+                        <span>✓</span>
+                    </div>
                 </div>
 
                 <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 22px;">🇩🇪</span>
+                        <!-- Germany Flag SVG -->
+                        <svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="6" fill="#000"/><rect y="6" width="24" height="6" fill="#dd0000"/><rect y="12" width="24" height="6" fill="#ffce00"/></svg>
                         <span style="font-weight: bold; color: var(--text-primary);">Germany - Frankfurt</span>
                     </div>
-                    <span style="color: var(--green-neon); font-weight: bold;">12 ms </span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: var(--green-neon); font-weight: bold; font-size: 14px;">12 ms</span>
+                        <div class="signal-bars"><span></span><span></span><span></span><span></span></div>
+                    </div>
                 </div>
 
                 <div class="card stats-grid">
                     <div class="stat-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         <span class="stat-val">00:12:34</span>
                         <span class="stat-lbl" data-i18n="connTime">زمان اتصال</span>
                     </div>
                     <div class="divider-v"></div>
                     <div class="stat-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
                         <span class="stat-val">12.5 MB</span>
                         <span class="stat-lbl" data-i18n="download">دانلود</span>
                     </div>
                     <div class="divider-v"></div>
                     <div class="stat-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green-neon)" stroke-width="2.2" stroke-linecap="round"><path d="M12 16V4m0 0l-5 5m5-5l5 5M4 20h16"/></svg>
                         <span class="stat-val">3.8 MB</span>
                         <span class="stat-lbl" data-i18n="upload">آپلود</span>
                     </div>
                 </div>
 
                 <button class="btn-purple" style="background: var(--secondary-purple);" onclick="toggleConnected()">
-                    <span></span> <span data-i18n="disconnect">قطع اتصال</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"><path d="M18.36 6.64A9 9 0 0 1 20.78 14.6M12 3v4M5.64 6.64A9 9 0 0 0 12 21a8.93 8.93 0 0 0 5.65-2M2 2l20 20"/></svg>
+                    <span data-i18n="disconnect">قطع اتصال</span>
                 </button>
             </div>
         </div>
@@ -443,59 +511,73 @@
 
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 20px;">🇩🇪</span>
+                    <!-- Germany Flag SVG -->
+                    <svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="6" fill="#000"/><rect y="6" width="24" height="6" fill="#dd0000"/><rect y="12" width="24" height="6" fill="#ffce00"/></svg>
                     <span style="color: var(--text-primary); font-weight: bold;">Germany - Frankfurt</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: var(--green-neon); font-weight: bold; font-size: 13px;">12 ms </span>
+                    <span style="color: var(--green-neon); font-weight: bold; font-size: 13px;">12 ms</span>
+                    <div class="signal-bars"><span></span><span></span><span></span><span></span></div>
                     <input type="radio" checked name="srv">
                 </div>
             </div>
 
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 20px;">🇳🇱</span>
+                    <!-- Netherlands Flag SVG -->
+                    <svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="6" fill="#ae1c28"/><rect y="6" width="24" height="6" fill="#ffffff"/><rect y="12" width="24" height="6" fill="#21468b"/></svg>
                     <span style="color: var(--text-primary); font-weight: bold;">Netherlands - Amsterdam</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: var(--green-neon); font-weight: bold; font-size: 13px;">18 ms </span>
+                    <span style="color: var(--green-neon); font-weight: bold; font-size: 13px;">18 ms</span>
+                    <div class="signal-bars"><span></span><span></span><span></span><span></span></div>
                     <input type="radio" name="srv">
                 </div>
             </div>
 
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 20px;">🇸🇬</span>
+                    <!-- Singapore Flag SVG -->
+                    <svg width="24" height="18" viewBox="0 0 24 18"><rect width="24" height="9" fill="#ed2939"/><rect y="9" width="24" height="9" fill="#ffffff"/></svg>
                     <span style="color: var(--text-primary); font-weight: bold;">Singapore - SG</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: var(--green-neon); font-weight: bold; font-size: 13px;">22 ms </span>
+                    <span style="color: var(--green-neon); font-weight: bold; font-size: 13px;">22 ms</span>
+                    <div class="signal-bars"><span></span><span></span><span></span><span></span></div>
                     <input type="radio" name="srv">
                 </div>
             </div>
 
             <button class="btn-purple" onclick="switchTab('home'); toggleConnected();">
-                <span>⚡</span> <span data-i18n="connectSelected">اتصال به سرور انتخاب شده</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff"><path d="M7 2v11h3v9l7-12h-4l3-8z"/></svg>
+                <span data-i18n="connectSelected">اتصال به سرور انتخاب شده</span>
             </button>
         </div>
 
         <!-- SCREEN 3: SUBSCRIPTION -->
         <div id="screen-stats" class="screen-container">
             <div style="text-align: center; margin: 15px 0;">
-                <div style="font-size: 40px; margin-bottom: 8px;"><svg width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"#fbbf24\"><path d=\"M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5m14 3a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1h14v1z\"/></svg></div>
-                <div style="font-size: 20px; font-weight: bold; color: var(--text-primary);">ViraxNet <span style="color: var(--gold);">Premium</span></div>
-                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;" data-i18n="subActive">اشتراک شما فعال و معتبر است ✨</div>
+                <div style="display: flex; justify-content: center; margin-bottom: 8px;">
+                    <div style="width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle, #6d28d9 0%, #3b1874 100%); border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center;">
+                        <svg width="42" height="42" viewBox="0 0 24 24" fill="#fbbf24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5m14 3a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1h14v1z"/></svg>
+                    </div>
+                </div>
+                <div style="font-size: 21px; font-weight: bold; color: var(--text-primary);">ViraxNet <span style="color: var(--gold);">Premium</span></div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6z"/></svg>
+                    <span data-i18n="subActive">اشتراک شما فعال و معتبر است</span>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                <div class="card" style="text-align: center;">
-                    <div style="font-size: 18px;"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg></div>
-                    <div style="font-size: 11px; color: var(--text-secondary); margin: 4px 0;" data-i18n="remainingTime">زمان باقی‌مانده</div>
+                <div class="card" style="text-align: center; padding: 16px 12px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <div style="font-size: 11px; color: var(--text-secondary); margin: 6px 0 2px;" data-i18n="remainingTime">زمان باقی‌مانده</div>
                     <div style="font-size: 15px; font-weight: bold; color: var(--text-primary);" data-i18n="days29">29 روز</div>
                 </div>
-                <div class="card" style="text-align: center;">
-                    <div style="font-size: 18px;"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/></svg></div>
-                    <div style="font-size: 11px; color: var(--text-secondary); margin: 4px 0;" data-i18n="expiryDate">تاریخ انقضا</div>
+                <div class="card" style="text-align: center; padding: 16px 12px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <div style="font-size: 11px; color: var(--text-secondary); margin: 6px 0 2px;" data-i18n="expiryDate">تاریخ انقضا</div>
                     <div style="font-size: 15px; font-weight: bold; color: var(--text-primary);">1405/07/25</div>
                 </div>
             </div>
@@ -503,7 +585,7 @@
             <div class="card">
                 <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
                     <span style="color: var(--text-secondary);" data-i18n="trafficConsumed">حجم مصرفی</span>
-                    <span style="font-weight: bold; color: var(--text-primary);">4.7 GB / 50 GB</span>
+                    <span style="font-weight: bold; color: var(--text-primary);" dir="ltr">4.7 GB / 50 GB</span>
                 </div>
                 <div style="height: 8px; border-radius: 4px; background: var(--card-border); overflow: hidden;">
                     <div style="width: 25%; height: 100%; background: linear-gradient(90deg, var(--primary-purple), var(--secondary-purple));"></div>
@@ -513,7 +595,7 @@
             <button class="btn-purple" data-i18n="manageSub">مدیریت اشتراک</button>
 
             <div class="card" style="display: flex; gap: 10px; font-size: 12px; color: var(--text-secondary); line-height: 18px; margin-top: 14px;">
-                <span>ⓘ</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                 <span data-i18n="subReceivedNote">اشتراک شما از طریق لینک ساب کانفیگ دریافت شده است.</span>
             </div>
         </div>
@@ -521,55 +603,76 @@
         <!-- SCREEN 4: SETTINGS -->
         <div id="screen-settings" class="screen-container">
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-weight: bold; color: var(--text-primary);" data-i18n="routing">Routing Settings</div>
-                    <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="routingSub">تنظیم مسیرهای ترافیک</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="2"><path d="M19 15v-2a4 4 0 0 0-4-4h-2V7.83a3 3 0 1 0-2 0V9H9a4 4 0 0 0-4 4v2a3 3 0 1 0 2 2v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2a3 3 0 1 0 2-2z"/></svg>
+                    <div>
+                        <div style="font-weight: bold; color: var(--text-primary);" data-i18n="routing">Routing Settings</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="routingSub">تنظیم مسیرهای ترافیک</div>
+                    </div>
                 </div>
-                <span>❯</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
 
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-weight: bold; color: var(--text-primary);">Local DNS</div>
-                    <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="localDnsSub">استفاده از DNS محلی</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <div>
+                        <div style="font-weight: bold; color: var(--text-primary);">Local DNS</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="localDnsSub">استفاده از DNS محلی</div>
+                    </div>
                 </div>
-                <input type="checkbox" checked style="transform: scale(1.4);">
+                <input type="checkbox" checked style="transform: scale(1.4); accent-color: var(--primary-purple);">
             </div>
 
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-weight: bold; color: var(--text-primary);">Fake DNS</div>
-                    <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="fakeDnsSub">فعال‌سازی DNS جعلی</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--primary-purple)"><path d="M4 6h16V4H4m0 6h16V8H4m0 6h16v-2H4m0 6h16v-2H4m0 6h16v-2H4z"/></svg>
+                    <div>
+                        <div style="font-weight: bold; color: var(--text-primary);">Fake DNS</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="fakeDnsSub">فعال‌سازی DNS جعلی</div>
+                    </div>
                 </div>
-                <input type="checkbox" style="transform: scale(1.4);">
+                <input type="checkbox" style="transform: scale(1.4); accent-color: var(--primary-purple);">
             </div>
 
-            <div class="card">
-                <div style="font-weight: bold; color: var(--text-primary);" data-i18n="pingUrl">لینک تست پینگ</div>
-                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">https://www.gstatic.com/generate_204</div>
+            <div class="card" style="display: flex; align-items: center; gap: 10px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-purple)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                <div>
+                    <div style="font-weight: bold; color: var(--text-primary);" data-i18n="pingUrl">لینک تست پینگ</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;" dir="ltr">https://www.gstatic.com/generate_204</div>
+                </div>
             </div>
 
-            <div style="font-size: 11px; color: var(--text-muted); line-height: 18px; margin-top: 12px;">
-                ⓘ نوع پینگ‌گیری: مشابه V2rayNG (Ping = Google)
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 18px; margin-top: 12px; display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span>نوع پینگ‌گیری: مشابه V2rayNG (Ping = Google)</span>
             </div>
         </div>
 
         <!-- Bottom Navigation Bar -->
         <div class="bottom-nav">
             <div class="nav-item active" onclick="switchTab('home')">
-                <div class="nav-icon-pill">🏠</div>
+                <div class="nav-icon-pill">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                </div>
                 <span data-i18n="tabHome">خانه</span>
             </div>
             <div class="nav-item" onclick="switchTab('servers')">
-                <div class="nav-icon-pill">☰</div>
+                <div class="nav-icon-pill">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16V4H4m0 6h16V8H4m0 6h16v-2H4m0 6h16v-2H4z"/></svg>
+                </div>
                 <span data-i18n="tabServers">سرورها</span>
             </div>
             <div class="nav-item" onclick="switchTab('stats')">
-                <div class="nav-icon-pill">📊</div>
+                <div class="nav-icon-pill">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11V3H8v6H2v12h20V11h-6M10 5h4v14h-4V5M4 11h4v8H4v-8m16 8h-4v-6h4v6z"/></svg>
+                </div>
                 <span data-i18n="tabStats">آمار</span>
             </div>
             <div class="nav-item" onclick="switchTab('settings')">
-                <div class="nav-icon-pill">⚙</div>
+                <div class="nav-icon-pill">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.62.06-.94 0-.32-.02-.63-.06-.94l2.32-1.81a.5.5 0 0 0 .12-.64l-2.2-3.81a.5.5 0 0 0-.61-.22l-2.73 1.1a7.7 7.7 0 0 0-1.63-.95l-.42-2.85A.5.5 0 0 0 13.5 1.25h-4.4a.5.5 0 0 0-.49.42l-.42 2.85c-.6.25-1.17.58-1.7.95L3.76 4.37a.5.5 0 0 0-.61.22l-2.2 3.81a.5.5 0 0 0 .12.64l2.32 1.81c-.04.31-.06.63-.06.94 0 .31.02.63.06.94l-2.32 1.81a.5.5 0 0 0-.12.64l2.2 3.81c.13.24.42.33.61.22l2.73-1.1c.53.37 1.1.7 1.7.95l.42 2.85c.04.27.27.46.55.46h4.4c.28 0 .51-.19.55-.46l.42-2.85c.6-.25 1.17-.58 1.7-.95l2.73 1.1c.25.1.54.02.61-.22l2.2-3.81a.5.5 0 0 0-.12-.64l-2.32-1.81zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+                </div>
                 <span data-i18n="tabSettings">تنظیمات</span>
             </div>
         </div>
@@ -597,14 +700,14 @@
                 upload: "آپلود",
                 yourIp: "IP شما",
                 smartSelect: "انتخاب هوشمند بهترین سرور",
-                connected: "متصل هستید ✓",
+                connected: "متصل هستید",
                 disconnect: "قطع اتصال",
                 all: "همه",
                 highSpeed: "پرسرعت",
                 stable: "پایدار",
                 favorites: "علاقه‌مندی‌ها",
                 connectSelected: "اتصال به سرور انتخاب شده",
-                subActive: "اشتراک شما فعال و معتبر است ✨",
+                subActive: "اشتراک شما فعال و معتبر است",
                 remainingTime: "زمان باقی‌مانده",
                 days29: "29 روز",
                 expiryDate: "تاریخ انقضا",
@@ -629,14 +732,14 @@
                 upload: "Upload",
                 yourIp: "Your IP",
                 smartSelect: "Smart Best Server Selection",
-                connected: "Connected ✓",
+                connected: "Connected",
                 disconnect: "Disconnect",
                 all: "All",
                 highSpeed: "Fast",
                 stable: "Stable",
                 favorites: "Favorites",
                 connectSelected: "Connect to Selected Server",
-                subActive: "Your subscription is active and valid ✨",
+                subActive: "Your subscription is active and valid",
                 remainingTime: "Remaining Time",
                 days29: "29 days",
                 expiryDate: "Expiry Date",
@@ -688,6 +791,10 @@
                 const key = el.getAttribute('data-i18n');
                 if (strings[key]) el.textContent = strings[key];
             });
+        }
+
+        function toggleDrawer() {
+            alert('Navigation Drawer toggled');
         }
     </script>
 </body>
