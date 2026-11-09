@@ -149,12 +149,24 @@ fun ViraxHomeScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            Text(
-                text = stringResource(R.string.virax_connected) + " ✓",
-                color = colors.greenNeon,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_virax_shield_check),
+                    contentDescription = null,
+                    tint = colors.greenNeon,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.virax_connected),
+                    color = colors.greenNeon,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -337,7 +349,7 @@ private fun ConnectedShieldView() {
 @Composable
 private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
     val colors = ViraxTheme.colors
-    val flag = ViraxFlagUtils.getFlagEmoji(serverName)
+    val flagRes = ViraxFlagUtils.getFlagDrawable(serverName)
     val displayName = serverName ?: "Germany - Frankfurt"
 
     Box(
@@ -354,7 +366,12 @@ private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = flag, fontSize = 22.sp)
+                Icon(
+                    painter = painterResource(id = flagRes),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(24.dp)
+                )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = displayName,
@@ -427,7 +444,12 @@ private fun ViraxStatsCard(
         ) {
             // Time
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "⏱", fontSize = 16.sp)
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_virax_clock),
+                    contentDescription = null,
+                    tint = colors.primaryPurple,
+                    modifier = Modifier.size(18.dp)
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = timeText,
@@ -452,7 +474,12 @@ private fun ViraxStatsCard(
 
             // Download
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "↓", fontSize = 16.sp, color = colors.primaryPurple, fontWeight = FontWeight.Bold)
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_virax_download),
+                    contentDescription = null,
+                    tint = colors.primaryPurple,
+                    modifier = Modifier.size(18.dp)
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = downloadText,
@@ -477,7 +504,12 @@ private fun ViraxStatsCard(
 
             // Upload
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "↑", fontSize = 16.sp, color = colors.greenNeon, fontWeight = FontWeight.Bold)
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_virax_upload),
+                    contentDescription = null,
+                    tint = colors.greenNeon,
+                    modifier = Modifier.size(18.dp)
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = uploadText,

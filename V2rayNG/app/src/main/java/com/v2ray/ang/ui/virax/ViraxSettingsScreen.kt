@@ -328,7 +328,12 @@ fun ViraxSettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "🎨", fontSize = 20.sp)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_virax_palette),
+                        contentDescription = null,
+                        tint = colors.primaryPurple,
+                        modifier = Modifier.size(24.dp)
+                    )
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
@@ -378,7 +383,12 @@ fun ViraxSettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "🌐", fontSize = 20.sp)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_virax_globe),
+                        contentDescription = null,
+                        tint = colors.primaryPurple,
+                        modifier = Modifier.size(24.dp)
+                    )
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
@@ -412,12 +422,24 @@ fun ViraxSettingsScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // Footer Note
-        Text(
-            text = "ⓘ " + stringResource(R.string.virax_ping_type_note),
-            color = colors.textMuted,
-            fontSize = 12.sp,
-            lineHeight = 18.sp
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_virax_info),
+                contentDescription = null,
+                tint = colors.textMuted,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.virax_ping_type_note),
+                color = colors.textMuted,
+                fontSize = 12.sp,
+                lineHeight = 18.sp
+            )
+        }
 
         Spacer(modifier = Modifier.height(30.dp))
     }

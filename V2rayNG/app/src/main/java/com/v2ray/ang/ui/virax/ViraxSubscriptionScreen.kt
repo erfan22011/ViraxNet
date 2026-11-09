@@ -187,17 +187,33 @@ fun ViraxSubscriptionScreen(
         Spacer(modifier = Modifier.height(6.dp))
 
         // Subscription Status
-        val statusText = when {
-            !data.hasUserInfo -> unavailableText
-            data.isExpired -> stringResource(R.string.virax_sub_expired)
-            else -> stringResource(R.string.virax_sub_active_valid)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (data.hasUserInfo) {
+                Icon(
+                    painter = painterResource(
+                        id = if (data.isExpired) R.drawable.ic_virax_warning else R.drawable.ic_virax_sparkle
+                    ),
+                    contentDescription = null,
+                    tint = if (data.isExpired) colors.disconnectRed else colors.gold,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+            }
+            val statusText = when {
+                !data.hasUserInfo -> unavailableText
+                data.isExpired -> stringResource(R.string.virax_sub_expired)
+                else -> stringResource(R.string.virax_sub_active_valid)
+            }
+            Text(
+                text = statusText,
+                color = if (data.isExpired) colors.disconnectRed else colors.textSecondary,
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center
+            )
         }
-        Text(
-            text = statusText,
-            color = if (data.isExpired) colors.disconnectRed else colors.textSecondary,
-            fontSize = 13.sp,
-            textAlign = TextAlign.Center
-        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -217,7 +233,12 @@ fun ViraxSubscriptionScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "⏱", fontSize = 18.sp)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_virax_clock),
+                        contentDescription = null,
+                        tint = colors.primaryPurple,
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = stringResource(R.string.virax_remaining_time),
@@ -251,7 +272,12 @@ fun ViraxSubscriptionScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "📅", fontSize = 18.sp)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_virax_calendar),
+                        contentDescription = null,
+                        tint = colors.primaryPurple,
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = stringResource(R.string.virax_expiry_date),
@@ -347,7 +373,12 @@ fun ViraxSubscriptionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "ⓘ", color = colors.primaryPurple, fontSize = 18.sp)
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_virax_info),
+                    contentDescription = null,
+                    tint = colors.primaryPurple,
+                    modifier = Modifier.size(18.dp)
+                )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = stringResource(R.string.virax_sub_received_from_link),

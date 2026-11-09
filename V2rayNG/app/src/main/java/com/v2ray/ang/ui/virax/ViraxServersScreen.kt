@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -258,7 +257,7 @@ fun ViraxServersScreen(
             ) {
                 items(filteredServers, key = { it.guid }) { server ->
                     val isChecked = server.guid == selectedGuid
-                    val flag = ViraxFlagUtils.getFlagEmoji(server.remarks)
+                    val flagRes = ViraxFlagUtils.getFlagDrawable(server.remarks)
 
                     Box(
                         modifier = Modifier
@@ -282,7 +281,12 @@ fun ViraxServersScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(text = flag, fontSize = 20.sp)
+                                Icon(
+                                    painter = painterResource(id = flagRes),
+                                    contentDescription = null,
+                                    tint = Color.Unspecified,
+                                    modifier = Modifier.size(22.dp)
+                                )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
                                     text = server.remarks,
@@ -344,12 +348,24 @@ fun ViraxServersScreen(
                     .fillMaxWidth()
                     .height(54.dp)
             ) {
-                Text(
-                    text = "⚡ " + stringResource(R.string.virax_connect_selected_server),
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_virax_lightning),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.virax_connect_selected_server),
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

@@ -42,6 +42,41 @@ fun ViraxMainScreen(
     val isTesting = uiState.isTesting
     val selectedGuid = uiState.selectedGuid
 
+    val activeGroupId = remember(uiState.selectedGroupId, uiState.groups) {
+        uiState.selectedGroupId.ifEmpty { uiState.groups.firstOrNull()?.id.orEmpty() }
+    }
+    val groupState by mainViewModel.serverGroupState(activeGroupId).collectAsStateWithLifecycle()
+
+    val viraxServers = remember(groupState.rows, selectedGuid) {
+        if (groupState.rows.isNotEmpty()) {
+            groupState.rows.map { row ->
+                ViraxServerItem(
+                    guid = row.guid,
+                    remarks = row.remarks,
+                    pingMillis = row.testDelayMillis,
+                    isSelected = row.guid == selectedGuid
+                )
+            }
+        } else {
+            listOf(
+                ViraxServerItem("s1", "Germany - Frankfurt", 12L, selectedGuid == "s1"),
+                ViraxServerItem("s2", "Netherlands - Amsterdam", 18L, selectedGuid == "s2"),
+                ViraxServerItem("s3", "Singapore - SG", 22L, selectedGuid == "s3"),
+                ViraxServerItem("s4", "Turkey - Istanbul", 27L, selectedGuid == "s4"),
+                ViraxServerItem("s5", "United States - NY", 31L, selectedGuid == "s5"),
+                ViraxServerItem("s6", "Japan - Tokyo", 34L, selectedGuid == "s6")
+            )
+        }
+    }
+
+    val currentServerRow = groupState.rows.firstOrNull { it.guid == selectedGuid }
+    val currentServerName = currentServerRow?.remarks ?: "Germany - Frankfurt"
+    val currentServerPing = currentServerRow?.testDelayMillis ?: 12L
+
+    val subscriptionData = remember(activeGroupId, uiState) {
+        ViraxConnectionManager.getSubscriptionUsage(activeGroupId)
+    }
+
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -82,6 +117,23 @@ fun ViraxMainScreen(
         )
     }
 
+    val handleAutoConnect: () -> Unit = {
+        if (isRunning) {
+            onAction(MainAction.ToggleService)
+        } else {
+            val fastest = ViraxConnectionManager.findFastestHealthyServer(viraxServers)
+            if (fastest != null) {
+                onAction(MainAction.SelectServer(fastest.guid))
+                isConnectingModalVisible = true
+                onAction(MainAction.ToggleService)
+            } else {
+                onAction(MainAction.TestRealAllServers)
+                isConnectingModalVisible = true
+                onAction(MainAction.ToggleService)
+            }
+        }
+    }
+
     ViraxThemeProvider(themeMode = themeMode) {
         val colors = ViraxTheme.colors
 
@@ -119,18 +171,13 @@ fun ViraxMainScreen(
                                 ViraxHomeScreen(
                                     isConnected = isRunning,
                                     isConnecting = isTesting,
-                                    serverName = "Germany - Frankfurt",
-                                    serverPing = 12L,
+                                    serverName = currentServerName,
+                                    serverPing = currentServerPing,
                                     ipAddress = if (isRunning) "10.0.0.2" else null,
                                     connectionDurationText = if (isRunning) "00:12:34" else "00:00:00",
                                     downloadSpeedText = if (isRunning) "12.5 MB" else "0 B/s",
                                     uploadSpeedText = if (isRunning) "3.8 MB" else "0 B/s",
-                                    onPowerClick = {
-                                        if (!isRunning) {
-                                            isConnectingModalVisible = true
-                                        }
-                                        onAction(MainAction.ToggleService)
-                                    },
+                                    onPowerClick = handleAutoConnect,
                                     onMenuClick = {
                                         scope.launch { drawerState.open() }
                                     },
@@ -141,21 +188,14 @@ fun ViraxMainScreen(
 
                             ViraxTab.SERVERS -> {
                                 ViraxServersScreen(
-                                    servers = listOf(
-                                        ViraxServerItem("s1", "Germany - Frankfurt", 12L, selectedGuid == "s1"),
-                                        ViraxServerItem("s2", "Netherlands - Amsterdam", 18L, selectedGuid == "s2"),
-                                        ViraxServerItem("s3", "Singapore - SG", 22L, selectedGuid == "s3"),
-                                        ViraxServerItem("s4", "Turkey - Istanbul", 27L, selectedGuid == "s4"),
-                                        ViraxServerItem("s5", "United States - NY", 31L, selectedGuid == "s5"),
-                                        ViraxServerItem("s6", "Japan - Tokyo", 34L, selectedGuid == "s6")
-                                    ),
-                                    selectedGuid = selectedGuid ?: "s1",
+                                    servers = viraxServers,
+                                    selectedGuid = selectedGuid ?: viraxServers.firstOrNull()?.guid,
                                     onServerSelect = { guid ->
                                         onAction(MainAction.SelectServer(guid))
                                     },
                                     onAutoConnectClick = {
                                         selectedTab = ViraxTab.HOME
-                                        onAction(MainAction.ToggleService)
+                                        handleAutoConnect()
                                     },
                                     onConnectSelectedClick = {
                                         selectedTab = ViraxTab.HOME
@@ -167,13 +207,7 @@ fun ViraxMainScreen(
 
                             ViraxTab.STATS -> {
                                 ViraxSubscriptionScreen(
-                                    data = ViraxSubscriptionUiData(
-                                        hasUserInfo = true,
-                                        uploadBytes = 1_500_000_000L,
-                                        downloadBytes = 3_200_000_000L,
-                                        totalBytes = 50_000_000_000L,
-                                        expireTimestamp = 1792195200L // 1405/07/25
-                                    ),
+                                    data = subscriptionData,
                                     onManageSubscriptionClick = {
                                         onNavigate(MainDestination.Subscriptions)
                                     },

@@ -484,7 +484,8 @@ object AngConfigManager {
                     return SubscriptionUpdateResult(failureCount = 1)
                 }
             }
-            LogUtil.i(AppConfig.TAG, url)
+            // Sensitive: Never log raw subscription URLs or credentials
+            LogUtil.i(AppConfig.TAG, "Updating subscription for ${it.subscription.remarks}")
             val userAgent = it.subscription.userAgent
             val requestHeaders = it.subscription.requestHeaders
             val proxyUsername = SettingsManager.getSocksUsername()
