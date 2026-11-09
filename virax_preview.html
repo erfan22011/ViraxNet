@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViraxNet Interactive UI Preview</title>
+    <style>
+        :root {
+            --bg-color: #0c0a19;
+            --bg-darker: #070510;
+            --card-bg: #16132a;
+            --card-border: #2b2353;
+            --primary-purple: #8b5cf6;
+            --secondary-purple: #6d28d9;
+            --dark-purple: #3b1874;
+            --light-purple: #a78bfa;
+            --gold: #fbbf24;
+            --gold-light: #fde68a;
+            --green-neon: #10b981;
+            --green-glow: #34d399;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Tahoma, sans-serif;
+        }
+
+        body.light-theme {
+            --bg-color: #f6f5fc;
+            --bg-darker: #edeaf8;
+            --card-bg: #ffffff;
+            --card-border: #e2dcf5;
+            --primary-purple: #7c3aed;
+            --secondary-purple: #6d28d9;
+            --dark-purple: #ede9fe;
+            --light-purple: #7c3aed;
+            --gold: #d97706;
+            --gold-light: #fbbf24;
+            --green-neon: #059669;
+            --green-glow: #10b981;
+            --text-primary: #1e1b2e;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: #121024;
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 390px;
+            height: 800px;
+            background: var(--bg-color);
+            border-radius: 44px;
+            border: 4px solid #2d2650;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px 8px;
+        }
+
+        .top-brand {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            font-size: 19px;
+            color: var(--text-primary);
+        }
+
+        .badge-premium {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #000;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 8px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 20px;
+        }
+
+        /* Screen Container */
+        .screen-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 20px 80px;
+            display: none;
+        }
+
+        .screen-container.active {
+            display: block;
+        }
+
+        /* Power Button Area */
+        .power-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .power-ring-outer {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.25) 0%, rgba(12, 10, 25, 0) 70%);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .power-ring-outer:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+        }
+
+        .power-ring-inner {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #6d28d9 0%, #3b1874 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 46px;
+            border: 2px solid rgba(167, 139, 250, 0.7);
+        }
+
+        .shield-outer {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(12, 10, 25, 0) 70%);
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .shield-inner {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #059669 0%, #064e3b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 52px;
+            border: 2px solid var(--green-glow);
+        }
+
+        .status-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-top: 14px;
+        }
+
+        .status-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            text-align: center;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-val {
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .stat-lbl {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .divider-v {
+            width: 1px;
+            height: 32px;
+            background: var(--card-border);
+            margin: 0 auto;
+        }
+
+        /* Buttons */
+        .btn-purple {
+            width: 100%;
+            height: 52px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
+            color: #ffffff;
+            border: none;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-purple:hover {
+            opacity: 0.9;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 68px;
+            background: var(--bg-darker);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            gap: 3px;
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+            font-weight: bold;
+        }
+
+        .nav-icon-pill {
+            padding: 4px 14px;
+            border-radius: 12px;
+            background: transparent;
+            font-size: 18px;
+        }
+
+        .nav-item.active .nav-icon-pill {
+            background: var(--dark-purple);
+            color: var(--primary-purple);
+        }
+
+        /* Controls Floating Panel */
+        .preview-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1c1836;
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 1px solid #3d346b;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 999;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .preview-controls button {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: none;
+            background: #6d28d9;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Phone Frame -->
+    <div class="phone-frame">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <button class="icon-btn" onclick="toggleConnected()">☰</button>
+            <div class="top-brand">
+                <span>🚀 ViraxNet</span>
+                <span class="badge-premium">Premium</span>
+            </div>
+            <button class="icon-btn" onclick="switchTab('stats')">👑</button>
+        </div>
+
+        <!-- SCREEN 1: HOME -->
+        <div id="screen-home" class="screen-container active">
+            <!-- Disconnected View -->
+            <div id="view-disconnected">
+                <div class="power-area">
+                    <div class="power-ring-outer" onclick="toggleConnected()">
+                        <div class="power-ring-inner">⏻</div>
+                    </div>
+                    <div class="status-title" data-i18n="autoConnect">اتصال خودکار</div>
+                    <div class="status-subtitle" data-i18n="bestServerSubtitle">بهترین سرور با کمترین پینگ</div>
+                </div>
+
+                <div class="card stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-val">00:00:00</span>
+                        <span class="stat-lbl" data-i18n="connTime">زمان اتصال</span>
+                    </div>
+                    <div class="divider-v"></div>
+                    <div class="stat-item">
+                        <span class="stat-val">0 B/s</span>
+                        <span class="stat-lbl" data-i18n="download">دانلود</span>
+                    </div>
+                    <div class="divider-v"></div>
+                    <div class="stat-item">
+                        <span class="stat-val">0 B/s</span>
+                        <span class="stat-lbl" data-i18n="upload">آپلود</span>
+                    </div>
+                </div>
+
+                <div class="card" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <span>🌐</span>
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; color: var(--text-secondary);" data-i18n="yourIp">IP شما</div>
+                        <div style="font-size: 14px; font-weight: bold; color: var(--text-primary);">-</div>
+                    </div>
+                </div>
+
+                <div class="card" onclick="switchTab('servers')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: var(--gold); font-size: 20px;">⚡</span>
+                        <div>
+                            <div style="font-size: 14px; font-weight: bold; color: var(--text-primary);" data-i18n="smartSelect">انتخاب هوشمند بهترین سرور</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">پینگ: ... ms</div>
+                        </div>
+                    </div>
+                    <span style="color: var(--text-muted);">❯</span>
+                </div>
+            </div>
+
+            <!-- Connected View (Hidden by default) -->
+            <div id="view-connected" style="display: none;">
+                <div class="power-area">
+                    <div class="shield-outer" onclick="toggleConnected()">
+                        <div class="shield-inner">✓</div>
+                    </div>
+                    <div class="status-title" style="color: var(--green-neon);" data-i18n="connected">متصل هستید ✓</div>
+                </div>
+
+                <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">🇩🇪</span>
+                        <span style="font-weight: bold; color: var(--text-primary);">Germany - Frankfurt</span>
+                    </div>
+                    <span style="color: var(--green-neon); font-weight: bold;">12 ms 📶</span>
+                </div>
+
+                <div class="card stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-val">00:12:34</span>
+                        <span class="stat-lbl" data-i18n="connTime">زمان اتصال</span>
+                    </div>
+                    <div class="divider-v"></div>
+                    <div class="stat-item">
+                        <span class="stat-val">12.5 MB</span>
+                        <span class="stat-lbl" data-i18n="download">دانلود</span>
+                    </div>
+                    <div class="divider-v"></div>
+                    <div class="stat-item">
+                        <span class="stat-val">3.8 MB</span>
+                        <span class="stat-lbl" data-i18n="upload">آپلود</span>
+                    </div>
+                </div>
+
+                <button class="btn-purple" style="background: var(--secondary-purple);" onclick="toggleConnected()">
+                    <span>🛑</span> <span data-i18n="disconnect">قطع اتصال</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: SERVERS -->
+        <div id="screen-servers" class="screen-container">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto;">
+                <div class="card" style="padding: 6px 14px; margin: 0; background: var(--dark-purple); color: var(--text-primary); font-size: 13px; font-weight: bold;" data-i18n="all">همه</div>
+                <div class="card" style="padding: 6px 14px; margin: 0; color: var(--text-secondary); font-size: 13px;" data-i18n="highSpeed">پرسرعت</div>
+                <div class="card" style="padding: 6px 14px; margin: 0; color: var(--text-secondary); font-size: 13px;" data-i18n="stable">پایدار</div>
+                <div class="card" style="padding: 6px 14px; margin: 0; color: var(--text-secondary); font-size: 13px;" data-i18n="favorites">علاقه‌مندی‌ها</div>
+            </div>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">🇩🇪</span>
+                    <span style="color: var(--text-primary); font-weight: bold;">Germany - Frankfurt</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: var(--green-neon); font-weight: bold; font-size: 13px;">12 ms 📶</span>
+                    <input type="radio" checked name="srv">
+                </div>
+            </div>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">🇳🇱</span>
+                    <span style="color: var(--text-primary); font-weight: bold;">Netherlands - Amsterdam</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: var(--green-neon); font-weight: bold; font-size: 13px;">18 ms 📶</span>
+                    <input type="radio" name="srv">
+                </div>
+            </div>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">🇸🇬</span>
+                    <span style="color: var(--text-primary); font-weight: bold;">Singapore - SG</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: var(--green-neon); font-weight: bold; font-size: 13px;">22 ms 📶</span>
+                    <input type="radio" name="srv">
+                </div>
+            </div>
+
+            <button class="btn-purple" onclick="switchTab('home'); toggleConnected();">
+                <span>⚡</span> <span data-i18n="connectSelected">اتصال به سرور انتخاب شده</span>
+            </button>
+        </div>
+
+        <!-- SCREEN 3: SUBSCRIPTION -->
+        <div id="screen-stats" class="screen-container">
+            <div style="text-align: center; margin: 15px 0;">
+                <div style="font-size: 40px; margin-bottom: 8px;">👑</div>
+                <div style="font-size: 20px; font-weight: bold; color: var(--text-primary);">ViraxNet <span style="color: var(--gold);">Premium</span></div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;" data-i18n="subActive">اشتراک شما فعال و معتبر است ✨</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 18px;">⏱</div>
+                    <div style="font-size: 11px; color: var(--text-secondary); margin: 4px 0;" data-i18n="remainingTime">زمان باقی‌مانده</div>
+                    <div style="font-size: 15px; font-weight: bold; color: var(--text-primary);" data-i18n="days29">29 روز</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 18px;">📅</div>
+                    <div style="font-size: 11px; color: var(--text-secondary); margin: 4px 0;" data-i18n="expiryDate">تاریخ انقضا</div>
+                    <div style="font-size: 15px; font-weight: bold; color: var(--text-primary);">1405/07/25</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+                    <span style="color: var(--text-secondary);" data-i18n="trafficConsumed">حجم مصرفی</span>
+                    <span style="font-weight: bold; color: var(--text-primary);">4.7 GB / 50 GB</span>
+                </div>
+                <div style="height: 8px; border-radius: 4px; background: var(--card-border); overflow: hidden;">
+                    <div style="width: 25%; height: 100%; background: linear-gradient(90deg, var(--primary-purple), var(--secondary-purple));"></div>
+                </div>
+            </div>
+
+            <button class="btn-purple" data-i18n="manageSub">مدیریت اشتراک</button>
+
+            <div class="card" style="display: flex; gap: 10px; font-size: 12px; color: var(--text-secondary); line-height: 18px; margin-top: 14px;">
+                <span>ⓘ</span>
+                <span data-i18n="subReceivedNote">اشتراک شما از طریق لینک ساب کانفیگ دریافت شده است.</span>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: SETTINGS -->
+        <div id="screen-settings" class="screen-container">
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: bold; color: var(--text-primary);" data-i18n="routing">Routing Settings</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="routingSub">تنظیم مسیرهای ترافیک</div>
+                </div>
+                <span>❯</span>
+            </div>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: bold; color: var(--text-primary);">Local DNS</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="localDnsSub">استفاده از DNS محلی</div>
+                </div>
+                <input type="checkbox" checked style="transform: scale(1.4);">
+            </div>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: bold; color: var(--text-primary);">Fake DNS</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);" data-i18n="fakeDnsSub">فعال‌سازی DNS جعلی</div>
+                </div>
+                <input type="checkbox" style="transform: scale(1.4);">
+            </div>
+
+            <div class="card">
+                <div style="font-weight: bold; color: var(--text-primary);" data-i18n="pingUrl">لینک تست پینگ</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">https://www.gstatic.com/generate_204</div>
+            </div>
+
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 18px; margin-top: 12px;">
+                ⓘ نوع پینگ‌گیری: مشابه V2rayNG (Ping = Google)
+            </div>
+        </div>
+
+        <!-- Bottom Navigation Bar -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('home')">
+                <div class="nav-icon-pill">🏠</div>
+                <span data-i18n="tabHome">خانه</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('servers')">
+                <div class="nav-icon-pill">☰</div>
+                <span data-i18n="tabServers">سرورها</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('stats')">
+                <div class="nav-icon-pill">📊</div>
+                <span data-i18n="tabStats">آمار</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('settings')">
+                <div class="nav-icon-pill">⚙</div>
+                <span data-i18n="tabSettings">تنظیمات</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Live Control Panel for User Testing -->
+    <div class="preview-controls">
+        <h4 style="font-size: 14px; border-bottom: 1px solid #3d346b; padding-bottom: 6px;">تست زنده UI</h4>
+        <button onclick="toggleTheme()">🌓 تغییر تم (تاریک / روشن)</button>
+        <button onclick="toggleLang()">🌐 تغییر زبان (فارسی / English)</button>
+        <button onclick="toggleConnected()">⚡ تغییر وضعیت اتصال</button>
+    </div>
+
+    <script>
+        let isConnected = false;
+        let isDark = true;
+        let currentLang = 'fa';
+
+        const i18nData = {
+            fa: {
+                autoConnect: "اتصال خودکار",
+                bestServerSubtitle: "بهترین سرور با کمترین پینگ",
+                connTime: "زمان اتصال",
+                download: "دانلود",
+                upload: "آپلود",
+                yourIp: "IP شما",
+                smartSelect: "انتخاب هوشمند بهترین سرور",
+                connected: "متصل هستید ✓",
+                disconnect: "قطع اتصال",
+                all: "همه",
+                highSpeed: "پرسرعت",
+                stable: "پایدار",
+                favorites: "علاقه‌مندی‌ها",
+                connectSelected: "اتصال به سرور انتخاب شده",
+                subActive: "اشتراک شما فعال و معتبر است ✨",
+                remainingTime: "زمان باقی‌مانده",
+                days29: "29 روز",
+                expiryDate: "تاریخ انقضا",
+                trafficConsumed: "حجم مصرفی",
+                manageSub: "مدیریت اشتراک",
+                subReceivedNote: "اشتراک شما از طریق لینک ساب کانفیگ دریافت شده است.",
+                routing: "Routing Settings",
+                routingSub: "تنظیم مسیرهای ترافیک",
+                localDnsSub: "استفاده از DNS محلی",
+                fakeDnsSub: "فعال‌سازی DNS جعلی",
+                pingUrl: "لینک تست پینگ",
+                tabHome: "خانه",
+                tabServers: "سرورها",
+                tabStats: "آمار",
+                tabSettings: "تنظیمات"
+            },
+            en: {
+                autoConnect: "Auto Connect",
+                bestServerSubtitle: "Best server with lowest ping",
+                connTime: "Duration",
+                download: "Download",
+                upload: "Upload",
+                yourIp: "Your IP",
+                smartSelect: "Smart Best Server Selection",
+                connected: "Connected ✓",
+                disconnect: "Disconnect",
+                all: "All",
+                highSpeed: "Fast",
+                stable: "Stable",
+                favorites: "Favorites",
+                connectSelected: "Connect to Selected Server",
+                subActive: "Your subscription is active and valid ✨",
+                remainingTime: "Remaining Time",
+                days29: "29 days",
+                expiryDate: "Expiry Date",
+                trafficConsumed: "Data Consumed",
+                manageSub: "Manage Subscription",
+                subReceivedNote: "Your subscription was received via sub config link.",
+                routing: "Routing Settings",
+                routingSub: "Traffic routing rules",
+                localDnsSub: "Use local DNS",
+                fakeDnsSub: "Enable Fake DNS",
+                pingUrl: "Ping Test URL",
+                tabHome: "Home",
+                tabServers: "Servers",
+                tabStats: "Stats",
+                tabSettings: "Settings"
+            }
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + tabId).classList.add('active');
+
+            const tabOrder = ['home', 'servers', 'stats', 'settings'];
+            const idx = tabOrder.indexOf(tabId);
+            document.querySelectorAll('.nav-item').forEach((item, i) => {
+                if (i === idx) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+        }
+
+        function toggleConnected() {
+            isConnected = !isConnected;
+            document.getElementById('view-disconnected').style.display = isConnected ? 'none' : 'block';
+            document.getElementById('view-connected').style.display = isConnected ? 'block' : 'none';
+        }
+
+        function toggleTheme() {
+            isDark = !isDark;
+            document.body.classList.toggle('light-theme', !isDark);
+        }
+
+        function toggleLang() {
+            currentLang = currentLang === 'fa' ? 'en' : 'fa';
+            document.documentElement.lang = currentLang;
+            document.documentElement.dir = currentLang === 'fa' ? 'rtl' : 'ltr';
+
+            const strings = i18nData[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (strings[key]) el.textContent = strings[key];
+            });
+        }
+    </script>
+</body>
+</html>
