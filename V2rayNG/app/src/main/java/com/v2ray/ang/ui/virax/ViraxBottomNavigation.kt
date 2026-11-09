@@ -44,10 +44,12 @@ fun ViraxBottomNavigation(
     onTabSelected: (ViraxTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = ViraxTheme.colors
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(ViraxColors.BackgroundDarker)
+            .background(colors.bottomBarBackground)
             .navigationBarsPadding()
     ) {
         Row(
@@ -81,13 +83,13 @@ fun ViraxBottomNavigation(
                         modifier = Modifier
                             .size(36.dp, 28.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(if (isSelected) ViraxColors.PurpleDark else Color.Transparent),
+                            .background(if (isSelected) colors.darkPurple else Color.Transparent),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             painter = painterResource(id = tab.iconRes),
                             contentDescription = null,
-                            tint = if (isSelected) ViraxColors.PurpleLight else ViraxColors.TextMuted,
+                            tint = if (isSelected) colors.primaryPurple else colors.textMuted,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -96,7 +98,7 @@ fun ViraxBottomNavigation(
                         text = label,
                         fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) ViraxColors.TextWhite else ViraxColors.TextMuted,
+                        color = if (isSelected) colors.textPrimary else colors.textMuted,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }

@@ -608,4 +608,12 @@
     <string name="virax_connected">Connected</string>
     <string name="virax_disconnect">Disconnect</string>
     <string name="virax_ms_unit">%d ms</string>
+    <string name="virax_theme">Theme</string>
+    <string name="virax_theme_light">Light</string>
+    <string name="virax_theme_dark">Dark</string>
+    <string name="virax_theme_system">System Default</string>
+    <string name="virax_language">Language</string>
+    <string name="virax_lang_fa">فارسی</string>
+    <string name="virax_lang_en">English</string>
+    <string name="virax_lang_system">System Default</string>
 </resources>

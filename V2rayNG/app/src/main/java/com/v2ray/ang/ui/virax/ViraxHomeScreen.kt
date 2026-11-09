@@ -46,7 +46,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.v2ray.ang.R
@@ -67,12 +66,13 @@ fun ViraxHomeScreen(
     onSmartSelectClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = ViraxTheme.colors
     val scrollState = rememberScrollState()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(ViraxColors.Background)
+            .background(colors.background)
             .verticalScroll(scrollState)
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -89,7 +89,7 @@ fun ViraxHomeScreen(
                 Icon(
                     imageVector = Icons.Default.Menu,
                     contentDescription = stringResource(R.string.navigation_drawer_open),
-                    tint = ViraxColors.TextWhite
+                    tint = colors.textPrimary
                 )
             }
 
@@ -101,13 +101,13 @@ fun ViraxHomeScreen(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_virax_rocket),
                     contentDescription = null,
-                    tint = ViraxColors.PurpleLight,
+                    tint = colors.primaryPurple,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = stringResource(R.string.virax_brand_name),
-                    color = ViraxColors.TextWhite,
+                    color = colors.textPrimary,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -115,7 +115,11 @@ fun ViraxHomeScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(ViraxColors.GoldGradient)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(colors.gold, colors.goldLight)
+                            )
+                        )
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
@@ -131,7 +135,7 @@ fun ViraxHomeScreen(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_virax_crown),
                     contentDescription = stringResource(R.string.virax_user_subscription),
-                    tint = ViraxColors.Gold,
+                    tint = colors.gold,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -147,7 +151,7 @@ fun ViraxHomeScreen(
 
             Text(
                 text = stringResource(R.string.virax_connected) + " ✓",
-                color = ViraxColors.GreenNeon,
+                color = colors.greenNeon,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -171,7 +175,7 @@ fun ViraxHomeScreen(
             // Disconnect Button
             Button(
                 onClick = onPowerClick,
-                colors = ButtonDefaults.buttonColors(containerColor = ViraxColors.PurpleSecondary),
+                colors = ButtonDefaults.buttonColors(containerColor = colors.secondaryPurple),
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -184,13 +188,13 @@ fun ViraxHomeScreen(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_virax_disconnect),
                         contentDescription = null,
-                        tint = ViraxColors.TextWhite,
+                        tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.virax_disconnect),
-                        color = ViraxColors.TextWhite,
+                        color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -204,14 +208,14 @@ fun ViraxHomeScreen(
 
             Text(
                 text = stringResource(R.string.virax_auto_connect),
-                color = ViraxColors.TextWhite,
+                color = colors.textPrimary,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.virax_subtitle_disconnected),
-                color = ViraxColors.TextSecondary,
+                color = colors.textSecondary,
                 fontSize = 13.sp
             )
 
@@ -245,6 +249,7 @@ fun ViraxHomeScreen(
 
 @Composable
 private fun DisconnectedPowerButton(onPowerClick: () -> Unit) {
+    val colors = ViraxTheme.colors
     val infiniteTransition = rememberInfiniteTransition(label = "power_glow")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 0.98f,
@@ -264,13 +269,13 @@ private fun DisconnectedPowerButton(onPowerClick: () -> Unit) {
             .background(
                 Brush.radialGradient(
                     colors = listOf(
-                        Color(0xFF281454),
-                        Color(0xFF140C2E),
+                        colors.powerButtonOuterGlow,
+                        colors.powerButtonMiddleGlow,
                         Color.Transparent
                     )
                 )
             )
-            .border(2.dp, Color(0xFF381F6D), CircleShape)
+            .border(2.dp, colors.powerButtonRingBorder, CircleShape)
             .clickable(onClick = onPowerClick)
             .semantics { role = Role.Button },
         contentAlignment = Alignment.Center
@@ -279,22 +284,14 @@ private fun DisconnectedPowerButton(onPowerClick: () -> Unit) {
             modifier = Modifier
                 .size(145.dp)
                 .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF6D28D9),
-                            Color(0xFF4C1D95),
-                            Color(0xFF1E0E45)
-                        )
-                    )
-                )
-                .border(2.dp, ViraxColors.PurpleLight.copy(alpha = 0.6f), CircleShape),
+                .background(colors.powerButtonGradient)
+                .border(2.dp, colors.lightPurple.copy(alpha = 0.7f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_virax_power),
                 contentDescription = stringResource(R.string.virax_auto_connect),
-                tint = ViraxColors.TextWhite,
+                tint = Color.White,
                 modifier = Modifier.size(52.dp)
             )
         }
@@ -303,6 +300,7 @@ private fun DisconnectedPowerButton(onPowerClick: () -> Unit) {
 
 @Composable
 private fun ConnectedShieldView() {
+    val colors = ViraxTheme.colors
     Box(
         modifier = Modifier
             .size(180.dp)
@@ -310,35 +308,26 @@ private fun ConnectedShieldView() {
             .background(
                 Brush.radialGradient(
                     colors = listOf(
-                        Color(0xFF064E3B),
-                        Color(0xFF022C22),
+                        colors.connectedShieldOuterGlow,
                         Color.Transparent
                     )
                 )
             )
-            .border(2.dp, ViraxColors.GreenNeon.copy(alpha = 0.5f), CircleShape),
+            .border(2.dp, colors.greenNeon.copy(alpha = 0.5f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
                 .size(135.dp)
                 .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF059669),
-                            Color(0xFF047857),
-                            Color(0xFF064E3B)
-                        )
-                    )
-                )
-                .border(2.dp, ViraxColors.GreenGlow, CircleShape),
+                .background(colors.connectedShieldGradient)
+                .border(2.dp, colors.greenGlow, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_virax_shield_check),
                 contentDescription = null,
-                tint = ViraxColors.TextWhite,
+                tint = Color.White,
                 modifier = Modifier.size(62.dp)
             )
         }
@@ -347,6 +336,7 @@ private fun ConnectedShieldView() {
 
 @Composable
 private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
+    val colors = ViraxTheme.colors
     val flag = ViraxFlagUtils.getFlagEmoji(serverName)
     val displayName = serverName ?: "Germany - Frankfurt"
 
@@ -354,8 +344,8 @@ private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(ViraxColors.CardBackground)
-            .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(16.dp))
+            .background(colors.cardBackground)
+            .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
@@ -368,7 +358,7 @@ private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = displayName,
-                    color = ViraxColors.TextWhite,
+                    color = colors.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -377,7 +367,7 @@ private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = if (serverPing > 0) "${serverPing} ms" else "12 ms",
-                    color = ViraxColors.GreenNeon,
+                    color = colors.greenNeon,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -390,6 +380,7 @@ private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
 
 @Composable
 fun ViraxSignalBars(ping: Long, modifier: Modifier = Modifier) {
+    val colors = ViraxTheme.colors
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -401,14 +392,14 @@ fun ViraxSignalBars(ping: Long, modifier: Modifier = Modifier) {
             ping in 161..300 -> 2
             else -> 1
         }
-        val barColor = if (ping > 300) ViraxColors.DisconnectRed else ViraxColors.GreenNeon
+        val barColor = if (ping > 300) colors.disconnectRed else colors.greenNeon
 
         for (i in 1..4) {
             Box(
                 modifier = Modifier
                     .width(3.dp)
                     .height((i * 3 + 4).dp)
-                    .background(if (i <= activeBars) barColor else ViraxColors.TextMuted)
+                    .background(if (i <= activeBars) barColor else colors.textMuted)
             )
         }
     }
@@ -420,12 +411,13 @@ private fun ViraxStatsCard(
     downloadText: String,
     uploadText: String
 ) {
+    val colors = ViraxTheme.colors
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(ViraxColors.CardBackground)
-            .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(18.dp))
+            .background(colors.cardBackground)
+            .border(1.dp, colors.cardBorder, RoundedCornerShape(18.dp))
             .padding(vertical = 14.dp, horizontal = 12.dp)
     ) {
         Row(
@@ -439,14 +431,14 @@ private fun ViraxStatsCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = timeText,
-                    color = ViraxColors.TextWhite,
+                    color = colors.textPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.virax_connection_time),
-                    color = ViraxColors.TextSecondary,
+                    color = colors.textSecondary,
                     fontSize = 11.sp
                 )
             }
@@ -455,23 +447,23 @@ private fun ViraxStatsCard(
                 modifier = Modifier
                     .width(1.dp)
                     .height(36.dp)
-                    .background(ViraxColors.CardBorder)
+                    .background(colors.cardBorder)
             )
 
             // Download
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "↓", fontSize = 16.sp, color = ViraxColors.PurpleLight, fontWeight = FontWeight.Bold)
+                Text(text = "↓", fontSize = 16.sp, color = colors.primaryPurple, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = downloadText,
-                    color = ViraxColors.TextWhite,
+                    color = colors.textPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.virax_download),
-                    color = ViraxColors.TextSecondary,
+                    color = colors.textSecondary,
                     fontSize = 11.sp
                 )
             }
@@ -480,23 +472,23 @@ private fun ViraxStatsCard(
                 modifier = Modifier
                     .width(1.dp)
                     .height(36.dp)
-                    .background(ViraxColors.CardBorder)
+                    .background(colors.cardBorder)
             )
 
             // Upload
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "↑", fontSize = 16.sp, color = ViraxColors.GreenNeon, fontWeight = FontWeight.Bold)
+                Text(text = "↑", fontSize = 16.sp, color = colors.greenNeon, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = uploadText,
-                    color = ViraxColors.TextWhite,
+                    color = colors.textPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.virax_upload),
-                    color = ViraxColors.TextSecondary,
+                    color = colors.textSecondary,
                     fontSize = 11.sp
                 )
             }
@@ -506,12 +498,13 @@ private fun ViraxStatsCard(
 
 @Composable
 private fun ViraxIpCard(ip: String?) {
+    val colors = ViraxTheme.colors
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(ViraxColors.CardBackground)
-            .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(16.dp))
+            .background(colors.cardBackground)
+            .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
@@ -522,19 +515,19 @@ private fun ViraxIpCard(ip: String?) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_virax_globe),
                 contentDescription = null,
-                tint = ViraxColors.PurpleLight,
+                tint = colors.primaryPurple,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = stringResource(R.string.virax_your_ip),
-                    color = ViraxColors.TextSecondary,
+                    color = colors.textSecondary,
                     fontSize = 11.sp
                 )
                 Text(
                     text = ip ?: "-",
-                    color = ViraxColors.TextWhite,
+                    color = colors.textPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -549,12 +542,13 @@ private fun ViraxSmartServerCard(
     serverPing: Long,
     onClick: () -> Unit
 ) {
+    val colors = ViraxTheme.colors
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(ViraxColors.CardBackground)
-            .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(16.dp))
+            .background(colors.cardBackground)
+            .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .semantics { role = Role.Button }
             .padding(horizontal = 16.dp, vertical = 14.dp)
@@ -568,14 +562,14 @@ private fun ViraxSmartServerCard(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_virax_lightning),
                     contentDescription = null,
-                    tint = ViraxColors.Gold,
+                    tint = colors.gold,
                     modifier = Modifier.size(22.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
                         text = stringResource(R.string.virax_smart_server_selection),
-                        color = ViraxColors.TextWhite,
+                        color = colors.textPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -584,7 +578,7 @@ private fun ViraxSmartServerCard(
                             R.string.virax_ping_prefix,
                             if (serverPing > 0) "${serverPing} ms" else "... ms"
                         ),
-                        color = ViraxColors.TextSecondary,
+                        color = colors.textSecondary,
                         fontSize = 12.sp
                     )
                 }
@@ -593,7 +587,7 @@ private fun ViraxSmartServerCard(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
-                tint = ViraxColors.TextMuted,
+                tint = colors.textMuted,
                 modifier = Modifier.size(18.dp)
             )
         }

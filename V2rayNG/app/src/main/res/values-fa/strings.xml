@@ -610,4 +610,12 @@
     <string name="virax_connected">متصل هستید</string>
     <string name="virax_disconnect">قطع اتصال</string>
     <string name="virax_ms_unit">%d میلی‌ثانیه</string>
+    <string name="virax_theme">تم برنامه</string>
+    <string name="virax_theme_light">روشن</string>
+    <string name="virax_theme_dark">تاریک</string>
+    <string name="virax_theme_system">پیش‌فرض سیستم</string>
+    <string name="virax_language">زبان برنامه</string>
+    <string name="virax_lang_fa">فارسی</string>
+    <string name="virax_lang_en">English</string>
+    <string name="virax_lang_system">پیش‌فرض سیستم</string>
 </resources>

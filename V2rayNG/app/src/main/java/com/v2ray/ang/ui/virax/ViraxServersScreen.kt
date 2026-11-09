@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -77,6 +76,7 @@ fun ViraxServersScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = ViraxTheme.colors
     var activeFilter by remember { mutableStateOf(ViraxServerFilter.ALL) }
     var isSearchOpen by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -92,14 +92,14 @@ fun ViraxServersScreen(
                 .sortedBy { it.pingMillis }
             ViraxServerFilter.STABLE -> list.filter { it.pingMillis > 0 }
                 .sortedBy { it.pingMillis }
-            ViraxServerFilter.FAVORITES -> list // can be extended with favorite flag
+            ViraxServerFilter.FAVORITES -> list
         }
     }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(ViraxColors.Background)
+            .background(colors.background)
     ) {
         Column(
             modifier = Modifier
@@ -118,13 +118,13 @@ fun ViraxServersScreen(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = ViraxColors.TextWhite
+                        tint = colors.textPrimary
                     )
                 }
 
                 Text(
                     text = stringResource(R.string.virax_tab_servers),
-                    color = ViraxColors.TextWhite,
+                    color = colors.textPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -133,7 +133,7 @@ fun ViraxServersScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = ViraxColors.TextWhite
+                        tint = colors.textPrimary
                     )
                 }
             }
@@ -143,16 +143,16 @@ fun ViraxServersScreen(
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text(text = "جستجوی سرور...", color = ViraxColors.TextSecondary) },
+                    placeholder = { Text(text = "...", color = colors.textSecondary) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 6.dp)
                         .clip(RoundedCornerShape(12.dp)),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = ViraxColors.CardBackground,
-                        unfocusedContainerColor = ViraxColors.CardBackground,
-                        focusedTextColor = ViraxColors.TextWhite,
-                        unfocusedTextColor = ViraxColors.TextWhite
+                        focusedContainerColor = colors.cardBackground,
+                        unfocusedContainerColor = colors.cardBackground,
+                        focusedTextColor = colors.textPrimary,
+                        unfocusedTextColor = colors.textPrimary
                     ),
                     singleLine = true
                 )
@@ -170,10 +170,10 @@ fun ViraxServersScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSelected) ViraxColors.PurpleDark else ViraxColors.CardBackground)
+                            .background(if (isSelected) colors.darkPurple else colors.cardBackground)
                             .border(
                                 1.dp,
-                                if (isSelected) ViraxColors.PurplePrimary else ViraxColors.CardBorder,
+                                if (isSelected) colors.primaryPurple else colors.cardBorder,
                                 RoundedCornerShape(16.dp)
                             )
                             .clickable { activeFilter = filter }
@@ -181,7 +181,7 @@ fun ViraxServersScreen(
                     ) {
                         Text(
                             text = stringResource(filter.labelRes),
-                            color = if (isSelected) ViraxColors.TextWhite else ViraxColors.TextSecondary,
+                            color = if (isSelected) (if (colors.isDark) Color.White else colors.primaryPurple) else colors.textSecondary,
                             fontSize = 13.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
@@ -197,8 +197,8 @@ fun ViraxServersScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(ViraxColors.CardBackground)
-                    .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(16.dp))
+                    .background(colors.cardBackground)
+                    .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
                     .clickable(onClick = onAutoConnectClick)
                     .semantics { role = Role.Button }
                     .padding(horizontal = 16.dp, vertical = 14.dp)
@@ -213,13 +213,13 @@ fun ViraxServersScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(ViraxColors.PurpleDark),
+                                .background(colors.darkPurple),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_virax_lightning),
                                 contentDescription = null,
-                                tint = ViraxColors.PurpleLight,
+                                tint = colors.primaryPurple,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -227,13 +227,13 @@ fun ViraxServersScreen(
                         Column {
                             Text(
                                 text = stringResource(R.string.virax_auto_connect),
-                                color = ViraxColors.TextWhite,
+                                color = colors.textPrimary,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = stringResource(R.string.virax_select_fastest_server),
-                                color = ViraxColors.TextSecondary,
+                                color = colors.textSecondary,
                                 fontSize = 12.sp
                             )
                         }
@@ -242,7 +242,7 @@ fun ViraxServersScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = ViraxColors.TextMuted,
+                        tint = colors.textMuted,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -264,10 +264,10 @@ fun ViraxServersScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(14.dp))
-                            .background(ViraxColors.CardBackground)
+                            .background(colors.cardBackground)
                             .border(
                                 1.dp,
-                                if (isChecked) ViraxColors.PurplePrimary else ViraxColors.CardBorder,
+                                if (isChecked) colors.primaryPurple else colors.cardBorder,
                                 RoundedCornerShape(14.dp)
                             )
                             .clickable { onServerSelect(server.guid) }
@@ -286,7 +286,7 @@ fun ViraxServersScreen(
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
                                     text = server.remarks,
-                                    color = ViraxColors.TextWhite,
+                                    color = colors.textPrimary,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1
@@ -297,7 +297,7 @@ fun ViraxServersScreen(
                                 if (server.pingMillis > 0) {
                                     Text(
                                         text = "${server.pingMillis} ms",
-                                        color = if (server.pingMillis > 300) ViraxColors.DisconnectRed else ViraxColors.GreenNeon,
+                                        color = if (server.pingMillis > 300) colors.disconnectRed else colors.greenNeon,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -306,7 +306,7 @@ fun ViraxServersScreen(
                                 } else {
                                     Text(
                                         text = "- ms",
-                                        color = ViraxColors.TextMuted,
+                                        color = colors.textMuted,
                                         fontSize = 13.sp
                                     )
                                 }
@@ -317,8 +317,8 @@ fun ViraxServersScreen(
                                     selected = isChecked,
                                     onClick = { onServerSelect(server.guid) },
                                     colors = RadioButtonDefaults.colors(
-                                        selectedColor = ViraxColors.PurpleLight,
-                                        unselectedColor = ViraxColors.TextMuted
+                                        selectedColor = colors.primaryPurple,
+                                        unselectedColor = colors.textMuted
                                     ),
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -338,7 +338,7 @@ fun ViraxServersScreen(
         ) {
             Button(
                 onClick = onConnectSelectedClick,
-                colors = ButtonDefaults.buttonColors(containerColor = ViraxColors.PurpleSecondary),
+                colors = ButtonDefaults.buttonColors(containerColor = colors.secondaryPurple),
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -346,7 +346,7 @@ fun ViraxServersScreen(
             ) {
                 Text(
                     text = "⚡ " + stringResource(R.string.virax_connect_selected_server),
-                    color = ViraxColors.TextWhite,
+                    color = Color.White,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )

@@ -44,6 +44,7 @@ import com.v2ray.ang.R
 fun ViraxConnectingDialog(
     onCancel: () -> Unit
 ) {
+    val colors = ViraxTheme.colors
     val infiniteTransition = rememberInfiniteTransition(label = "rocket_pulse")
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -63,8 +64,8 @@ fun ViraxConnectingDialog(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .clip(RoundedCornerShape(24.dp))
-                .background(ViraxColors.CardBackgroundElevated)
-                .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(24.dp))
+                .background(colors.cardBackgroundElevated)
+                .border(1.dp, colors.cardBorder, RoundedCornerShape(24.dp))
                 .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -74,7 +75,7 @@ fun ViraxConnectingDialog(
             ) {
                 Text(
                     text = stringResource(R.string.virax_connecting),
-                    color = ViraxColors.TextWhite,
+                    color = colors.textPrimary,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -88,8 +89,8 @@ fun ViraxConnectingDialog(
                         .background(
                             Brush.radialGradient(
                                 colors = listOf(
-                                    ViraxColors.PurpleDark,
-                                    ViraxColors.CardBackground
+                                    colors.darkPurple,
+                                    colors.cardBackground
                                 )
                             )
                         )
@@ -97,9 +98,9 @@ fun ViraxConnectingDialog(
                             width = 2.dp,
                             brush = Brush.sweepGradient(
                                 colors = listOf(
-                                    ViraxColors.PurplePrimary,
+                                    colors.primaryPurple,
                                     Color.Transparent,
-                                    ViraxColors.PurplePrimary
+                                    colors.primaryPurple
                                 )
                             ),
                             shape = CircleShape
@@ -109,7 +110,7 @@ fun ViraxConnectingDialog(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_virax_rocket),
                         contentDescription = null,
-                        tint = ViraxColors.PurpleLight,
+                        tint = colors.primaryPurple,
                         modifier = Modifier
                             .size(54.dp)
                             .rotate(rotation * 0.1f)
@@ -120,7 +121,7 @@ fun ViraxConnectingDialog(
 
                 Text(
                     text = stringResource(R.string.virax_connecting_subtitle),
-                    color = ViraxColors.TextSecondary,
+                    color = colors.textSecondary,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center
                 )
@@ -129,16 +130,16 @@ fun ViraxConnectingDialog(
 
                 Button(
                     onClick = onCancel,
-                    colors = ButtonDefaults.buttonColors(containerColor = ViraxColors.CardBackground),
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.cardBackground),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
-                        .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(16.dp))
+                        .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
                 ) {
                     Text(
                         text = stringResource(R.string.virax_cancel),
-                        color = ViraxColors.TextWhite,
+                        color = colors.textPrimary,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )

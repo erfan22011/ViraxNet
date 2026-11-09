@@ -56,7 +56,7 @@ data class ViraxSubscriptionUiData(
     val remainingDaysText: String get() {
         if (!hasUserInfo || expireTimestamp <= 0) return ""
         val days = ViraxDateUtils.remainingDays(expireTimestamp)
-        return if (days >= 0) "$days روز" else ""
+        return if (days >= 0) "$days" else ""
     }
 
     val jalaliExpiryDate: String get() {
@@ -82,13 +82,14 @@ fun ViraxSubscriptionScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = ViraxTheme.colors
     val scrollState = rememberScrollState()
     val unavailableText = stringResource(R.string.virax_sub_info_unavailable)
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(ViraxColors.Background)
+            .background(colors.background)
             .verticalScroll(scrollState)
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -101,11 +102,11 @@ fun ViraxSubscriptionScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Box(modifier = Modifier.size(48.dp)) // Spacer to center title
+            Box(modifier = Modifier.size(48.dp))
 
             Text(
                 text = stringResource(R.string.virax_user_subscription),
-                color = ViraxColors.TextWhite,
+                color = colors.textPrimary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -114,7 +115,7 @@ fun ViraxSubscriptionScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = ViraxColors.TextWhite
+                    tint = colors.textPrimary
                 )
             }
         }
@@ -129,13 +130,12 @@ fun ViraxSubscriptionScreen(
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF381F6D),
-                            Color(0xFF1B0E38),
+                            colors.darkPurple,
                             Color.Transparent
                         )
                     )
                 )
-                .border(2.dp, ViraxColors.PurpleLight.copy(alpha = 0.5f), CircleShape),
+                .border(2.dp, colors.primaryPurple.copy(alpha = 0.5f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Box(
@@ -145,18 +145,18 @@ fun ViraxSubscriptionScreen(
                     .background(
                         Brush.radialGradient(
                             colors = listOf(
-                                Color(0xFF6D28D9),
-                                Color(0xFF4C1D95)
+                                colors.secondaryPurple,
+                                colors.darkPurple
                             )
                         )
                     )
-                    .border(2.dp, ViraxColors.Gold, CircleShape),
+                    .border(2.dp, colors.gold, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_virax_crown),
                     contentDescription = null,
-                    tint = ViraxColors.Gold,
+                    tint = colors.gold,
                     modifier = Modifier.size(42.dp)
                 )
             }
@@ -171,14 +171,14 @@ fun ViraxSubscriptionScreen(
         ) {
             Text(
                 text = stringResource(R.string.virax_brand_name),
-                color = ViraxColors.TextWhite,
+                color = colors.textPrimary,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = stringResource(R.string.virax_premium),
-                color = ViraxColors.Gold,
+                color = colors.gold,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -194,7 +194,7 @@ fun ViraxSubscriptionScreen(
         }
         Text(
             text = statusText,
-            color = if (data.isExpired) ViraxColors.DisconnectRed else ViraxColors.TextSecondary,
+            color = if (data.isExpired) colors.disconnectRed else colors.textSecondary,
             fontSize = 13.sp,
             textAlign = TextAlign.Center
         )
@@ -211,8 +211,8 @@ fun ViraxSubscriptionScreen(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(ViraxColors.CardBackground)
-                    .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(16.dp))
+                    .background(colors.cardBackground)
+                    .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
                     .padding(vertical = 16.dp, horizontal = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -221,13 +221,19 @@ fun ViraxSubscriptionScreen(
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = stringResource(R.string.virax_remaining_time),
-                        color = ViraxColors.TextSecondary,
+                        color = colors.textSecondary,
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    val daysVal = data.remainingDaysText.toLongOrNull()
+                    val daysDisplay = if (data.hasUserInfo && daysVal != null) {
+                        stringResource(R.string.virax_days_unit, daysVal)
+                    } else {
+                        unavailableText
+                    }
                     Text(
-                        text = if (data.hasUserInfo && data.remainingDaysText.isNotBlank()) data.remainingDaysText else unavailableText,
-                        color = ViraxColors.TextWhite,
+                        text = daysDisplay,
+                        color = colors.textPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -239,8 +245,8 @@ fun ViraxSubscriptionScreen(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(ViraxColors.CardBackground)
-                    .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(16.dp))
+                    .background(colors.cardBackground)
+                    .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
                     .padding(vertical = 16.dp, horizontal = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -249,13 +255,13 @@ fun ViraxSubscriptionScreen(
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = stringResource(R.string.virax_expiry_date),
-                        color = ViraxColors.TextSecondary,
+                        color = colors.textSecondary,
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = if (data.hasUserInfo && data.jalaliExpiryDate.isNotBlank()) data.jalaliExpiryDate else unavailableText,
-                        color = ViraxColors.TextWhite,
+                        color = colors.textPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -270,8 +276,8 @@ fun ViraxSubscriptionScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(ViraxColors.CardBackground)
-                .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(16.dp))
+                .background(colors.cardBackground)
+                .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
             Column {
@@ -282,12 +288,12 @@ fun ViraxSubscriptionScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.virax_traffic_consumed),
-                        color = ViraxColors.TextSecondary,
+                        color = colors.textSecondary,
                         fontSize = 13.sp
                     )
                     Text(
                         text = if (data.hasUserInfo && data.trafficText.isNotBlank()) data.trafficText else unavailableText,
-                        color = ViraxColors.TextWhite,
+                        color = colors.textPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -301,8 +307,8 @@ fun ViraxSubscriptionScreen(
                         .fillMaxWidth()
                         .height(10.dp)
                         .clip(RoundedCornerShape(5.dp)),
-                    color = ViraxColors.PurpleLight,
-                    trackColor = ViraxColors.CardBorder
+                    color = colors.primaryPurple,
+                    trackColor = colors.cardBorder
                 )
             }
         }
@@ -312,7 +318,7 @@ fun ViraxSubscriptionScreen(
         // Manage Subscription Button
         Button(
             onClick = onManageSubscriptionClick,
-            colors = ButtonDefaults.buttonColors(containerColor = ViraxColors.PurpleSecondary),
+            colors = ButtonDefaults.buttonColors(containerColor = colors.secondaryPurple),
             shape = RoundedCornerShape(18.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -320,7 +326,7 @@ fun ViraxSubscriptionScreen(
         ) {
             Text(
                 text = stringResource(R.string.virax_manage_subscription),
-                color = ViraxColors.TextWhite,
+                color = Color.White,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -333,19 +339,19 @@ fun ViraxSubscriptionScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(ViraxColors.CardBackground)
-                .border(1.dp, ViraxColors.CardBorder, RoundedCornerShape(16.dp))
+                .background(colors.cardBackground)
+                .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
                 .padding(14.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "ⓘ", color = ViraxColors.PurpleLight, fontSize = 18.sp)
+                Text(text = "ⓘ", color = colors.primaryPurple, fontSize = 18.sp)
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = stringResource(R.string.virax_sub_received_from_link),
-                    color = ViraxColors.TextSecondary,
+                    color = colors.textSecondary,
                     fontSize = 12.sp,
                     lineHeight = 18.sp
                 )
