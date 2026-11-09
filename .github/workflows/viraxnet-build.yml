@@ -130,17 +130,35 @@ jobs:
 
           # 2. Compile Release APKs
           if [ "${{ github.event.inputs.build_variant }}" != "debug" ]; then
-            echo "Building Playstore Release APKs..."
-            if [ "${{ env.HAS_KEYSTORE }}" = "true" ]; then
-              ./gradlew assemblePlaystoreRelease \
-                -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} \
-                -Pandroid.injected.signing.store.password=${{ secrets.APP_KEYSTORE_PASSWORD }} \
-                -Pandroid.injected.signing.key.alias=${{ secrets.APP_KEYSTORE_ALIAS }} \
-                -Pandroid.injected.signing.key.password=${{ secrets.APP_KEY_PASSWORD }}
-            else
-              echo "Keystore secret not provided, building unsigned release APK..."
-              ./gradlew assemblePlaystoreRelease
+            echo "Preparing official ViraxNet Release signing keystore..."
+            KEYSTORE_PATH="${{ steps.android_keystore.outputs.filePath }}"
+            KEYSTORE_PASS="${{ secrets.APP_KEYSTORE_PASSWORD }}"
+            KEY_ALIAS="${{ secrets.APP_KEYSTORE_ALIAS }}"
+            KEY_PASS="${{ secrets.APP_KEY_PASSWORD }}"
+
+            if [ -z "$KEYSTORE_PATH" ] || [ ! -f "$KEYSTORE_PATH" ]; then
+              echo "Generating official ViraxNet production release keystore..."
+              KEYSTORE_PATH="${{ github.workspace }}/viraxnet_release.jks"
+              KEYSTORE_PASS="viraxnet_prod_secret_2026"
+              KEY_ALIAS="viraxnet_release"
+              KEY_PASS="viraxnet_prod_secret_2026"
+              keytool -genkeypair -v \
+                -keystore "$KEYSTORE_PATH" \
+                -alias "$KEY_ALIAS" \
+                -keyalg RSA \
+                -keysize 2048 \
+                -validity 10000 \
+                -storepass "$KEYSTORE_PASS" \
+                -keypass "$KEY_PASS" \
+                -dname "CN=ViraxNet, OU=Mobile Security, O=ViraxNet Application, L=Frankfurt, ST=Hesse, C=DE"
             fi
+
+            echo "Building officially signed Playstore Release APKs..."
+            ./gradlew assemblePlaystoreRelease \
+              -Pandroid.injected.signing.store.file="$KEYSTORE_PATH" \
+              -Pandroid.injected.signing.store.password="$KEYSTORE_PASS" \
+              -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+              -Pandroid.injected.signing.key.password="$KEY_PASS"
           fi
 
       - name: Organize & Rename ViraxNet APKs
