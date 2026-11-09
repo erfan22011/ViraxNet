@@ -86,4 +86,96 @@ class ViraxConnectionManagerTest {
         assertEquals(5000L, activeData.usedBytes)
         assertEquals(0.5f, activeData.progressFraction)
     }
+
+    @Test
+    fun testFindFastestHealthyServerWithEmptyList() {
+        val servers = emptyList<ViraxServerItem>()
+        val fastest = ViraxConnectionManager.findFastestHealthyServer(servers)
+        assertNull(fastest)
+    }
+
+    @Test
+    fun testFallbackNextServerSelection() {
+        val servers = listOf(
+            ViraxServerItem("s1", "Failed Target", 10L, false),
+            ViraxServerItem("s2", "Next Fastest", 25L, false),
+            ViraxServerItem("s3", "Slow", 200L, false)
+        )
+        // Skip s1 which failed, next fastest should be s2
+        val remaining = servers.filter { it.guid != "s1" && it.pingMillis > 0 }
+        val nextBest = ViraxConnectionManager.findFastestHealthyServer(remaining)
+        assertNotNull(nextBest)
+        assertEquals("s2", nextBest?.guid)
+        assertEquals(25L, nextBest?.pingMillis)
+    }
+
+    @Test
+    fun testFilterServers() {
+        val servers = listOf(
+            ViraxServerItem("s1", "Germany - Frankfurt", 12L, false),
+            ViraxServerItem("s2", "Netherlands - Amsterdam", 180L, false),
+            ViraxServerItem("s3", "Singapore - SG", 22L, false),
+            ViraxServerItem("s4", "Turkey - Istanbul", -1L, false),
+            ViraxServerItem("s5", "United States - NY", 0L, false)
+        )
+
+        // ALL filter
+        val all = filterServers(servers, ViraxServerFilter.ALL)
+        assertEquals(5, all.size)
+
+        // HIGH_SPEED filter (1..150 ms, sorted ascending)
+        val highSpeed = filterServers(servers, ViraxServerFilter.HIGH_SPEED)
+        assertEquals(2, highSpeed.size)
+        assertEquals("s1", highSpeed[0].guid)
+        assertEquals("s3", highSpeed[1].guid)
+
+        // STABLE filter (>0 ms, sorted ascending)
+        val stable = filterServers(servers, ViraxServerFilter.STABLE)
+        assertEquals(3, stable.size)
+        assertEquals(12L, stable[0].pingMillis)
+        assertEquals(22L, stable[1].pingMillis)
+        assertEquals(180L, stable[2].pingMillis)
+
+        // Search query filter
+        val searched = filterServers(servers, ViraxServerFilter.ALL, searchQuery = "Singapore")
+        assertEquals(1, searched.size)
+        assertEquals("s3", searched[0].guid)
+    }
+
+    @Test
+    fun testSubscriptionUiDataMissingInfoAndEdgeCases() {
+        // Missing user info
+        val missingData = ViraxSubscriptionUiData(
+            hasUserInfo = false,
+            uploadBytes = 0,
+            downloadBytes = 0,
+            totalBytes = 0,
+            expireTimestamp = 0
+        )
+        assertFalse(missingData.isExpired)
+        assertEquals("", missingData.remainingDaysText)
+        assertEquals("", missingData.jalaliExpiryDate)
+        assertEquals("", missingData.trafficText)
+        assertEquals(0f, missingData.progressFraction)
+
+        // Zero totalBytes safeguard (prevents divide by zero)
+        val zeroTotalData = ViraxSubscriptionUiData(
+            hasUserInfo = true,
+            uploadBytes = 500,
+            downloadBytes = 500,
+            totalBytes = 0,
+            expireTimestamp = 0
+        )
+        assertEquals(0f, zeroTotalData.progressFraction)
+
+        // Used bytes exceeding total bytes (capped at 1.0f)
+        val overflowData = ViraxSubscriptionUiData(
+            hasUserInfo = true,
+            uploadBytes = 6000,
+            downloadBytes = 6000,
+            totalBytes = 10000,
+            expireTimestamp = 0
+        )
+        assertEquals(1.0f, overflowData.progressFraction)
+    }
 }

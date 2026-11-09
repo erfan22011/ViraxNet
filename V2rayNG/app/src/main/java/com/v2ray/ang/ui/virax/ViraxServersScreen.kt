@@ -65,6 +65,23 @@ data class ViraxServerItem(
     val isSelected: Boolean
 )
 
+fun filterServers(
+    servers: List<ViraxServerItem>,
+    filter: ViraxServerFilter,
+    searchQuery: String = ""
+): List<ViraxServerItem> {
+    var list = servers
+    if (searchQuery.isNotBlank()) {
+        list = list.filter { it.remarks.contains(searchQuery, ignoreCase = true) }
+    }
+    return when (filter) {
+        ViraxServerFilter.ALL -> list
+        ViraxServerFilter.HIGH_SPEED -> list.filter { it.pingMillis in 1..150 }.sortedBy { it.pingMillis }
+        ViraxServerFilter.STABLE -> list.filter { it.pingMillis > 0 }.sortedBy { it.pingMillis }
+        ViraxServerFilter.FAVORITES -> list
+    }
+}
+
 @Composable
 fun ViraxServersScreen(
     servers: List<ViraxServerItem>,
@@ -81,18 +98,7 @@ fun ViraxServersScreen(
     var searchQuery by remember { mutableStateOf("") }
 
     val filteredServers = remember(servers, activeFilter, searchQuery) {
-        var list = servers
-        if (searchQuery.isNotBlank()) {
-            list = list.filter { it.remarks.contains(searchQuery, ignoreCase = true) }
-        }
-        when (activeFilter) {
-            ViraxServerFilter.ALL -> list
-            ViraxServerFilter.HIGH_SPEED -> list.filter { it.pingMillis in 1..150 }
-                .sortedBy { it.pingMillis }
-            ViraxServerFilter.STABLE -> list.filter { it.pingMillis > 0 }
-                .sortedBy { it.pingMillis }
-            ViraxServerFilter.FAVORITES -> list
-        }
+        filterServers(servers, activeFilter, searchQuery)
     }
 
     Box(

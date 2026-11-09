@@ -36,4 +36,19 @@ class ViraxDateUtilsTest {
         // Invalid
         assertEquals(-1L, ViraxDateUtils.remainingDays(0L, now))
     }
+
+    @Test
+    fun testTimestampToJalali() {
+        // Zero or negative
+        assertEquals("", ViraxDateUtils.timestampToJalali(0L))
+        assertEquals("", ViraxDateUtils.timestampToJalali(-100L))
+
+        // Fixed UTC timestamp for 2026-10-17 12:00:00 UTC -> Jalali 1405/07/25
+        val epochSeconds = 1792238400L // 2026-10-17
+        val formattedFromSeconds = ViraxDateUtils.timestampToJalali(epochSeconds)
+        assertEquals("1405/07/25", formattedFromSeconds)
+
+        val formattedFromMillis = ViraxDateUtils.timestampToJalali(epochSeconds * 1000L)
+        assertEquals("1405/07/25", formattedFromMillis)
+    }
 }
