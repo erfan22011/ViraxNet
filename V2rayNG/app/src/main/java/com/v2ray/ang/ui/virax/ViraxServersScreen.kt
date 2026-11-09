@@ -19,10 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -121,7 +117,7 @@ fun ViraxServersScreen(
             ) {
                 IconButton(onClick = { isSearchOpen = !isSearchOpen }) {
                     Icon(
-                        imageVector = Icons.Default.Search,
+                        painter = painterResource(R.drawable.ic_search_24dp),
                         contentDescription = "Search",
                         tint = colors.textPrimary
                     )
@@ -136,7 +132,7 @@ fun ViraxServersScreen(
 
                 IconButton(onClick = onBackClick) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(R.drawable.ic_arrow_back_24dp),
                         contentDescription = "Back",
                         tint = colors.textPrimary
                     )
@@ -245,7 +241,7 @@ fun ViraxServersScreen(
                     }
 
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        painter = painterResource(R.drawable.ic_virax_arrow_forward),
                         contentDescription = null,
                         tint = colors.textMuted,
                         modifier = Modifier.size(18.dp)

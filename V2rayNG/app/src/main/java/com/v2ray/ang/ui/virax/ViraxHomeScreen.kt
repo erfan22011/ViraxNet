@@ -24,9 +24,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -87,7 +84,7 @@ fun ViraxHomeScreen(
         ) {
             IconButton(onClick = onMenuClick) {
                 Icon(
-                    imageVector = Icons.Default.Menu,
+                    painter = painterResource(R.drawable.ic_menu_24dp),
                     contentDescription = stringResource(R.string.navigation_drawer_open),
                     tint = colors.textPrimary
                 )
@@ -617,7 +614,7 @@ private fun ViraxSmartServerCard(
             }
 
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                painter = painterResource(R.drawable.ic_virax_arrow_forward),
                 contentDescription = null,
                 tint = colors.textMuted,
                 modifier = Modifier.size(18.dp)

@@ -56,7 +56,7 @@ object ViraxConnectionManager {
             }
 
             // Persist the selected server GUID
-            MmkvManager.encodeSelectServer(fastest.guid)
+            MmkvManager.setSelectServer(fastest.guid)
 
             // Start VPN core
             LauncherManager.startService(context)
@@ -77,7 +77,7 @@ object ViraxConnectionManager {
         val remaining = servers.filter { it.guid != failedGuid && it.pingMillis > 0 }
         val nextBest = findFastestHealthyServer(remaining) ?: return null
 
-        MmkvManager.encodeSelectServer(nextBest.guid)
+        MmkvManager.setSelectServer(nextBest.guid)
         LauncherManager.startService(context)
         return nextBest.guid
     }

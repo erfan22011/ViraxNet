@@ -1,0 +1,121 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer Cyber Glow Ring -->
+    <path
+        android:pathData="M54,16 C74.98,16 92,33.02 92,54 C92,74.98 74.98,92 54,92 C33.02,92 16,74.98 16,54 C16,33.02 33.02,16 54,16 Z"
+        android:strokeWidth="1.5">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="16"
+                android:startY="16"
+                android:endX="92"
+                android:endY="92"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#7C3AED" />
+                <item android:offset="0.5" android:color="#A78BFA" />
+                <item android:offset="1.0" android:color="#10B981" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Cyber Shield Silhouette -->
+    <path
+        android:pathData="M54,22 L78,32 C78,60 54,82 54,82 C54,82 30,60 30,32 Z"
+        android:strokeWidth="2">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54"
+                android:startY="22"
+                android:endX="54"
+                android:endY="82"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#35186A" />
+                <item android:offset="1.0" android:color="#160D30" />
+            </gradient>
+        </aapt:attr>
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="30"
+                android:startY="22"
+                android:endX="78"
+                android:endY="82"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#8B5CF6" />
+                <item android:offset="1.0" android:color="#059669" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Energy Thruster Flame (Plasma Exhaust) -->
+    <path
+        android:pathData="M39,69 C37,77 41,81 44,79 C46,73 48,68 47,65 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="39"
+                android:startY="65"
+                android:endX="44"
+                android:endY="81"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FBBF24" />
+                <item android:offset="0.6" android:color="#EF4444" />
+                <item android:offset="1.0" android:color="#7C3AED" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Rocket Left Fin -->
+    <path
+        android:pathData="M43,59 L35,67 C34,69 36,71 39,70 L48,64 Z"
+        android:fillColor="#6D28D9" />
+
+    <!-- Rocket Right Fin -->
+    <path
+        android:pathData="M59,43 L67,35 C69,34 71,36 70,39 L64,48 Z"
+        android:fillColor="#6D28D9" />
+
+    <!-- Rocket Fuselage Body -->
+    <path
+        android:pathData="M44,66 C42,62 46,51 53,44 C60,37 68,34 72,36 C74,40 71,48 64,55 C57,62 48,68 44,66 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="44"
+                android:startY="66"
+                android:endX="72"
+                android:endY="36"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#EDE9FE" />
+                <item android:offset="0.5" android:color="#FFFFFF" />
+                <item android:offset="1.0" android:color="#C4B5FD" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Rocket Nose Cone High-Tech Tip -->
+    <path
+        android:pathData="M67,41 C67,41 71,37 73,35 C73,35 71,39 67,41 Z"
+        android:fillColor="#7C3AED" />
+
+    <!-- Glowing Cyber Cockpit Window -->
+    <path
+        android:pathData="M56,48 C54,50 52,50 51,49 C50,48 50,46 52,44 C54,42 56,42 57,43 C58,44 58,46 56,48 Z"
+        android:fillColor="#10B981" />
+
+    <!-- Core Neon Glow Pulse -->
+    <path
+        android:pathData="M54,46 C53,47 52,47 51.5,46.5 C51,46 51,45 52,44 C53,43 54,43 54.5,43.5 C55,44 55,45 54,46 Z"
+        android:fillColor="#6EE7B7" />
+
+    <!-- Orbit Sparkle Stars -->
+    <path
+        android:pathData="M32,32 L33.5,35 L36.5,36.5 L33.5,38 L32,41 L30.5,38 L27.5,36.5 L30.5,35 Z"
+        android:fillColor="#FBBF24" />
+
+    <path
+        android:pathData="M76,64 L77,66 L79,67 L77,68 L76,70 L75,68 L73,67 L75,66 Z"
+        android:fillColor="#34D399" />
+</vector>
