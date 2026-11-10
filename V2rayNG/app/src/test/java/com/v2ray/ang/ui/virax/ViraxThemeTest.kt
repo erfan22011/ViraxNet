@@ -1,5 +1,6 @@
 package com.v2ray.ang.ui.virax
 
+import androidx.compose.ui.graphics.Color
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -13,9 +14,9 @@ class ViraxThemeTest {
         assertFalse(ViraxLightPalette.isDark)
 
         // Dark palette uses dark background
-        assertEquals(0xFF0C0A19.toInt(), ViraxDarkPalette.background.value.toInt())
+        assertEquals(Color(0xFF0C0A19), ViraxDarkPalette.background)
         // Light palette uses light background
-        assertEquals(0xFFF6F5FC.toInt(), ViraxLightPalette.background.value.toInt())
+        assertEquals(Color(0xFFF6F5FC), ViraxLightPalette.background)
     }
 
     @Test
