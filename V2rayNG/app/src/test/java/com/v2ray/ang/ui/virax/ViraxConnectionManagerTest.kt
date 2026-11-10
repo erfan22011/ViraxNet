@@ -1,7 +1,11 @@
 package com.v2ray.ang.ui.virax
 
 import com.v2ray.ang.dto.entities.ProfileItem
+import com.v2ray.ang.dto.entities.SubscriptionCache
+import com.v2ray.ang.dto.entities.SubscriptionItem
+import com.v2ray.ang.dto.entities.SubscriptionUsageInfo
 import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.ui.main.MainUiState
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -177,5 +181,82 @@ class ViraxConnectionManagerTest {
             expireTimestamp = 0
         )
         assertEquals(1.0f, overflowData.progressFraction)
+    }
+
+    @Test
+    fun testSubscriptionDefaultsEnable12HourAutoUpdate() {
+        val item = SubscriptionItem()
+        assertTrue(item.enabled)
+        assertTrue(item.autoUpdate)
+        assertEquals(720L, item.updateInterval)
+    }
+
+    @Test
+    fun testMainUiStatePremiumBadgeVisibilityFollowsActiveSubscriptions() {
+        val emptyState = MainUiState(groupsLoaded = true)
+        assertFalse(emptyState.hasActiveSubscription)
+        assertTrue(emptyState.activeSubscriptions.isEmpty())
+
+        val blankDefaultOnly = MainUiState(
+            groupsLoaded = true,
+            subscriptions = listOf(
+                SubscriptionCache("default", SubscriptionItem(remarks = "Default", url = ""))
+            )
+        )
+        assertFalse(blankDefaultOnly.hasActiveSubscription)
+        assertTrue(blankDefaultOnly.activeSubscriptions.isEmpty())
+
+        val disabledSub = MainUiState(
+            groupsLoaded = true,
+            subscriptions = listOf(
+                SubscriptionCache("sub1", SubscriptionItem(remarks = "Sub", url = "https://example.com/sub", enabled = false))
+            )
+        )
+        assertFalse(disabledSub.hasActiveSubscription)
+        assertEquals(1, disabledSub.activeSubscriptions.size)
+
+        val activeSub = MainUiState(
+            groupsLoaded = true,
+            subscriptions = listOf(
+                SubscriptionCache("sub1", SubscriptionItem(remarks = "Sub", url = "https://example.com/sub", enabled = true))
+            )
+        )
+        assertTrue(activeSub.hasActiveSubscription)
+    }
+
+    @Test
+    fun testCreateUiDataFromSubscription() {
+        val fromNull = ViraxConnectionManager.createUiDataFromSubscription(null)
+        assertFalse(fromNull.hasUserInfo)
+
+        val noInfoSub = SubscriptionItem(remarks = "Sub", url = "https://example.com")
+        assertFalse(ViraxConnectionManager.createUiDataFromSubscription(noInfoSub).hasUserInfo)
+
+        val validSub = SubscriptionItem(
+            remarks = "Sub",
+            url = "https://example.com",
+            usageInfo = SubscriptionUsageInfo(upload = 100, download = 400, total = 1000, expire = 1900000000L)
+        )
+        val uiData = ViraxConnectionManager.createUiDataFromSubscription(validSub)
+        assertTrue(uiData.hasUserInfo)
+        assertEquals(500L, uiData.usedBytes)
+        assertEquals(0.5f, uiData.progressFraction)
+    }
+
+    @Test
+    fun testResolveConnectionTargetFallbackOrder() {
+        val untestedServers = listOf(
+            ViraxServerItem("s1", "First", 0L, false),
+            ViraxServerItem("s2", "Second", -1L, false)
+        )
+        assertEquals("s2", ViraxConnectionManager.resolveConnectionTarget(untestedServers, "s2")?.guid)
+        assertEquals("s1", ViraxConnectionManager.resolveConnectionTarget(untestedServers, "missing")?.guid)
+
+        val mixedServers = listOf(
+            ViraxServerItem("s1", "Selected Slow", 200L, true),
+            ViraxServerItem("s2", "Fastest", 35L, false)
+        )
+        assertEquals("s2", ViraxConnectionManager.resolveConnectionTarget(mixedServers, "s1")?.guid)
+        assertNull(ViraxConnectionManager.resolveConnectionTarget(emptyList(), null))
     }
 }

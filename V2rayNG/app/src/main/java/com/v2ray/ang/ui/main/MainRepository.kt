@@ -140,9 +140,18 @@ class MainRepository(
                 }
             )
         }
-        result += MmkvManager.decodeSubscriptions()
+        result += MmkvManager.decodeSubscriptions().filterNot {
+            it.guid == AppConfig.DEFAULT_SUBSCRIPTION_ID &&
+                it.subscription.url.isBlank() &&
+                MmkvManager.decodeServerList(AppConfig.DEFAULT_SUBSCRIPTION_ID).isEmpty()
+        }
         return result
     }
+
+    override fun getAllRawSubscriptions(): List<SubscriptionCache> =
+        MmkvManager.decodeSubscriptions().filter {
+            it.guid != AppConfig.DEFAULT_SUBSCRIPTION_ID && it.subscription.url.isNotBlank()
+        }
 
     override fun getSubscriptionItem(id: String): SubscriptionItem? =
         MmkvManager.decodeSubscription(id)
@@ -192,11 +201,59 @@ class MainRepository(
         updateUI: Boolean
     ): Pair<Int, Int> = AngConfigManager.importBatchConfig(server, subscriptionId, updateUI)
 
+    override fun importOrUpdateSubscriptionUrl(
+        url: String,
+        allowInsecure: Boolean
+    ): Pair<String?, SubscriptionUpdateResult> =
+        AngConfigManager.importOrUpdateSubscriptionUrl(url, allowInsecure)
+
+    override fun updateSubscriptionItem(subId: String, item: SubscriptionItem) {
+        MmkvManager.encodeSubscription(subId, item)
+        SubscriptionUpdater.syncOne(app, subId)
+    }
+
+    override fun deleteSubscription(subId: String) {
+        SettingsManager.removeSubscriptionWithDefault(subId)
+    }
+
     override fun updateConfigViaSubAll(): SubscriptionUpdateResult =
         AngConfigManager.updateConfigViaSubAll()
 
     override fun updateConfigViaSub(subscriptionCache: SubscriptionCache): SubscriptionUpdateResult =
         AngConfigManager.updateConfigViaSub(subscriptionCache)
+
+    override fun isValidUrl(value: String?): Boolean = Utils.isValidUrl(value)
+
+    override fun getSettingsBool(key: String, default: Boolean): Boolean =
+        MmkvManager.decodeSettingsBool(key, default)
+
+    override fun setSettingsBool(key: String, value: Boolean) {
+        MmkvManager.encodeSettings(key, value)
+    }
+
+    override fun getSettingsString(key: String, default: String): String =
+        MmkvManager.decodeSettingsString(key, default) ?: default
+
+    override fun setSettingsString(key: String, value: String) {
+        MmkvManager.encodeSettings(key, value)
+    }
+
+    override fun getLocalDnsEnabled(): Boolean =
+        MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED, false)
+
+    override fun getFakeDnsEnabled(): Boolean =
+        MmkvManager.decodeSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED, false)
+
+    override fun getDelayTestUrl(): String =
+        MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL, AppConfig.DELAY_TEST_URL)
+            ?: AppConfig.DELAY_TEST_URL
+
+    override fun getLanguageCode(): String =
+        MmkvManager.decodeSettingsString(AppConfig.PREF_LANGUAGE, "auto") ?: "auto"
+
+    override fun setLanguageCode(code: String) {
+        AppLocaleManager.setApplicationLanguage(code)
+    }
 
     override fun shareNonCustomConfigsToClipboard(guids: List<String>): Int =
         AngConfigManager.shareNonCustomConfigsToClipboard(app, guids)

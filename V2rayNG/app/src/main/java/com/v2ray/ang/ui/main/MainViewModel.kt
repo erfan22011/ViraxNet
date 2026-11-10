@@ -79,10 +79,15 @@ class MainViewModel(
     // ---------- UI state ----------
     private val _uiState = MutableStateFlow(
         MainUiState(
+            subscriptions = dataSource.getAllRawSubscriptions(),
             selectedGroupId = dataSource.getSelectedSubscriptionId(),
             selectedGuid = dataSource.getSelectServer(),
             confirmRemove = dataSource.getConfirmRemove(),
-            doubleColumnDisplay = dataSource.getDoubleColumnDisplay()
+            doubleColumnDisplay = dataSource.getDoubleColumnDisplay(),
+            localDnsEnabled = dataSource.getLocalDnsEnabled(),
+            fakeDnsEnabled = dataSource.getFakeDnsEnabled(),
+            delayTestUrl = dataSource.getDelayTestUrl(),
+            languageCode = dataSource.getLanguageCode(),
         )
     )
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
@@ -142,6 +147,7 @@ class MainViewModel(
                     toastError(R.string.toast_services_failure)
                 }
                 updateRunningState(false)
+                notifyStartFailure()
             }
 
             MainServiceEvent.StateStopSuccess -> updateRunningState(false)
@@ -292,6 +298,26 @@ class MainViewModel(
             is MainAction.RemoveServer -> removeServerAndRefresh(action.guid)
             is MainAction.Search -> filterConfig(action.query)
             is MainAction.ImportBatchConfig -> importBatchConfig(action.configText)
+            is MainAction.ImportSubscriptionUrl -> importSubscriptionUrl(action.url)
+            is MainAction.ToggleSubscriptionEnabled -> toggleSubscriptionEnabled(action.subId, action.enabled)
+            is MainAction.ToggleSubscriptionAutoUpdate -> toggleSubscriptionAutoUpdate(action.subId, action.autoUpdate)
+            is MainAction.DeleteSubscription -> deleteSubscription(action.subId)
+            is MainAction.SetLocalDnsEnabled -> {
+                dataSource.setSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED, action.enabled)
+                _uiState.update { it.copy(localDnsEnabled = action.enabled) }
+            }
+            is MainAction.SetFakeDnsEnabled -> {
+                dataSource.setSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED, action.enabled)
+                _uiState.update { it.copy(fakeDnsEnabled = action.enabled) }
+            }
+            is MainAction.SetDelayTestUrl -> {
+                dataSource.setSettingsString(AppConfig.PREF_DELAY_TEST_URL, action.url)
+                _uiState.update { it.copy(delayTestUrl = action.url) }
+            }
+            is MainAction.SetLanguageCode -> {
+                dataSource.setLanguageCode(action.code)
+                _uiState.update { it.copy(languageCode = action.code) }
+            }
             MainAction.LocateHandled -> consumeLocateTarget()
             is MainAction.ShareQRCode -> {
                 val bitmap = dataSource.share2QRCode(action.guid)
@@ -338,10 +364,19 @@ class MainViewModel(
     fun refreshUiSettings() {
         _uiState.update {
             it.copy(
+                subscriptions = dataSource.getAllRawSubscriptions(),
                 confirmRemove = dataSource.getConfirmRemove(),
-                doubleColumnDisplay = dataSource.getDoubleColumnDisplay()
+                doubleColumnDisplay = dataSource.getDoubleColumnDisplay(),
+                localDnsEnabled = dataSource.getLocalDnsEnabled(),
+                fakeDnsEnabled = dataSource.getFakeDnsEnabled(),
+                delayTestUrl = dataSource.getDelayTestUrl(),
+                languageCode = dataSource.getLanguageCode(),
             )
         }
+    }
+
+    fun notifyStartFailure() {
+        _uiState.update { it.copy(startFailureCounter = it.startFailureCounter + 1) }
     }
 
     // ---------- Group & server loading ----------
@@ -464,31 +499,41 @@ class MainViewModel(
                         },
                     )
                 }
+                val rawSubscriptions = dataSource.getAllRawSubscriptions()
                 val selectedGroup = resolveSelectedGroup(groups)
-                val validIds = groups.mapTo(HashSet()) { it.id }
+                val validIds = groups.mapTo(HashSet()) { it.id }.apply { add("") }
                 groupUiFlows.keys.removeAll { it !in validIds }
                 groupServerFlows.keys.removeAll { it !in validIds }
                 groupLoadMutexes.keys.removeAll { it !in validIds }
 
-                _uiState.update {
-                    it.copy(
-                        groups = groups,
-                        selectedGroupId = selectedGroup,
-                        selectedGuid = dataSource.getSelectServer(),
-                    )
-                }
+                mutableServerGroupState("")
                 groups.forEach { mutableServerGroupState(it.id) }
-
-                if (groups.isEmpty()) {
-                    cacheMutex.withLock { groupDataCache.clear() }
-                    return@launch
-                }
 
                 val selectedServers = loadGroup(selectedGroup, forceRefresh)
                 updateGroupUi(selectedGroup, selectedServers)
 
+                var currentSelectedGuid = dataSource.getSelectServer()
+                if (currentSelectedGuid.isNullOrBlank() && selectedServers.isNotEmpty()) {
+                    currentSelectedGuid = selectedServers.first().guid
+                    dataSource.setSelectServer(currentSelectedGuid)
+                }
+
+                _uiState.update {
+                    it.copy(
+                        groups = groups,
+                        groupsLoaded = true,
+                        subscriptions = rawSubscriptions,
+                        selectedGroupId = selectedGroup,
+                        selectedGuid = currentSelectedGuid,
+                    )
+                }
+
                 if (!initialPageReady.isCompleted) {
                     initialPageReady.complete(Unit)
+                }
+
+                if (groups.isEmpty()) {
+                    return@launch
                 }
 
                 val selectedIndex =
@@ -516,19 +561,66 @@ class MainViewModel(
 
     // ---------- Business actions (coroutine-based) ----------
     private fun importBatchConfig(configText: String) {
+        val trimmed = configText.trim()
+        if (trimmed.isEmpty()) {
+            toastError(R.string.toast_none_data_clipboard)
+            return
+        }
         launchLoading {
             withContext(ioDispatcher) {
                 try {
-                    val (count, countSub) = dataSource.importBatchConfig(
-                        configText, uiState.value.selectedGroupId, true
-                    )
+                    val lines = trimmed.lines().map { it.trim() }.filter { it.isNotEmpty() }
+                    val urlLines = lines.filter { dataSource.isValidUrl(it) }.distinct()
+                    val configLinesText = lines.filterNot { dataSource.isValidUrl(it) }.joinToString("\n")
+
+                    var importedConfigs = 0
+                    var importedSubs = 0
+                    var importedSubConfigs = 0
+                    var lastSubGuid: String? = null
+
+                    if (configLinesText.isNotBlank()) {
+                        val (cnt, subCnt) = dataSource.importBatchConfig(
+                            configLinesText, uiState.value.selectedGroupId, true
+                        )
+                        importedConfigs += cnt
+                        importedSubs += subCnt
+                    }
+
+                    urlLines.forEach { url ->
+                        val (subGuid, result) = dataSource.importOrUpdateSubscriptionUrl(url, allowInsecure = true)
+                        if (subGuid != null && result.configCount > 0) {
+                            lastSubGuid = subGuid
+                            importedSubs += 1
+                            importedSubConfigs += result.configCount
+                        }
+                    }
+
+                    if (importedSubs > 0) {
+                        dataSource.syncSubscriptions()
+                    }
+                    lastSubGuid?.let { guid ->
+                        dataSource.setSelectedSubscriptionId(guid)
+                        _uiState.update { it.copy(selectedGroupId = guid) }
+                    }
+
                     when {
-                        count > 0 -> {
-                            toast(dataSource.getString(R.string.title_import_config_count, count))
+                        importedConfigs > 0 && importedSubConfigs == 0 -> {
+                            toast(dataSource.getString(R.string.title_import_config_count, importedConfigs))
                             setupGroupTab(forceRefresh = true)
                         }
-
-                        countSub > 0 -> setupGroupTab(forceRefresh = true)
+                        importedSubConfigs > 0 -> {
+                            toast(
+                                getQuantityString(
+                                    R.plurals.title_update_config_count,
+                                    importedSubConfigs,
+                                    importedSubConfigs,
+                                )
+                            )
+                            setupGroupTab(forceRefresh = true)
+                        }
+                        importedSubs > 0 -> {
+                            setupGroupTab(forceRefresh = true)
+                        }
                         else -> toastError(R.string.toast_failure)
                     }
                 } catch (cancelled: CancellationException) {
@@ -537,6 +629,46 @@ class MainViewModel(
                     LogUtil.e(AppConfig.TAG, "Failed to import batch config", e)
                     toastError(R.string.toast_failure)
                 }
+            }
+        }
+    }
+
+    private fun importSubscriptionUrl(url: String) {
+        val clean = url.trim()
+        if (clean.isEmpty() || !dataSource.isValidUrl(clean)) {
+            toastError(R.string.toast_invalid_url)
+            return
+        }
+        importBatchConfig(clean)
+    }
+
+    private fun toggleSubscriptionEnabled(subId: String, enabled: Boolean) {
+        viewModelScope.launch(ioDispatcher) {
+            val item = dataSource.getSubscriptionItem(subId) ?: return@launch
+            val updated = item.copy(enabled = enabled)
+            dataSource.updateSubscriptionItem(subId, updated)
+            setupGroupTab(forceRefresh = true)
+        }
+    }
+
+    private fun toggleSubscriptionAutoUpdate(subId: String, autoUpdate: Boolean) {
+        viewModelScope.launch(ioDispatcher) {
+            val item = dataSource.getSubscriptionItem(subId) ?: return@launch
+            val updated = item.copy(
+                autoUpdate = autoUpdate,
+                updateInterval = if (item.updateInterval > 0) item.updateInterval else 720L
+            )
+            dataSource.updateSubscriptionItem(subId, updated)
+            _uiState.update { it.copy(subscriptions = dataSource.getAllRawSubscriptions()) }
+        }
+    }
+
+    private fun deleteSubscription(subId: String) {
+        launchLoading {
+            withContext(ioDispatcher) {
+                dataSource.deleteSubscription(subId)
+                cacheMutex.withLock { groupDataCache.clear() }
+                setupGroupTab(forceRefresh = true).join()
             }
         }
     }
@@ -567,7 +699,7 @@ class MainViewModel(
                         else ->
                             toast(dataSource.getString(R.string.title_update_subscription_result, result.configCount, result.successCount, result.failureCount, result.skipCount))
                     }
-                    if (result.configCount > 0) {
+                    if (result.configCount > 0 || result.successCount > 0) {
                         setupGroupTab(forceRefresh = true)
                         refreshSelectedGuid()
                     }
@@ -719,7 +851,7 @@ class MainViewModel(
     }
 
     fun subscriptionIdChanged(id: String) {
-        if (_uiState.value.groups.none { it.id == id }) return
+        if (id.isNotEmpty() && _uiState.value.groups.none { it.id == id } && _uiState.value.subscriptions.none { it.guid == id }) return
         mutableServerGroupState(id)
         if (uiState.value.selectedGroupId != id) {
             dataSource.setSelectedSubscriptionId(id)
@@ -786,12 +918,15 @@ class MainViewModel(
     }
 
     fun removeServerAndRefresh(guid: String) {
-        if (guid == uiState.value.selectedGuid) {
+        if (uiState.value.isRunning && guid == uiState.value.selectedGuid) {
             toast(R.string.toast_action_not_allowed)
             return
         }
         viewModelScope.launch(ioDispatcher) {
             dataSource.removeServer(guid)
+            if (guid == uiState.value.selectedGuid) {
+                dataSource.setSelectServer("")
+            }
             cacheMutex.withLock { groupDataCache.clear() }
             setupGroupTab(forceRefresh = true).join()
         }

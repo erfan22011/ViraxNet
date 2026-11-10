@@ -1,4 +1,4 @@
-﻿package com.v2ray.ang.ui.main
+package com.v2ray.ang.ui.main
 
 import android.content.Intent
 import android.net.VpnService
@@ -62,7 +62,11 @@ class MainActivity : HelperBaseComponentActivity() {
 
     private val requestVpnPermission =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            if (it.resultCode == RESULT_OK) startV2Ray()
+            if (it.resultCode == RESULT_OK) {
+                startV2Ray()
+            } else {
+                mainViewModel.notifyStartFailure()
+            }
         }
 
     private val profileEditorLauncher =
@@ -126,8 +130,11 @@ class MainActivity : HelperBaseComponentActivity() {
         )
     }
 
-    private fun shareToClipboard(guid: String): Boolean =
-        AngConfigManager.share2Clipboard(this, guid) == 0
+    private fun shareToClipboard(guid: String): Boolean {
+        val ok = AngConfigManager.share2Clipboard(this, guid) == 0
+        if (ok) toastSuccess(R.string.toast_success) else toastError(R.string.toast_failure)
+        return ok
+    }
 
     private fun shareFullContentAsync(guid: String) {
         lifecycleScope.launch(Dispatchers.IO) {
@@ -193,6 +200,7 @@ class MainActivity : HelperBaseComponentActivity() {
     private fun startV2Ray() {
         if (mainViewModel.uiState.value.selectedGuid.isNullOrEmpty()) {
             toast(R.string.title_file_chooser)
+            mainViewModel.notifyStartFailure()
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN

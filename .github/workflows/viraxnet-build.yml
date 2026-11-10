@@ -119,8 +119,9 @@ jobs:
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
           chmod 755 gradlew
           
-          # License report
+          # License report & unit tests
           ./gradlew licensePlaystoreReleaseReport || ./gradlew licenseFdroidReleaseReport || true
+          ./gradlew testPlaystoreDebugUnitTest
 
           # 1. Compile Debug APKs (Always built for instant testing unless release-only requested)
           if [ "${{ github.event.inputs.build_variant }}" != "release" ]; then
@@ -173,7 +174,9 @@ jobs:
           if [ -d "${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/debug" ]; then
             find ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/debug -name "*.apk" | while read -r apk; do
               fname=$(basename "$apk")
-              abi=$(echo "$fname" | sed -E 's/.*_([a-zA-Z0-9_-]+)\.apk/\1/')
+              rest="${fname#*_}"
+              abi="${rest#*_}"
+              abi="${abi%.apk}"
               target_name="ViraxNet-debug-${abi}.apk"
               cp "$apk" "${{ github.workspace }}/viraxnet-apks/debug/${target_name}"
               cp "$apk" "${{ github.workspace }}/viraxnet-apks/all/${target_name}"
@@ -190,7 +193,9 @@ jobs:
           if [ -d "${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/release" ]; then
             find ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/playstore/release -name "*.apk" | while read -r apk; do
               fname=$(basename "$apk")
-              abi=$(echo "$fname" | sed -E 's/.*_([a-zA-Z0-9_-]+)\.apk/\1/')
+              rest="${fname#*_}"
+              abi="${rest#*_}"
+              abi="${abi%.apk}"
               target_name="ViraxNet-release-${abi}.apk"
               cp "$apk" "${{ github.workspace }}/viraxnet-apks/release/${target_name}"
               cp "$apk" "${{ github.workspace }}/viraxnet-apks/all/${target_name}"
@@ -266,13 +271,13 @@ jobs:
       - name: Download Built APK Artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: ViraxNet-*
+          pattern: ViraxNet-Release-All-ABIs
           path: release-artifacts
 
       - name: Prepare Release Directory
         run: |
           mkdir -p release-files
-          find release-artifacts -type f -name "*.apk" -exec cp {} release-files/ \;
+          find release-artifacts -type f -name "ViraxNet-release-*.apk" -exec cp {} release-files/ \;
           ls -la release-files
 
       - name: Determine Release Tag

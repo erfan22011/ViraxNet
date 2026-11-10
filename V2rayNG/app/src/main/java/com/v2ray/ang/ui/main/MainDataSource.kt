@@ -26,6 +26,7 @@ interface MainDataSource : Closeable {
     fun getString(resId: Int, vararg formatArgs: Any): String
 
     fun getSubscriptions(): List<SubscriptionCache>
+    fun getAllRawSubscriptions(): List<SubscriptionCache>
     fun getSubscriptionItem(id: String): SubscriptionItem?
 
     fun getServerGuidList(groupId: String): List<String>
@@ -49,8 +50,27 @@ interface MainDataSource : Closeable {
         updateUI: Boolean
     ): Pair<Int, Int>
 
+    fun importOrUpdateSubscriptionUrl(
+        url: String,
+        allowInsecure: Boolean = true
+    ): Pair<String?, SubscriptionUpdateResult>
+
+    fun updateSubscriptionItem(subId: String, item: SubscriptionItem)
+    fun deleteSubscription(subId: String)
+
     fun updateConfigViaSubAll(): SubscriptionUpdateResult
     fun updateConfigViaSub(subscriptionCache: SubscriptionCache): SubscriptionUpdateResult
+
+    fun isValidUrl(value: String?): Boolean
+    fun getSettingsBool(key: String, default: Boolean): Boolean
+    fun setSettingsBool(key: String, value: Boolean)
+    fun getSettingsString(key: String, default: String): String
+    fun setSettingsString(key: String, value: String)
+    fun getLocalDnsEnabled(): Boolean
+    fun getFakeDnsEnabled(): Boolean
+    fun getDelayTestUrl(): String
+    fun getLanguageCode(): String
+    fun setLanguageCode(code: String)
 
     fun shareNonCustomConfigsToClipboard(guids: List<String>): Int
     fun share2QRCode(guid: String): android.graphics.Bitmap?

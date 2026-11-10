@@ -39,9 +39,9 @@ object SettingsManager {
 
     fun initApp(context: Context) {
         ensureDefaultSettings()
-        //ensureDefaultSubscription()
         initRoutingRulesets(context)
         migrateServerListToSubscriptions()
+        cleanupEmptyDefaultSubscription()
         migrateHysteria2PinSHA256()
     }
 
@@ -231,25 +231,21 @@ object SettingsManager {
     }
 
     /**
-     * Removes the subscription.
-     * If there are no remaining subscriptions,
-     * it creates a new default subscription to ensure that ungroup
+     * Removes the subscription without recreating a phantom empty "Default" subscription entry.
      **/
     fun removeSubscriptionWithDefault(subid: String) {
         SubscriptionUpdater.cancelOne(subId = subid)
-        // Remove the subscription
         removeSubscription(subid)
+    }
 
-        // After removal, check if there are any subscriptions left. If not, create a default subscription.
-        val subsList2 = decodeSubsList()
-        if (subsList2.isNotEmpty()) {
-            return
+    /**
+     * Removes an empty legacy default subscription entry so it does not pollute subscription UIs.
+     */
+    private fun cleanupEmptyDefaultSubscription() {
+        val defaultSub = decodeSubscription(DEFAULT_SUBSCRIPTION_ID) ?: return
+        if (defaultSub.url.isBlank() && MmkvManager.decodeServerList(DEFAULT_SUBSCRIPTION_ID).isEmpty()) {
+            removeSubscription(DEFAULT_SUBSCRIPTION_ID)
         }
-
-        val defaultSub = SubscriptionItem(
-            remarks = "Default",
-        )
-        encodeSubscription(DEFAULT_SUBSCRIPTION_ID, defaultSub)
     }
 
     /**

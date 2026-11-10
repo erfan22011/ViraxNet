@@ -220,6 +220,8 @@ object AngConfigManager {
 
             var count = 0
             servers.lines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
                 .distinct()
                 .forEach { str ->
                     if (Utils.isValidSubUrl(str)) {
@@ -544,6 +546,11 @@ object AngConfigManager {
                 it.subscription.lastUpdated = System.currentTimeMillis()
                 // Replaced on every successful update so the box disappears if the panel stops sending the headers.
                 it.subscription.usageInfo = usageInfo
+                val headerTitle = usageInfo?.title?.trim().orEmpty()
+                val hostName = runCatching { URI(Utils.fixIllegalUrl(it.subscription.url)).host.orEmpty() }.getOrDefault("")
+                if (headerTitle.isNotEmpty() && it.subscription.remarks in setOf("", "import sub", "Subscription", hostName)) {
+                    it.subscription.remarks = headerTitle
+                }
                 MmkvManager.encodeSubscription(it.guid, it.subscription)
                 LogUtil.i(AppConfig.TAG, "Subscription updated: ${it.subscription.remarks}, $count configs")
                 return SubscriptionUpdateResult(
@@ -615,25 +622,88 @@ object AngConfigManager {
     }
 
     /**
-     * Imports a URL as a subscription.
+     * Imports a URL as a subscription with 12-hour automatic update enabled.
      *
      * @param url The URL.
-     * @return The number of subscriptions imported.
+     * @return The number of new subscriptions created.
      */
     private fun importUrlAsSubscription(url: String): Int {
+        val cleanUrl = url.trim()
         val subscriptions = MmkvManager.decodeSubscriptions()
         subscriptions.forEach {
-            if (it.subscription.url == url) {
+            if (it.subscription.url == cleanUrl) {
                 return 0
             }
         }
-        val uri = URI(Utils.fixIllegalUrl(url))
-        val subItem = SubscriptionItem()
-        subItem.remarks = uri.fragment ?: "import sub"
-        subItem.url = url
+        val uri = runCatching { URI(Utils.fixIllegalUrl(cleanUrl)) }.getOrNull()
+        val decodedFragment = uri?.fragment?.takeIf { it.isNotBlank() }?.let { frag ->
+            runCatching { java.net.URLDecoder.decode(frag, "UTF-8") }.getOrDefault(frag)
+        }
+        val subItem = SubscriptionItem(
+            remarks = decodedFragment ?: uri?.host?.takeIf { it.isNotBlank() } ?: "Subscription",
+            url = cleanUrl,
+            enabled = true,
+            autoUpdate = true,
+            updateInterval = DEFAULT_AUTO_UPDATE_MINUTES,
+        )
         MmkvManager.encodeSubscription("", subItem)
         return 1
     }
+
+    /**
+     * Imports a new subscription URL or updates an existing matching one, enabling 12h auto-update,
+     * and fetches its servers immediately.
+     */
+    fun importOrUpdateSubscriptionUrl(
+        url: String,
+        allowInsecure: Boolean = true
+    ): Pair<String?, SubscriptionUpdateResult> {
+        val cleanUrl = url.trim()
+        if (!Utils.isValidUrl(cleanUrl)) {
+            return null to SubscriptionUpdateResult(failureCount = 1)
+        }
+        if (!allowInsecure && !Utils.isValidSubUrl(cleanUrl)) {
+            return null to SubscriptionUpdateResult(failureCount = 1)
+        }
+
+        val existing = MmkvManager.decodeSubscriptions().firstOrNull { it.subscription.url == cleanUrl }
+        val targetGuid: String
+        val targetItem: SubscriptionItem
+        if (existing != null) {
+            targetGuid = existing.guid
+            targetItem = existing.subscription.copy(
+                enabled = true,
+                autoUpdate = true,
+                updateInterval = if (existing.subscription.updateInterval > 0) existing.subscription.updateInterval else DEFAULT_AUTO_UPDATE_MINUTES,
+                allowInsecureUrl = existing.subscription.allowInsecureUrl || !Utils.isValidSubUrl(cleanUrl)
+            )
+            MmkvManager.encodeSubscription(targetGuid, targetItem)
+        } else {
+            val uri = runCatching { URI(Utils.fixIllegalUrl(cleanUrl)) }.getOrNull()
+            val decodedFragment = uri?.fragment?.takeIf { it.isNotBlank() }?.let { frag ->
+                runCatching { java.net.URLDecoder.decode(frag, "UTF-8") }.getOrDefault(frag)
+            }
+            targetGuid = Utils.getUuid()
+            targetItem = SubscriptionItem(
+                remarks = decodedFragment ?: uri?.host?.takeIf { it.isNotBlank() } ?: "Subscription",
+                url = cleanUrl,
+                enabled = true,
+                autoUpdate = true,
+                updateInterval = DEFAULT_AUTO_UPDATE_MINUTES,
+                allowInsecureUrl = allowInsecure && !Utils.isValidSubUrl(cleanUrl)
+            )
+            MmkvManager.encodeSubscription(targetGuid, targetItem)
+        }
+
+        val result = updateConfigViaSub(SubscriptionCache(targetGuid, targetItem))
+        if (result.configCount == 0 && existing == null && result.failureCount > 0) {
+            MmkvManager.removeSubscription(targetGuid)
+            return null to result
+        }
+        return targetGuid to result
+    }
+
+    private const val DEFAULT_AUTO_UPDATE_MINUTES = 720L
 
     /** Generates a description for the profile.
      *

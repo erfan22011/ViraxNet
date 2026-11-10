@@ -30,6 +30,19 @@ object ViraxConnectionManager {
     }
 
     /**
+     * Resolves the best target server to connect to: prefers the lowest-ping healthy server,
+     * falling back to the currently selected server or the first available server.
+     */
+    fun resolveConnectionTarget(
+        servers: List<ViraxServerItem>,
+        selectedGuid: String?
+    ): ViraxServerItem? {
+        return findFastestHealthyServer(servers)
+            ?: servers.firstOrNull { it.guid == selectedGuid }
+            ?: servers.firstOrNull()
+    }
+
+    /**
      * Auto-Connect execution logic:
      * 1. Evaluates all valid servers
      * 2. Filters out failed servers
@@ -111,6 +124,19 @@ object ViraxConnectionManager {
             )
         }
 
+        return createUiDataFromSubscription(subItem)
+    }
+
+    fun createUiDataFromSubscription(subItem: SubscriptionItem?): ViraxSubscriptionUiData {
+        if (subItem == null) {
+            return ViraxSubscriptionUiData(
+                hasUserInfo = false,
+                uploadBytes = 0,
+                downloadBytes = 0,
+                totalBytes = 0,
+                expireTimestamp = 0
+            )
+        }
         return createUiDataFromItem(subItem)
     }
 

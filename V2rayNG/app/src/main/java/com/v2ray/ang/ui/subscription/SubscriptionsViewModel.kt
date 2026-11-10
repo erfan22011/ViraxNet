@@ -87,14 +87,13 @@ class SubscriptionsViewModel(application: Application) : BaseViewModel(applicati
     }
 
     fun updateSubscriptions() {
-        val updateSubscription = MmkvManager.decodeSettingsBool(AppConfig.PREF_UPDATE_SUBSCRIPTION, false)
         val autoTestAfterUpdateSubscription = MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_TEST_AFTER_UPDATE_SUBSCRIPTION, false)
 
         when {
             // If auto test is enabled, trigger background service for long-running task
             autoTestAfterUpdateSubscription -> updateSubscriptionsMore()
-            // If only update is enabled, perform local update with UI loading state
-            updateSubscription -> updateSubscriptionsOnly()
+            // Perform local update with UI loading state
+            else -> updateSubscriptionsOnly()
         }
     }
 

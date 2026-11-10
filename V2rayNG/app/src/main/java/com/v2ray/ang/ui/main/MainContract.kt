@@ -18,6 +18,8 @@ sealed interface MainStatus {
  */
 data class MainUiState(
     val groups: List<GroupMapItem> = emptyList(),
+    val groupsLoaded: Boolean = false,
+    val subscriptions: List<com.v2ray.ang.dto.entities.SubscriptionCache> = emptyList(),
     val selectedGroupId: String = "",
     val selectedGuid: String? = null,
     val isRunning: Boolean = false,
@@ -26,8 +28,19 @@ data class MainUiState(
     val locateTarget: LocateTarget? = null,
     val confirmRemove: Boolean = false,
     val doubleColumnDisplay: Boolean = false,
-    val shareQRCodeBitmap: android.graphics.Bitmap? = null
-)
+    val shareQRCodeBitmap: android.graphics.Bitmap? = null,
+    val localDnsEnabled: Boolean = false,
+    val fakeDnsEnabled: Boolean = false,
+    val delayTestUrl: String = com.v2ray.ang.AppConfig.DELAY_TEST_URL,
+    val languageCode: String = "auto",
+    val startFailureCounter: Long = 0L,
+) {
+    val activeSubscriptions: List<com.v2ray.ang.dto.entities.SubscriptionCache>
+        get() = subscriptions.filter { it.subscription.url.isNotBlank() }
+
+    val hasActiveSubscription: Boolean
+        get() = activeSubscriptions.any { it.subscription.enabled }
+}
 
 /**
  * All possible user interaction intents
@@ -67,6 +80,14 @@ sealed interface MainAction {
     data class OpenSubscriptionLink(val url: String) : MainAction
 
     data class ImportBatchConfig(val configText: String) : MainAction
+    data class ImportSubscriptionUrl(val url: String) : MainAction
+    data class ToggleSubscriptionEnabled(val subId: String, val enabled: Boolean) : MainAction
+    data class ToggleSubscriptionAutoUpdate(val subId: String, val autoUpdate: Boolean) : MainAction
+    data class DeleteSubscription(val subId: String) : MainAction
+    data class SetLocalDnsEnabled(val enabled: Boolean) : MainAction
+    data class SetFakeDnsEnabled(val enabled: Boolean) : MainAction
+    data class SetDelayTestUrl(val url: String) : MainAction
+    data class SetLanguageCode(val code: String) : MainAction
 
     data object LocateHandled : MainAction
 }

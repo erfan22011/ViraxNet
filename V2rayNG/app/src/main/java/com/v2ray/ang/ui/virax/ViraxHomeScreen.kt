@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.v2ray.ang.R
@@ -51,6 +52,7 @@ import com.v2ray.ang.R
 fun ViraxHomeScreen(
     isConnected: Boolean,
     isConnecting: Boolean,
+    showPremiumBadge: Boolean,
     serverName: String?,
     serverPing: Long,
     ipAddress: String?,
@@ -58,6 +60,8 @@ fun ViraxHomeScreen(
     downloadSpeedText: String,
     uploadSpeedText: String,
     onPowerClick: () -> Unit,
+    onShieldClick: () -> Unit,
+    onIpCardClick: () -> Unit,
     onMenuClick: () -> Unit,
     onCrownClick: () -> Unit,
     onSmartSelectClick: () -> Unit,
@@ -108,23 +112,25 @@ fun ViraxHomeScreen(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(colors.gold, colors.goldLight)
+                if (showPremiumBadge) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(colors.gold, colors.goldLight)
+                                )
                             )
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.virax_premium),
+                            color = Color.Black,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold
                         )
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.virax_premium),
-                        color = Color.Black,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
+                    }
                 }
             }
 
@@ -142,7 +148,7 @@ fun ViraxHomeScreen(
 
         if (isConnected) {
             // Connected View State
-            ConnectedShieldView()
+            ConnectedShieldView(onShieldClick = onShieldClick)
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -170,7 +176,16 @@ fun ViraxHomeScreen(
             // Connected Server Info Card
             ConnectedServerCard(serverName = serverName, serverPing = serverPing)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // IP Address Card (tappable to run connection & IP check)
+            ViraxIpCard(
+                ip = ipAddress,
+                isConnected = true,
+                onClick = onIpCardClick
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Session Stats Card
             ViraxStatsCard(
@@ -179,7 +194,7 @@ fun ViraxHomeScreen(
                 uploadText = uploadSpeedText
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(22.dp))
 
             // Disconnect Button
             Button(
@@ -240,7 +255,11 @@ fun ViraxHomeScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // IP Address Card
-            ViraxIpCard(ip = ipAddress)
+            ViraxIpCard(
+                ip = ipAddress,
+                isConnected = false,
+                onClick = null
+            )
 
             Spacer(modifier = Modifier.height(14.dp))
 
@@ -308,7 +327,7 @@ private fun DisconnectedPowerButton(onPowerClick: () -> Unit) {
 }
 
 @Composable
-private fun ConnectedShieldView() {
+private fun ConnectedShieldView(onShieldClick: () -> Unit) {
     val colors = ViraxTheme.colors
     Box(
         modifier = Modifier
@@ -322,7 +341,9 @@ private fun ConnectedShieldView() {
                     )
                 )
             )
-            .border(2.dp, colors.greenNeon.copy(alpha = 0.5f), CircleShape),
+            .border(2.dp, colors.greenNeon.copy(alpha = 0.5f), CircleShape)
+            .clickable(onClick = onShieldClick)
+            .semantics { role = Role.Button },
         contentAlignment = Alignment.Center
     ) {
         Box(
@@ -335,7 +356,7 @@ private fun ConnectedShieldView() {
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_virax_shield_check),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.virax_disconnect),
                 tint = Color.White,
                 modifier = Modifier.size(62.dp)
             )
@@ -347,7 +368,7 @@ private fun ConnectedShieldView() {
 private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
     val colors = ViraxTheme.colors
     val flagRes = ViraxFlagUtils.getFlagDrawable(serverName)
-    val displayName = serverName ?: "Germany - Frankfurt"
+    val displayName = serverName ?: stringResource(R.string.virax_not_selected)
 
     Box(
         modifier = Modifier
@@ -362,7 +383,10 @@ private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
                 Icon(
                     painter = painterResource(id = flagRes),
                     contentDescription = null,
@@ -374,19 +398,32 @@ private fun ConnectedServerCard(serverName: String?, serverPing: Long) {
                     text = displayName,
                     color = colors.textPrimary,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
+            Spacer(modifier = Modifier.width(8.dp))
+
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = if (serverPing > 0) "${serverPing} ms" else "12 ms",
-                    color = colors.greenNeon,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                ViraxSignalBars(ping = if (serverPing > 0) serverPing else 12)
+                if (serverPing > 0) {
+                    Text(
+                        text = stringResource(R.string.virax_ms_unit, serverPing),
+                        color = colors.greenNeon,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    ViraxSignalBars(ping = serverPing)
+                } else {
+                    Text(
+                        text = "- ms",
+                        color = colors.textMuted,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
@@ -526,7 +563,11 @@ private fun ViraxStatsCard(
 }
 
 @Composable
-private fun ViraxIpCard(ip: String?) {
+private fun ViraxIpCard(
+    ip: String?,
+    isConnected: Boolean,
+    onClick: (() -> Unit)?
+) {
     val colors = ViraxTheme.colors
     Box(
         modifier = Modifier
@@ -534,6 +575,9 @@ private fun ViraxIpCard(ip: String?) {
             .clip(RoundedCornerShape(16.dp))
             .background(colors.cardBackground)
             .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
+            .then(
+                if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
@@ -555,10 +599,12 @@ private fun ViraxIpCard(ip: String?) {
                     fontSize = 11.sp
                 )
                 Text(
-                    text = ip ?: "-",
+                    text = ip ?: if (isConnected) stringResource(R.string.virax_tap_to_test_ip) else "-",
                     color = colors.textPrimary,
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -587,7 +633,10 @@ private fun ViraxSmartServerCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_virax_lightning),
                     contentDescription = null,
@@ -600,15 +649,20 @@ private fun ViraxSmartServerCard(
                         text = stringResource(R.string.virax_smart_server_selection),
                         color = colors.textPrimary,
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    val pingPart = stringResource(
+                        R.string.virax_ping_prefix,
+                        if (serverPing > 0) stringResource(R.string.virax_ms_unit, serverPing) else "- ms"
                     )
                     Text(
-                        text = stringResource(
-                            R.string.virax_ping_prefix,
-                            if (serverPing > 0) "${serverPing} ms" else "... ms"
-                        ),
+                        text = if (!serverName.isNullOrBlank()) "$serverName • $pingPart" else pingPart,
                         color = colors.textSecondary,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
