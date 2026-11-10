@@ -645,4 +645,7 @@
     <string name="virax_all_servers">همه سرورها</string>
     <string name="virax_ungrouped_servers">سرورهای دستی</string>
     <string name="virax_tap_to_test_ip">برای تست IP و پینگ لمس کنید</string>
+    <string name="virax_smart_ping_title">در حال انتخاب بهترین سرور...</string>
+    <string name="virax_smart_ping_subtitle">در حال گرفتن پینگ سرورها و اتصال به سریع‌ترین سرور...</string>
+    <string name="virax_no_healthy_server">هیچ سرور سالمی به تست پینگ پاسخ نداد. اینترنت یا اشتراک خود را بررسی کنید.</string>
 </resources>

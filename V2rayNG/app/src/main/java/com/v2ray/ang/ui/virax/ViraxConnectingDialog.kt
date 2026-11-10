@@ -42,6 +42,7 @@ import com.v2ray.ang.R
 
 @Composable
 fun ViraxConnectingDialog(
+    isSmartPinging: Boolean = false,
     onCancel: () -> Unit
 ) {
     val colors = ViraxTheme.colors
@@ -74,7 +75,9 @@ fun ViraxConnectingDialog(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = stringResource(R.string.virax_connecting),
+                    text = stringResource(
+                        if (isSmartPinging) R.string.virax_smart_ping_title else R.string.virax_connecting
+                    ),
                     color = colors.textPrimary,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
@@ -120,7 +123,9 @@ fun ViraxConnectingDialog(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = stringResource(R.string.virax_connecting_subtitle),
+                    text = stringResource(
+                        if (isSmartPinging) R.string.virax_smart_ping_subtitle else R.string.virax_connecting_subtitle
+                    ),
                     color = colors.textSecondary,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center

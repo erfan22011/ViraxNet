@@ -20,6 +20,8 @@ import com.v2ray.ang.extension.matchesPattern
 import com.v2ray.ang.extension.moveItem
 import com.v2ray.ang.handler.SubscriptionInfoParser
 import com.v2ray.ang.ui.base.BaseViewModel
+import com.v2ray.ang.ui.virax.ViraxConnectionManager
+import com.v2ray.ang.ui.virax.ViraxConnectionSession
 import com.v2ray.ang.util.LogUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -27,19 +29,25 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.PatternSyntaxException
 
@@ -114,6 +122,13 @@ class MainViewModel(
 
     private val testRequests = MainTestRequests()
     private var bulkTestJob: Job? = null
+    private var pendingSmartConnectRequestId: String? = null
+    private var smartConnectPreStopJob: Job? = null
+    private var sessionMetricsJob: Job? = null
+    private var fallbackConnectionSession: ViraxConnectionSession? = null
+
+    private val _uiEffects = Channel<MainUiEffect>(Channel.BUFFERED)
+    val uiEffects: Flow<MainUiEffect> = _uiEffects.receiveAsFlow()
 
     private val initialPageReady = CompletableDeferred<Unit>()
 
@@ -174,7 +189,15 @@ class MainViewModel(
                     scheduledFlush?.cancelAndJoin()
                     if (testRequests.bulk?.id != request.id) return@launch
                     flushPendingTestResults(request)
+                    val isSmartTarget = (pendingSmartConnectRequestId == request.id)
+                    if (isSmartTarget) {
+                        pendingSmartConnectRequestId = null
+                    }
+                    val testedServers = mutableServerGroupState(request.groupId).value.servers
                     onTestsFinished(request.id)
+                    if (isSmartTarget) {
+                        completeSmartConnect(testedServers)
+                    }
                 }
             }
 
@@ -183,6 +206,11 @@ class MainViewModel(
             }
 
             is MainServiceEvent.MeasureConfigCancelled -> {
+                if (pendingSmartConnectRequestId == event.requestId) {
+                    pendingSmartConnectRequestId = null
+                    _uiState.update { it.copy(isSmartConnecting = false) }
+                    notifyStartFailure()
+                }
                 if (testRequests.completeBulk(event.requestId) != null) {
                     cancelPendingTestResults()
                     resetTestStatus()
@@ -275,8 +303,11 @@ class MainViewModel(
     private fun mutableServerGroupState(groupId: String): MutableStateFlow<ServerGroupUiState> =
         groupUiFlows.computeIfAbsent(groupId) { MutableStateFlow(ServerGroupUiState()) }
 
+    private fun activeGroupId(): String =
+        uiState.value.selectedGroupId.ifEmpty { uiState.value.groups.firstOrNull()?.id.orEmpty() }
+
     private fun currentServers(): List<ServersCache> =
-        mutableServerGroupState(uiState.value.selectedGroupId).value.servers
+        mutableServerGroupState(activeGroupId()).value.servers
 
     // ---------- Action handler ----------
     fun onAction(action: MainAction) {
@@ -285,6 +316,7 @@ class MainViewModel(
             MainAction.RefreshGroups -> setupGroupTab(forceRefresh = true)
             MainAction.TestAllServers -> testAllRealPing(true)
             MainAction.TestRealAllServers -> testAllRealPing()
+            MainAction.SmartConnect -> smartConnect()
             MainAction.CancelTesting -> cancelAllPing()
             MainAction.RemoveAllServers -> removeAllServerAsync()
             MainAction.RemoveDuplicateServers -> removeDuplicateServerAsync()
@@ -295,6 +327,7 @@ class MainViewModel(
             MainAction.ExportAll -> exportAllAsync()
             is MainAction.SelectGroup -> subscriptionIdChanged(action.groupId)
             is MainAction.SelectServer -> updateSelectedGuid(action.guid)
+            is MainAction.SelectServerOnly -> updateSelectedGuid(action.guid)
             is MainAction.RemoveServer -> removeServerAndRefresh(action.guid)
             is MainAction.Search -> filterConfig(action.query)
             is MainAction.ImportBatchConfig -> importBatchConfig(action.configText)
@@ -329,6 +362,7 @@ class MainViewModel(
             }
 
             MainAction.ToggleService,
+            is MainAction.ConnectServer,
             MainAction.TestCurrentServer,
             MainAction.ImportQRcode,
             MainAction.ImportClipboard,
@@ -951,11 +985,15 @@ class MainViewModel(
 
     // ---------- Testing ----------
     fun cancelAllPing() {
+        smartConnectPreStopJob?.cancel()
+        smartConnectPreStopJob = null
+        pendingSmartConnectRequestId = null
         bulkTestJob?.cancel()
         bulkTestJob = null
         testRequests.cancelBulk()
         testRequests.invalidateCurrent()
         cancelPendingTestResults()
+        _uiState.update { it.copy(isSmartConnecting = false) }
         resetTestStatus()
         dataSource.cancelAllPing()
     }
@@ -972,10 +1010,14 @@ class MainViewModel(
 
     fun testAllRealPing(onlyTcp: Boolean = false) {
         cancelAllPing()
-        val groupId = uiState.value.selectedGroupId
-        val servers = currentServers()
+        startBulkRealPing(onlyTcp = onlyTcp, explicitGroupId = activeGroupId())
+    }
+
+    private fun startBulkRealPing(onlyTcp: Boolean, explicitGroupId: String): String? {
+        val groupId = explicitGroupId
+        val servers = mutableServerGroupState(groupId).value.servers
         if (servers.isEmpty()) {
-            return
+            return null
         }
         val serverGuids = servers.map { it.guid }
         mutableServerGroupState(groupId).update { current ->
@@ -1017,6 +1059,48 @@ class MainViewModel(
                 }
             }
             dataSource.sendMsg2TestService(message, request.id)
+        }
+        return request.id
+    }
+
+    private fun smartConnect() {
+        cancelAllPing()
+        val groupId = activeGroupId()
+        val servers = mutableServerGroupState(groupId).value.servers
+        if (servers.isEmpty()) {
+            _uiState.update { it.copy(isSmartConnecting = false) }
+            notifyStartFailure()
+            toastError(R.string.virax_no_servers_found)
+            return
+        }
+        _uiState.update { it.copy(isSmartConnecting = true) }
+        smartConnectPreStopJob = viewModelScope.launch {
+            if (uiState.value.isRunning) {
+                _uiEffects.send(MainUiEffect.StopForSmartConnect)
+                withTimeoutOrNull(2500L) {
+                    uiState.first { !it.isRunning }
+                }
+            }
+            val requestId = startBulkRealPing(onlyTcp = false, explicitGroupId = groupId)
+            if (requestId != null) {
+                pendingSmartConnectRequestId = requestId
+            } else {
+                _uiState.update { it.copy(isSmartConnecting = false) }
+                notifyStartFailure()
+            }
+        }
+    }
+
+    private fun completeSmartConnect(testedServers: List<ServersCache>) {
+        val bestGuid = ViraxConnectionManager.findFastestServerGuid(testedServers)
+        if (bestGuid != null) {
+            updateSelectedGuid(bestGuid)
+            _uiState.update { it.copy(isSmartConnecting = false) }
+            _uiEffects.trySend(MainUiEffect.ConnectOrRestart)
+        } else {
+            _uiState.update { it.copy(isSmartConnecting = false) }
+            notifyStartFailure()
+            toastError(R.string.virax_no_healthy_server)
         }
     }
 
@@ -1066,14 +1150,65 @@ class MainViewModel(
     // ---------- Running state ----------
     private fun updateRunningState(running: Boolean, clearTestingText: Boolean = true) {
         if (!running || clearTestingText) testRequests.invalidateCurrent()
+        if (running) {
+            startSessionMetricsTracking()
+        } else {
+            stopSessionMetricsTracking()
+        }
         _uiState.update { state ->
             state.copy(
                 isRunning = running,
                 isTesting = testRequests.isTesting,
+                sessionDurationText = if (running) state.sessionDurationText else "00:00:00",
+                sessionDownloadText = if (running) state.sessionDownloadText else "0 B",
+                sessionUploadText = if (running) state.sessionUploadText else "0 B",
                 status = if (!clearTestingText && state.isRunning == running) state.status
                 else if (running) MainStatus.Connected else MainStatus.Disconnected
             )
         }
+    }
+
+    private fun startSessionMetricsTracking() {
+        if (sessionMetricsJob?.isActive == true) return
+        fallbackConnectionSession = null
+        sessionMetricsJob = viewModelScope.launch {
+            while (isActive) {
+                val persistedSession = withContext(ioDispatcher) { dataSource.getConnectionSession() }
+                val currentElapsedMs = dataSource.getElapsedRealtimeMs()
+                val currentRx = dataSource.getAppRxBytes()
+                val currentTx = dataSource.getAppTxBytes()
+                val effectiveSession = if (persistedSession != null) {
+                    persistedSession
+                } else {
+                    fallbackConnectionSession ?: ViraxConnectionSession(
+                        connectedElapsedMs = currentElapsedMs,
+                        baseRxBytes = currentRx,
+                        baseTxBytes = currentTx,
+                    ).also { fallbackConnectionSession = it }
+                }
+                val snapshot = ViraxConnectionManager.computeSessionTrafficSnapshot(
+                    isRunning = true,
+                    session = effectiveSession,
+                    currentElapsedMs = currentElapsedMs,
+                    currentRxBytes = currentRx,
+                    currentTxBytes = currentTx,
+                )
+                _uiState.update {
+                    it.copy(
+                        sessionDurationText = snapshot.durationText,
+                        sessionDownloadText = snapshot.downloadText,
+                        sessionUploadText = snapshot.uploadText,
+                    )
+                }
+                delay(1000L)
+            }
+        }
+    }
+
+    private fun stopSessionMetricsTracking() {
+        sessionMetricsJob?.cancel()
+        sessionMetricsJob = null
+        fallbackConnectionSession = null
     }
 
     override fun onCleared() {
@@ -1082,7 +1217,9 @@ class MainViewModel(
         selectedGroupLoadJob?.cancel()
         reloadJob?.cancel()
         filterJob?.cancel()
+        stopSessionMetricsTracking()
         cancelAllPing()
+        _uiEffects.close()
         dataSource.close()
         super.onCleared()
     }

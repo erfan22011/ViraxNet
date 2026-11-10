@@ -34,6 +34,10 @@ data class MainUiState(
     val delayTestUrl: String = com.v2ray.ang.AppConfig.DELAY_TEST_URL,
     val languageCode: String = "auto",
     val startFailureCounter: Long = 0L,
+    val isSmartConnecting: Boolean = false,
+    val sessionDurationText: String = "00:00:00",
+    val sessionDownloadText: String = "0 B",
+    val sessionUploadText: String = "0 B",
 ) {
     val activeSubscriptions: List<com.v2ray.ang.dto.entities.SubscriptionCache>
         get() = subscriptions.filter { it.subscription.url.isNotBlank() }
@@ -70,6 +74,9 @@ sealed interface MainAction {
 
     data class SelectGroup(val groupId: String) : MainAction
     data class SelectServer(val guid: String) : MainAction
+    data class SelectServerOnly(val guid: String) : MainAction
+    data class ConnectServer(val guid: String) : MainAction
+    data object SmartConnect : MainAction
     data class RemoveServer(val guid: String) : MainAction
     data class EditServer(val guid: String, val profile: com.v2ray.ang.dto.entities.ProfileItem) : MainAction
     data class Search(val query: String) : MainAction
@@ -90,4 +97,10 @@ sealed interface MainAction {
     data class SetLanguageCode(val code: String) : MainAction
 
     data object LocateHandled : MainAction
+}
+
+/** One-shot side effects emitted from [MainViewModel] to [MainActivity]. */
+sealed interface MainUiEffect {
+    data object StopForSmartConnect : MainUiEffect
+    data object ConnectOrRestart : MainUiEffect
 }

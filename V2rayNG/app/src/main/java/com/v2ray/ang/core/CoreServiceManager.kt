@@ -7,8 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
+import android.net.TrafficStats
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.os.Process
+import android.os.SystemClock
 import android.system.OsConstants
 import androidx.core.content.ContextCompat
 import com.v2ray.ang.AppConfig
@@ -178,6 +181,12 @@ object CoreServiceManager {
         }
 
         if (!isReload) {
+            val uid = Process.myUid()
+            MmkvManager.encodeConnectionSession(
+                connectedElapsedMs = SystemClock.elapsedRealtime(),
+                baseRxBytes = TrafficStats.getUidRxBytes(uid),
+                baseTxBytes = TrafficStats.getUidTxBytes(uid),
+            )
             MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_SUCCESS, "")
         }
         NotificationManager.startSpeedNotification()
@@ -214,6 +223,7 @@ object CoreServiceManager {
             browserDialer = null
         }
 
+        MmkvManager.clearConnectionSession()
         MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_STOP_SUCCESS, "")
         NotificationManager.cancelNotification()
 

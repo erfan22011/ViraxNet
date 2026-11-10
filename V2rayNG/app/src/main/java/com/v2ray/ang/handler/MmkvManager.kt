@@ -50,6 +50,15 @@ object MmkvManager {
     private const val KEY_SUB_SERVER_PREFIX = "SUB_SERVERS_"
     private const val KEY_SUB_IDS = "SUB_IDS"
     private const val KEY_WEBDAV_CONFIG = "WEBDAV_CONFIG"
+    private const val KEY_SESSION_CONNECTED_ELAPSED_MS = "SESSION_CONNECTED_ELAPSED_MS"
+    private const val KEY_SESSION_BASE_RX_BYTES = "SESSION_BASE_RX_BYTES"
+    private const val KEY_SESSION_BASE_TX_BYTES = "SESSION_BASE_TX_BYTES"
+
+    data class ConnectionSessionSnapshot(
+        val connectedElapsedMs: Long,
+        val baseRxBytes: Long,
+        val baseTxBytes: Long,
+    )
 
     private val recoveryHandler = object : MMKVHandler {
         override fun onMMKVCRCCheckFail(mmapID: String) =
@@ -976,6 +985,47 @@ object MmkvManager {
      */
     fun decodeStartOnBoot(): Boolean {
         return decodeSettingsBool(PREF_IS_BOOTED, false)
+    }
+
+    /**
+     * Records the active tunnel session baseline across processes using multi-process MMKV.
+     */
+    fun encodeConnectionSession(
+        connectedElapsedMs: Long,
+        baseRxBytes: Long,
+        baseTxBytes: Long,
+    ) {
+        settingsStorage.encode(KEY_SESSION_CONNECTED_ELAPSED_MS, connectedElapsedMs)
+        settingsStorage.encode(KEY_SESSION_BASE_RX_BYTES, baseRxBytes)
+        settingsStorage.encode(KEY_SESSION_BASE_TX_BYTES, baseTxBytes)
+    }
+
+    /**
+     * Reads the active tunnel session baseline, or returns null when no session is stored.
+     */
+    fun decodeConnectionSession(): ConnectionSessionSnapshot? {
+        val elapsedMs = settingsStorage.decodeLong(KEY_SESSION_CONNECTED_ELAPSED_MS, 0L)
+        if (elapsedMs <= 0L) return null
+        val baseRx = settingsStorage.decodeLong(KEY_SESSION_BASE_RX_BYTES, -1L)
+        val baseTx = settingsStorage.decodeLong(KEY_SESSION_BASE_TX_BYTES, -1L)
+        return ConnectionSessionSnapshot(
+            connectedElapsedMs = elapsedMs,
+            baseRxBytes = baseRx,
+            baseTxBytes = baseTx,
+        )
+    }
+
+    /**
+     * Clears the active tunnel session baseline when the core stops.
+     */
+    fun clearConnectionSession() {
+        settingsStorage.removeValuesForKeys(
+            arrayOf(
+                KEY_SESSION_CONNECTED_ELAPSED_MS,
+                KEY_SESSION_BASE_RX_BYTES,
+                KEY_SESSION_BASE_TX_BYTES,
+            )
+        )
     }
 
     //endregion

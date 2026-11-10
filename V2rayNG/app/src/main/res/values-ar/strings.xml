@@ -653,4 +653,7 @@
     <string name="virax_all_servers">جميع الخوادم</string>
     <string name="virax_ungrouped_servers">خوادم يدوية</string>
     <string name="virax_tap_to_test_ip">اضغط لاختبار IP والبينغ</string>
+    <string name="virax_smart_ping_title">جاري البحث عن أفضل خادم...</string>
+    <string name="virax_smart_ping_subtitle">جاري فحص البينغ والاتصال بأسرع خادم...</string>
+    <string name="virax_no_healthy_server">لم يستجب أي خادم سليم لفحص البينغ. تحقق من الاتصال أو الاشتراك.</string>
 </resources>

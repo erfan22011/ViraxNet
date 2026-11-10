@@ -1,6 +1,7 @@
 package com.v2ray.ang.ui.virax
 
 import com.v2ray.ang.dto.entities.ProfileItem
+import com.v2ray.ang.dto.entities.ServersCache
 import com.v2ray.ang.dto.entities.SubscriptionCache
 import com.v2ray.ang.dto.entities.SubscriptionItem
 import com.v2ray.ang.dto.entities.SubscriptionUsageInfo
@@ -258,5 +259,111 @@ class ViraxConnectionManagerTest {
         )
         assertEquals("s2", ViraxConnectionManager.resolveConnectionTarget(mixedServers, "s1")?.guid)
         assertNull(ViraxConnectionManager.resolveConnectionTarget(emptyList(), null))
+    }
+
+    @Test
+    fun testResolveExplicitOrFirstServerGuid() {
+        assertNull(ViraxConnectionManager.resolveExplicitOrFirstServerGuid(emptyList(), "s1"))
+
+        val servers = listOf(
+            ViraxServerItem("s1", "First", 100L, false),
+            ViraxServerItem("s2", "Second", 200L, false)
+        )
+        assertEquals("s2", ViraxConnectionManager.resolveExplicitOrFirstServerGuid(servers, "s2"))
+        assertEquals("s1", ViraxConnectionManager.resolveExplicitOrFirstServerGuid(servers, null))
+        assertEquals("s1", ViraxConnectionManager.resolveExplicitOrFirstServerGuid(servers, ""))
+        assertEquals("s1", ViraxConnectionManager.resolveExplicitOrFirstServerGuid(servers, "other-group-guid"))
+    }
+
+    @Test
+    fun testFindFastestServerGuidFromCache() {
+        val caches = listOf(
+            ServersCache("g1", ProfileItem(configType = EConfigType.VLESS, remarks = "Failed"), testDelayMillis = -1L),
+            ServersCache("g2", ProfileItem(configType = EConfigType.VLESS, remarks = "Untested"), testDelayMillis = 0L),
+            ServersCache("g3", ProfileItem(configType = EConfigType.VLESS, remarks = "Slow"), testDelayMillis = 280L),
+            ServersCache("g4", ProfileItem(configType = EConfigType.VLESS, remarks = "Best"), testDelayMillis = 42L)
+        )
+        assertEquals("g4", ViraxConnectionManager.findFastestServerGuid(caches))
+
+        val noHealthy = listOf(
+            ServersCache("g1", ProfileItem(configType = EConfigType.VLESS, remarks = "Failed"), testDelayMillis = -1L),
+            ServersCache("g2", ProfileItem(configType = EConfigType.VLESS, remarks = "Zero"), testDelayMillis = 0L)
+        )
+        assertNull(ViraxConnectionManager.findFastestServerGuid(noHealthy))
+        assertNull(ViraxConnectionManager.findFastestServerGuid(emptyList()))
+    }
+
+    @Test
+    fun testDurationAndTrafficVolumeFormatting() {
+        assertEquals("00:00:00", ViraxConnectionManager.formatDurationSeconds(-5L))
+        assertEquals("00:00:00", ViraxConnectionManager.formatDurationSeconds(0L))
+        assertEquals("00:01:05", ViraxConnectionManager.formatDurationSeconds(65L))
+        assertEquals("01:01:01", ViraxConnectionManager.formatDurationSeconds(3661L))
+
+        assertEquals("0 B", ViraxConnectionManager.formatTrafficVolume(-10L))
+        assertEquals("0 B", ViraxConnectionManager.formatTrafficVolume(0L))
+        assertEquals("512 B", ViraxConnectionManager.formatTrafficVolume(512L))
+        assertEquals("1.0 KB", ViraxConnectionManager.formatTrafficVolume(1024L))
+        assertEquals("12.5 MB", ViraxConnectionManager.formatTrafficVolume((12.5 * 1024.0 * 1024.0).toLong()))
+        assertEquals("3.8 MB", ViraxConnectionManager.formatTrafficVolume((3.8 * 1024.0 * 1024.0).toLong()))
+    }
+
+    @Test
+    fun testComputeSessionTrafficSnapshot() {
+        val baseSession = ViraxConnectionSession(
+            connectedElapsedMs = 1_000_000L,
+            baseRxBytes = 5_000_000L,
+            baseTxBytes = 1_000_000L
+        )
+
+        // Disconnected returns zeros regardless of stored session
+        val disconnected = ViraxConnectionManager.computeSessionTrafficSnapshot(
+            isRunning = false,
+            session = baseSession,
+            currentElapsedMs = 1_754_000L,
+            currentRxBytes = 18_000_000L,
+            currentTxBytes = 5_000_000L
+        )
+        assertEquals("00:00:00", disconnected.durationText)
+        assertEquals("0 B", disconnected.downloadText)
+        assertEquals("0 B", disconnected.uploadText)
+        assertEquals(0L, disconnected.downloadedBytes)
+        assertEquals(0L, disconnected.uploadedBytes)
+
+        // Connected calculates exact elapsed time and cumulative consumed RX/TX deltas
+        val dlDelta = (12.5 * 1024.0 * 1024.0).toLong()
+        val ulDelta = (3.8 * 1024.0 * 1024.0).toLong()
+        val connected = ViraxConnectionManager.computeSessionTrafficSnapshot(
+            isRunning = true,
+            session = baseSession,
+            currentElapsedMs = baseSession.connectedElapsedMs + 754_000L,
+            currentRxBytes = baseSession.baseRxBytes + dlDelta,
+            currentTxBytes = baseSession.baseTxBytes + ulDelta
+        )
+        assertEquals(754L, connected.elapsedSeconds)
+        assertEquals("00:12:34", connected.durationText)
+        assertEquals(dlDelta, connected.downloadedBytes)
+        assertEquals(ulDelta, connected.uploadedBytes)
+        assertEquals("12.5 MB", connected.downloadText)
+        assertEquals("3.8 MB", connected.uploadText)
+
+        // Unsupported (-1) TrafficStats safely clamps traffic volumes to 0 without failing timer
+        val unsupportedTraffic = ViraxConnectionManager.computeSessionTrafficSnapshot(
+            isRunning = true,
+            session = ViraxConnectionSession(10_000L, -1L, -1L),
+            currentElapsedMs = 75_000L,
+            currentRxBytes = -1L,
+            currentTxBytes = -1L
+        )
+        assertEquals("00:01:05", unsupportedTraffic.durationText)
+        assertEquals("0 B", unsupportedTraffic.downloadText)
+        assertEquals("0 B", unsupportedTraffic.uploadText)
+
+        // Initial MainUiState session defaults
+        val initial = MainUiState()
+        assertFalse(initial.isSmartConnecting)
+        assertEquals("00:00:00", initial.sessionDurationText)
+        assertEquals("0 B", initial.sessionDownloadText)
+        assertEquals("0 B", initial.sessionUploadText)
     }
 }

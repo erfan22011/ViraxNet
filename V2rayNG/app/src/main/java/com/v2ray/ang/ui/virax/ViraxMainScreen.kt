@@ -1,8 +1,5 @@
 package com.v2ray.ang.ui.virax
 
-import android.net.TrafficStats
-import android.os.Process
-import android.os.SystemClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,10 +42,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.GroupMapItem
-import com.v2ray.ang.extension.toSpeedString
 import com.v2ray.ang.handler.SubscriptionInfoParser
 import com.v2ray.ang.ui.compose.ConfirmDialog
 import com.v2ray.ang.ui.compose.QRCodeDialog
@@ -59,7 +54,6 @@ import com.v2ray.ang.ui.main.MainDrawerContent
 import com.v2ray.ang.ui.main.MainStatus
 import com.v2ray.ang.ui.main.MainViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -142,56 +136,18 @@ fun ViraxMainScreen(
             isConnectingModalVisible = false
         }
     }
-    LaunchedEffect(isConnectingModalVisible) {
-        if (isConnectingModalVisible) {
+    LaunchedEffect(isConnectingModalVisible, uiState.isSmartConnecting) {
+        if (isConnectingModalVisible && !uiState.isSmartConnecting) {
             delay(20_000L)
             isConnectingModalVisible = false
         }
     }
 
-    // Live session timer and network speed tracking while VPN is connected
-    var sessionDurationText by remember { mutableStateOf("00:00:00") }
-    var downloadSpeedText by remember { mutableStateOf("0 B/s") }
-    var uploadSpeedText by remember { mutableStateOf("0 B/s") }
-
+    // Automatically test IP and latency once shortly after connection comes up
     LaunchedEffect(isRunning) {
-        if (!isRunning) {
-            sessionDurationText = "00:00:00"
-            downloadSpeedText = "0 B/s"
-            uploadSpeedText = "0 B/s"
-            return@LaunchedEffect
-        }
-        val uid = Process.myUid()
-        val startElapsed = SystemClock.elapsedRealtime()
-        var lastRx = TrafficStats.getUidRxBytes(uid)
-        var lastTx = TrafficStats.getUidTxBytes(uid)
-        var testedOnce = false
-
-        while (isActive) {
-            val elapsedSec = ((SystemClock.elapsedRealtime() - startElapsed) / 1000L).coerceAtLeast(0L)
-            val hrs = elapsedSec / 3600L
-            val mins = (elapsedSec % 3600L) / 60L
-            val secs = elapsedSec % 60L
-            sessionDurationText = String.format(Locale.US, "%02d:%02d:%02d", hrs, mins, secs)
-
-            val curRx = TrafficStats.getUidRxBytes(uid)
-            val curTx = TrafficStats.getUidTxBytes(uid)
-            if (curRx != TrafficStats.UNSUPPORTED.toLong() && lastRx != TrafficStats.UNSUPPORTED.toLong()) {
-                val dl = (curRx - lastRx).coerceAtLeast(0L)
-                downloadSpeedText = dl.toSpeedString()
-            }
-            if (curTx != TrafficStats.UNSUPPORTED.toLong() && lastTx != TrafficStats.UNSUPPORTED.toLong()) {
-                val ul = (curTx - lastTx).coerceAtLeast(0L)
-                uploadSpeedText = ul.toSpeedString()
-            }
-            lastRx = curRx
-            lastTx = curTx
-
-            if (!testedOnce && elapsedSec >= 1L) {
-                testedOnce = true
-                onAction(MainAction.TestCurrentServer)
-            }
+        if (isRunning) {
             delay(1000L)
+            onAction(MainAction.TestCurrentServer)
         }
     }
 
@@ -227,6 +183,10 @@ fun ViraxMainScreen(
         }
     }
 
+    val effectiveServersSelectedGuid = remember(viraxServers, selectedGuid) {
+        ViraxConnectionManager.resolveExplicitOrFirstServerGuid(viraxServers, selectedGuid)
+    }
+
     val handleConnectOrDisconnect: () -> Unit = {
         if (isRunning) {
             // Ensure disconnect never triggers Connecting modal
@@ -236,32 +196,36 @@ fun ViraxMainScreen(
             isConnectingModalVisible = false
             showManualSubInputDialog = true
         } else {
-            val fastest = ViraxConnectionManager.resolveConnectionTarget(viraxServers, selectedGuid)
-            if (fastest != null) {
-                if (fastest.guid != selectedGuid) {
-                    onAction(MainAction.SelectServer(fastest.guid))
-                }
+            val target = ViraxConnectionManager.resolveConnectionTarget(viraxServers, selectedGuid)
+            if (target != null) {
                 isConnectingModalVisible = true
-                onAction(MainAction.ToggleService)
+                onAction(MainAction.ConnectServer(target.guid))
             } else {
                 showManualSubInputDialog = true
             }
         }
     }
 
-    val handleConnectSelected: () -> Unit = {
-        selectedTab = ViraxTab.HOME
-        if (isRunning) {
+    val handleSmartConnect: () -> Unit = {
+        if (viraxServers.isEmpty()) {
             isConnectingModalVisible = false
-            onAction(MainAction.ToggleService)
-        } else if (viraxServers.isEmpty()) {
             showManualSubInputDialog = true
         } else {
-            if (selectedGuid == null) {
-                viraxServers.firstOrNull()?.let { onAction(MainAction.SelectServer(it.guid)) }
-            }
+            selectedTab = ViraxTab.HOME
             isConnectingModalVisible = true
-            onAction(MainAction.ToggleService)
+            onAction(MainAction.SmartConnect)
+        }
+    }
+
+    val handleConnectSelected: () -> Unit = {
+        val targetGuid = effectiveServersSelectedGuid
+        if (targetGuid.isNullOrBlank()) {
+            isConnectingModalVisible = false
+            showManualSubInputDialog = true
+        } else {
+            selectedTab = ViraxTab.HOME
+            isConnectingModalVisible = true
+            onAction(MainAction.ConnectServer(targetGuid))
         }
     }
 
@@ -363,9 +327,9 @@ fun ViraxMainScreen(
                                     serverName = currentServerName,
                                     serverPing = liveServerPing,
                                     ipAddress = liveIpAddress,
-                                    connectionDurationText = sessionDurationText,
-                                    downloadSpeedText = downloadSpeedText,
-                                    uploadSpeedText = uploadSpeedText,
+                                    connectionDurationText = uiState.sessionDurationText,
+                                    downloadVolumeText = uiState.sessionDownloadText,
+                                    uploadVolumeText = uiState.sessionUploadText,
                                     onPowerClick = handleConnectOrDisconnect,
                                     onShieldClick = {
                                         if (isRunning) {
@@ -381,7 +345,7 @@ fun ViraxMainScreen(
                                         scope.launch { drawerState.open() }
                                     },
                                     onCrownClick = { selectedTab = ViraxTab.STATS },
-                                    onSmartSelectClick = { selectedTab = ViraxTab.SERVERS }
+                                    onSmartSelectClick = handleSmartConnect
                                 )
                             }
 
@@ -390,19 +354,16 @@ fun ViraxMainScreen(
                                     servers = viraxServers,
                                     groups = selectorGroups,
                                     selectedGroupId = activeGroupId,
-                                    selectedGuid = selectedGuid ?: viraxServers.firstOrNull()?.guid,
+                                    selectedGuid = effectiveServersSelectedGuid,
                                     isTesting = isTesting,
                                     isLoading = isLoading,
                                     onSelectGroup = { groupId ->
                                         onAction(MainAction.SelectGroup(groupId))
                                     },
                                     onServerSelect = { guid ->
-                                        onAction(MainAction.SelectServer(guid))
+                                        onAction(MainAction.SelectServerOnly(guid))
                                     },
-                                    onAutoConnectClick = {
-                                        selectedTab = ViraxTab.HOME
-                                        handleConnectOrDisconnect()
-                                    },
+                                    onAutoConnectClick = handleSmartConnect,
                                     onConnectSelectedClick = handleConnectSelected,
                                     onPingAllClick = { onAction(MainAction.TestRealAllServers) },
                                     onCancelPingClick = { onAction(MainAction.CancelTesting) },
@@ -487,11 +448,14 @@ fun ViraxMainScreen(
                             }
                         }
 
-                        if (isConnectingModalVisible && !isRunning) {
+                        if (uiState.isSmartConnecting || (isConnectingModalVisible && !isRunning)) {
                             ViraxConnectingDialog(
+                                isSmartPinging = uiState.isSmartConnecting,
                                 onCancel = {
                                     isConnectingModalVisible = false
-                                    if (isTesting) onAction(MainAction.CancelTesting)
+                                    if (uiState.isSmartConnecting || isTesting) {
+                                        onAction(MainAction.CancelTesting)
+                                    }
                                 }
                             )
                         }

@@ -4,6 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.TrafficStats
+import android.os.Process
+import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import com.v2ray.ang.AngApplication
 import com.v2ray.ang.AppConfig
@@ -23,6 +26,7 @@ import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.helper.MessageHelper
+import com.v2ray.ang.ui.virax.ViraxConnectionSession
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.channels.Channel
@@ -289,4 +293,20 @@ class MainRepository(
     override fun initAssets() {
         SettingsManager.initAssets(app, app.assets)
     }
+
+    override fun getConnectionSession(): ViraxConnectionSession? {
+        return MmkvManager.decodeConnectionSession()?.let { snapshot ->
+            ViraxConnectionSession(
+                connectedElapsedMs = snapshot.connectedElapsedMs,
+                baseRxBytes = snapshot.baseRxBytes,
+                baseTxBytes = snapshot.baseTxBytes,
+            )
+        }
+    }
+
+    override fun getElapsedRealtimeMs(): Long = SystemClock.elapsedRealtime()
+
+    override fun getAppRxBytes(): Long = TrafficStats.getUidRxBytes(Process.myUid())
+
+    override fun getAppTxBytes(): Long = TrafficStats.getUidTxBytes(Process.myUid())
 }

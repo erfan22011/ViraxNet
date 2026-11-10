@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -44,6 +46,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.v2ray.ang.R
@@ -57,8 +60,8 @@ fun ViraxHomeScreen(
     serverPing: Long,
     ipAddress: String?,
     connectionDurationText: String,
-    downloadSpeedText: String,
-    uploadSpeedText: String,
+    downloadVolumeText: String,
+    uploadVolumeText: String,
     onPowerClick: () -> Unit,
     onShieldClick: () -> Unit,
     onIpCardClick: () -> Unit,
@@ -190,8 +193,8 @@ fun ViraxHomeScreen(
             // Session Stats Card
             ViraxStatsCard(
                 timeText = connectionDurationText,
-                downloadText = downloadSpeedText,
-                uploadText = uploadSpeedText
+                downloadText = downloadVolumeText,
+                uploadText = uploadVolumeText
             )
 
             Spacer(modifier = Modifier.height(22.dp))
@@ -245,11 +248,11 @@ fun ViraxHomeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Stats Card (00:00:00, 0 B/s, 0 B/s)
+            // Stats Card (00:00:00, 0 B, 0 B)
             ViraxStatsCard(
                 timeText = "00:00:00",
-                downloadText = "0 B/s",
-                uploadText = "0 B/s"
+                downloadText = "0 B",
+                uploadText = "0 B"
             )
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -485,12 +488,14 @@ private fun ViraxStatsCard(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = timeText,
-                    color = colors.textPrimary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Text(
+                        text = timeText,
+                        color = colors.textPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.virax_connection_time),
@@ -515,12 +520,14 @@ private fun ViraxStatsCard(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = downloadText,
-                    color = colors.textPrimary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Text(
+                        text = downloadText,
+                        color = colors.textPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.virax_download),
@@ -545,12 +552,14 @@ private fun ViraxStatsCard(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = uploadText,
-                    color = colors.textPrimary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Text(
+                        text = uploadText,
+                        color = colors.textPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.virax_upload),

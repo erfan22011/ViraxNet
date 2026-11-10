@@ -643,4 +643,7 @@
     <string name="virax_all_servers">All Servers</string>
     <string name="virax_ungrouped_servers">Manual Servers</string>
     <string name="virax_tap_to_test_ip">Tap to test IP &amp; ping</string>
+    <string name="virax_smart_ping_title">Finding Best Server...</string>
+    <string name="virax_smart_ping_subtitle">Testing server pings and connecting to the fastest one...</string>
+    <string name="virax_no_healthy_server">No healthy server responded to ping. Check your internet or subscription.</string>
 </resources>

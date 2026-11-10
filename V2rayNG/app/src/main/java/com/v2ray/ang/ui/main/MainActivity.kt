@@ -9,7 +9,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.v2ray.ang.AngApplication
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
@@ -100,6 +102,20 @@ class MainActivity : HelperBaseComponentActivity() {
         super.onCreate(savedInstanceState)
         mainViewModel.onAction(MainAction.Initialize)
 
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.uiEffects.collect { effect ->
+                    when (effect) {
+                        MainUiEffect.StopForSmartConnect -> LauncherManager.stopService(this@MainActivity)
+                        MainUiEffect.ConnectOrRestart -> LauncherManager.restartServiceOrStart(
+                            this@MainActivity,
+                            ::requestServiceStart,
+                        )
+                    }
+                }
+            }
+        }
+
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {}
     }
 
@@ -111,6 +127,7 @@ class MainActivity : HelperBaseComponentActivity() {
             onAction = { action ->
                 when (action) {
                     MainAction.ToggleService -> handleFabAction()
+                    is MainAction.ConnectServer -> connectToServer(action.guid)
                     MainAction.TestCurrentServer -> handleLayoutTestClick()
                     MainAction.ImportQRcode -> importQRcode()
                     MainAction.ImportClipboard -> importClipboard()
@@ -291,6 +308,17 @@ class MainActivity : HelperBaseComponentActivity() {
             mainViewModel.updateSelectedGuid(guid)
             LauncherManager.restartService(this)
         }
+    }
+
+    private fun connectToServer(guid: String) {
+        if (guid.isBlank()) {
+            mainViewModel.notifyStartFailure()
+            return
+        }
+        if (mainViewModel.uiState.value.selectedGuid != guid) {
+            mainViewModel.updateSelectedGuid(guid)
+        }
+        LauncherManager.restartServiceOrStart(this, ::requestServiceStart)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {

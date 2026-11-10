@@ -6,6 +6,7 @@ import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.dto.entities.ServerAffiliationInfo
 import com.v2ray.ang.dto.entities.SubscriptionCache
 import com.v2ray.ang.dto.entities.SubscriptionItem
+import com.v2ray.ang.ui.virax.ViraxConnectionSession
 import kotlinx.coroutines.flow.Flow
 import java.io.Closeable
 
@@ -83,4 +84,9 @@ interface MainDataSource : Closeable {
 
     fun syncSubscriptions()
     fun initAssets()
+
+    fun getConnectionSession(): ViraxConnectionSession?
+    fun getElapsedRealtimeMs(): Long
+    fun getAppRxBytes(): Long
+    fun getAppTxBytes(): Long
 }
