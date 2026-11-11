@@ -11,10 +11,13 @@ import androidx.core.content.ContextCompat
 import com.v2ray.ang.AngApplication
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.core.CoreSniSpoofManager
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.RealPingResult
+import com.v2ray.ang.dto.SniSpoofConfig
 import com.v2ray.ang.dto.SubscriptionUpdateResult
 import com.v2ray.ang.dto.TestServiceMessage
+import com.v2ray.ang.dto.ViraxSniServerOption
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.dto.entities.ServerAffiliationInfo
 import com.v2ray.ang.dto.entities.SubscriptionCache
@@ -259,14 +262,14 @@ class MainRepository(
     }
 
     override fun getSniSpoofingConfig(): SniSpoofConfig =
-        com.v2ray.ang.core.CoreSniSpoofManager.decodeConfig()
+        CoreSniSpoofManager.decodeConfig()
 
     override fun setSniSpoofingConfig(config: SniSpoofConfig) {
-        com.v2ray.ang.core.CoreSniSpoofManager.encodeConfig(config)
+        CoreSniSpoofManager.encodeConfig(config)
     }
 
     override fun loadSniServerOptions(): List<ViraxSniServerOption> =
-        com.v2ray.ang.core.CoreSniSpoofManager.loadSniServerOptions()
+        CoreSniSpoofManager.loadSniServerOptions()
 
     override fun hasAnyServer(): Boolean =
         MmkvManager.decodeAllServerList().isNotEmpty()
