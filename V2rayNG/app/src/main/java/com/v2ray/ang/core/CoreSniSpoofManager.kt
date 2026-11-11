@@ -124,8 +124,7 @@ object CoreSniSpoofManager {
         // Preserve domain-based CDN Host headers when rewriting server address to Connect IP
         val effectiveHost = if (profile.host.isNullOrBlank() &&
             profile.network in HOST_PRESERVING_TRANSPORTS &&
-            originalServer.isNotEmpty() &&
-            Utils.isDomainName(originalServer)
+            isDomainHost(originalServer)
         ) {
             originalServer
         } else {
@@ -137,5 +136,16 @@ object CoreSniSpoofManager {
             sni = cleanFakeSni,
             host = effectiveHost,
         )
+    }
+
+    private val DOMAIN_LABEL_REGEX = Regex("^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
+
+    internal fun isDomainHost(host: String): Boolean {
+        val candidate = host.trim().trimEnd('.')
+        if (candidate.isEmpty() || candidate.length > 253 || Utils.isPureIpAddress(candidate)) {
+            return false
+        }
+        val labels = candidate.split('.')
+        return labels.size >= 2 && labels.all { DOMAIN_LABEL_REGEX.matches(it) }
     }
 }

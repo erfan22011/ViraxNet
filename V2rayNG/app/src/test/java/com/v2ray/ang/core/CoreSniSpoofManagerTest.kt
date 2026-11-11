@@ -94,6 +94,17 @@ class CoreSniSpoofManagerTest {
         assertEquals("custom-sni.org", applied.sni)
         assertEquals("worker.example.com", applied.host)
 
+        val wsIpServer = ProfileItem(
+            configType = EConfigType.VLESS,
+            server = "9.8.7.6",
+            network = NetworkType.WS.type,
+            security = AppConfig.TLS
+        )
+        val ipApplied = CoreSniSpoofManager.applySpoofIfEligible("g_ip", wsIpServer, cfg)
+        assertEquals("1.2.3.4", ipApplied.server)
+        assertEquals("custom-sni.org", ipApplied.sni)
+        assertEquals(null, ipApplied.host)
+
         val wg = ProfileItem(configType = EConfigType.WIREGUARD, server = "10.0.0.1")
         assertEquals("10.0.0.1", CoreSniSpoofManager.applySpoofIfEligible("g_wg", wg, cfg).server)
 
