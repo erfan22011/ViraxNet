@@ -4,6 +4,7 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.LOOPBACK
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.dto.UrlContentRequest
+import com.v2ray.ang.handler.ViraxAccessManager
 import okhttp3.Credentials
 import okhttp3.Headers
 import okhttp3.OkHttpClient
