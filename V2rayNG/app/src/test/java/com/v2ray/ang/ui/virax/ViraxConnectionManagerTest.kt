@@ -6,6 +6,9 @@ import com.v2ray.ang.dto.entities.SubscriptionCache
 import com.v2ray.ang.dto.entities.SubscriptionItem
 import com.v2ray.ang.dto.entities.SubscriptionUsageInfo
 import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.handler.SpeedtestManager
+import com.v2ray.ang.handler.ViraxAccessManager
+import com.v2ray.ang.handler.ViraxPlanBadge
 import com.v2ray.ang.ui.main.MainUiState
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -365,5 +368,67 @@ class ViraxConnectionManagerTest {
         assertEquals("00:00:00", initial.sessionDurationText)
         assertEquals("0 B", initial.sessionDownloadText)
         assertEquals("0 B", initial.sessionUploadText)
+        assertEquals(ViraxPlanBadge.NONE, initial.planBadge)
+    }
+
+    @Test
+    fun testMainUiStatePlanBadgeVariants() {
+        val manualOnly = MainUiState(hasAnyServer = true)
+        assertEquals(ViraxPlanBadge.CUSTOM, manualOnly.planBadge)
+
+        val customSub = MainUiState(
+            hasAnyServer = true,
+            subscriptions = listOf(
+                SubscriptionCache("sub1", SubscriptionItem(remarks = "Custom", url = "https://example.com/sub", enabled = true))
+            )
+        )
+        assertEquals(ViraxPlanBadge.CUSTOM, customSub.planBadge)
+
+        val dedicatedSub = MainUiState(
+            hasAnyServer = true,
+            subscriptions = listOf(
+                SubscriptionCache(
+                    "sub2",
+                    SubscriptionItem(
+                        remarks = "Dedicated",
+                        url = ViraxAccessManager.buildProtectedSubscriptionUrl("hdeiejjeodkd")!!,
+                        enabled = true
+                    )
+                )
+            )
+        )
+        assertEquals(ViraxPlanBadge.PREMIUM, dedicatedSub.planBadge)
+    }
+
+    @Test
+    fun testFindFastestServerGuidExcludingForAutoConnectFallback() {
+        val caches = listOf(
+            ServersCache("g1", ProfileItem(configType = EConfigType.VMESS), testDelayMillis = 25L),
+            ServersCache("g2", ProfileItem(configType = EConfigType.VMESS), testDelayMillis = 60L),
+            ServersCache("g3", ProfileItem(configType = EConfigType.VMESS), testDelayMillis = -1L),
+            ServersCache("g4", ProfileItem(configType = EConfigType.VMESS), testDelayMillis = 90L),
+        )
+        assertEquals("g1", ViraxConnectionManager.findFastestServerGuidExcluding(caches, emptySet()))
+        assertEquals("g2", ViraxConnectionManager.findFastestServerGuidExcluding(caches, setOf("g1")))
+        assertEquals("g4", ViraxConnectionManager.findFastestServerGuidExcluding(caches, setOf("g1", "g2")))
+        assertNull(ViraxConnectionManager.findFastestServerGuidExcluding(caches, setOf("g1", "g2", "g4")))
+    }
+
+    @Test
+    fun testSpeedtestManagerRemoteEndpointParsingFallbacks() {
+        val ipSb = SpeedtestManager.parseRemoteEndpointInfo("""{"ip":"1.2.3.4","country_code":"DE"}""")
+        assertEquals("1.2.3.4", ipSb?.ipAddress)
+        assertEquals("DE", ipSb?.country)
+
+        val ipWhoIs = SpeedtestManager.parseRemoteEndpointInfo("""{"ip":"5.6.7.8","country_code":"NL","success":true}""")
+        assertEquals("5.6.7.8", ipWhoIs?.ipAddress)
+        assertEquals("NL", ipWhoIs?.country)
+
+        val ipInfoIo = SpeedtestManager.parseRemoteEndpointInfo("""{"ip":"9.9.9.9","country":"FR"}""")
+        assertEquals("9.9.9.9", ipInfoIo?.ipAddress)
+        assertEquals("FR", ipInfoIo?.country)
+
+        assertNull(SpeedtestManager.parseRemoteEndpointInfo(""))
+        assertNull(SpeedtestManager.parseRemoteEndpointInfo("{}"))
     }
 }

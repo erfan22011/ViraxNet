@@ -14,7 +14,7 @@
     <string name="pull_down_to_refresh">রিফ্রেশ করতে নিচে টানুন!</string>
 
     <!-- Notifications -->
-    <string name="notification_channel_service">v2rayNG সার্ভিস</string>
+    <string name="notification_channel_service">ViraxNet সার্ভিস</string>
     <string name="notification_channel_subscription_updates">সাবস্ক্রিপশন আপডেট</string>
     <string name="notification_channel_connection_checks">সংযোগ পরীক্ষা</string>
     <string name="notification_action_stop_v2ray">বন্ধ করুন</string>
@@ -603,7 +603,7 @@
     <string name="virax_fake_dns">Fake DNS</string>
     <string name="virax_fake_dns_subtitle">Enable Fake DNS</string>
     <string name="virax_ping_test_url">Ping Test URL</string>
-    <string name="virax_ping_type_note">Ping type: Similar to V2rayNG (Ping = Google)</string>
+    <string name="virax_ping_type_note">Ping type: URL Test (204)</string>
     <string name="virax_connecting">Connecting...</string>
     <string name="virax_connecting_subtitle">Connecting to server, please wait...</string>
     <string name="virax_cancel">Cancel</string>
@@ -648,4 +648,20 @@
     <string name="virax_smart_ping_title">Finding Best Server...</string>
     <string name="virax_smart_ping_subtitle">Testing server pings and connecting to the fastest one...</string>
     <string name="virax_no_healthy_server">No healthy server responded to ping. Check your internet or subscription.</string>
+    <string name="virax_plan_custom">Custom</string>
+    <string name="virax_protected_sub_label">Protected Dedicated Subscription</string>
+    <string name="virax_protected_server_label">Dedicated Protected Server</string>
+    <string name="virax_protected_edit_locked">Protected dedicated configs cannot be edited or exported</string>
+    <string name="virax_dedicated_code_title">Dedicated Access Code</string>
+    <string name="virax_dedicated_code_desc">Enter your dedicated access code to fetch servers and connect</string>
+    <string name="virax_dedicated_code_hint">Enter dedicated code</string>
+    <string name="virax_dedicated_code_import_btn">Activate Access Code</string>
+    <string name="virax_invalid_dedicated_code">Please enter a valid dedicated access code</string>
+    <string name="virax_bypass_iran_title">Bypass Iranian Sites</string>
+    <string name="virax_bypass_iran_desc">Route Iranian websites and .ir domains directly through your real IP</string>
+    <string name="virax_tools_section_title">Tools &amp; Advanced Management</string>
+    <string name="virax_ip_fetching">Fetching server IP...</string>
+    <string name="virax_ping_action">Test Ping</string>
+    <string name="virax_sub_add_mode_link">Subscription / Link</string>
+    <string name="virax_sub_add_mode_code">Dedicated Code</string>
 </resources>

@@ -167,33 +167,8 @@ class PerAppProxyViewModel(application: Application) : BaseViewModel(application
     fun selectProxyAppAuto(context: Context) {
         val applicationContext = context.applicationContext
         launchLoading {
-            val url = AppConfig.ANDROID_PACKAGE_NAME_LIST_URL
-            var content = withContext(Dispatchers.IO) {
-                HttpUtil.getUrlContent(
-                    UrlContentRequest(
-                        url = url,
-                        timeout = 5000
-                    )
-                )
-            }
-            if (content.isNullOrEmpty()) {
-                val proxyUsername = SettingsManager.getSocksUsername()
-                val proxyPassword = SettingsManager.getSocksPassword()
-                val httpPort = SettingsManager.getHttpPort()
-                content = withContext(Dispatchers.IO) {
-                    HttpUtil.getUrlContent(
-                        UrlContentRequest(
-                            url = url,
-                            timeout = 5000,
-                            httpPort = httpPort,
-                            proxyUsername = proxyUsername,
-                            proxyPassword = proxyPassword
-                        )
-                    )
-                } ?: ""
-            }
             val success = applyProxyAppList(
-                content = content,
+                content = "",
                 context = applicationContext,
                 forceGoogleApps = true
             )

@@ -53,23 +53,15 @@ object SpeedtestManager {
         return -1
     }
 
-    fun getRemoteIPInfo(): RemoteEndpointInfo? {
-        val url = MmkvManager.decodeSettingsString(AppConfig.PREF_IP_API_URL)
-            .takeIf { !it.isNullOrBlank() } ?: AppConfig.IP_API_URL
+    private val FALLBACK_IP_API_URLS = listOf(
+        "https://ipwho.is/",
+        "https://api.ip.sb/geoip",
+        "https://ipinfo.io/json",
+        "https://api.myip.com",
+    )
 
-        val proxyUsername = SettingsManager.getSocksUsername()
-        val proxyPassword = SettingsManager.getSocksPassword()
-        val httpPort = SettingsManager.getHttpPort()
-        if (httpPort == 0) return null
-        val content = HttpUtil.getUrlContent(
-            UrlContentRequest(
-                url = url,
-                timeout = 5000,
-                httpPort = httpPort,
-                proxyUsername = proxyUsername,
-                proxyPassword = proxyPassword
-            )
-        ) ?: return null
+    internal fun parseRemoteEndpointInfo(content: String?): RemoteEndpointInfo? {
+        if (content.isNullOrBlank()) return null
         val ipInfo = JsonUtil.fromJsonSafe(content, IPAPIInfo::class.java) ?: return null
 
         val ip = listOf(
@@ -81,14 +73,48 @@ object SpeedtestManager {
 
         val country = listOf(
             ipInfo.country_code,
-            ipInfo.country,
             ipInfo.countryCode,
+            ipInfo.country,
             ipInfo.location?.country_code
         ).firstOrNull { !it.isNullOrBlank() }
 
+        if (ip.isNullOrBlank() && country.isNullOrBlank()) return null
         return RemoteEndpointInfo(
             country = country,
             ipAddress = ip,
         )
+    }
+
+    fun getRemoteIPInfo(): RemoteEndpointInfo? {
+        val proxyUsername = SettingsManager.getSocksUsername()
+        val proxyPassword = SettingsManager.getSocksPassword()
+        val httpPort = SettingsManager.getHttpPort()
+        if (httpPort == 0) return null
+
+        val configuredUrl = MmkvManager.decodeSettingsString(AppConfig.PREF_IP_API_URL)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+        val candidateUrls = buildList {
+            if (configuredUrl != null) add(configuredUrl)
+            add(AppConfig.IP_API_URL)
+            addAll(FALLBACK_IP_API_URLS)
+        }.distinct()
+
+        for (candidateUrl in candidateUrls) {
+            val content = HttpUtil.getUrlContent(
+                UrlContentRequest(
+                    url = candidateUrl,
+                    timeout = 4500,
+                    httpPort = httpPort,
+                    proxyUsername = proxyUsername,
+                    proxyPassword = proxyPassword
+                )
+            )
+            val parsed = parseRemoteEndpointInfo(content)
+            if (parsed != null && !parsed.ipAddress.isNullOrBlank()) {
+                return parsed
+            }
+        }
+        return null
     }
 }

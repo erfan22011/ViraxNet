@@ -14,6 +14,7 @@ internal data class ServerRowUiModel(
     val typeDescription: String,
     val testDelayMillis: Long,
     val subscriptionBadge: String,
+    val isProtected: Boolean = false,
 )
 
 internal data class ServerGroupUiState(
@@ -24,17 +25,24 @@ internal data class ServerGroupUiState(
 internal fun buildServerRowUiModel(
     server: ServersCache,
     subscriptionRemarks: String,
+    isSubscriptionProtected: Boolean = false,
 ): ServerRowUiModel {
     val profile = server.profile
+    val protectedServer = profile.isProtected || isSubscriptionProtected
     return ServerRowUiModel(
         guid = server.guid,
         profile = profile,
         remarks = profile.remarks,
-        statistics = profile.description.nullIfBlank()
-            ?: AngConfigManager.generateDescription(profile),
-        typeDescription = serverProtocolDescription(profile),
+        statistics = if (protectedServer) {
+            ""
+        } else {
+            profile.description.nullIfBlank()
+                ?: AngConfigManager.generateDescription(profile)
+        },
+        typeDescription = if (protectedServer) profile.configType.name else serverProtocolDescription(profile),
         testDelayMillis = server.testDelayMillis,
         subscriptionBadge = subscriptionRemarks.firstOrNull()?.toString().orEmpty(),
+        isProtected = protectedServer,
     )
 }
 

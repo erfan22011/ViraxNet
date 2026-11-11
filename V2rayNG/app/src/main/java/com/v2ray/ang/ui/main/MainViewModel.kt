@@ -19,6 +19,7 @@ import com.v2ray.ang.extension.isComplexType
 import com.v2ray.ang.extension.matchesPattern
 import com.v2ray.ang.extension.moveItem
 import com.v2ray.ang.handler.SubscriptionInfoParser
+import com.v2ray.ang.handler.ViraxAccessManager
 import com.v2ray.ang.ui.base.BaseViewModel
 import com.v2ray.ang.ui.virax.ViraxConnectionManager
 import com.v2ray.ang.ui.virax.ViraxConnectionSession
@@ -94,6 +95,8 @@ class MainViewModel(
             doubleColumnDisplay = dataSource.getDoubleColumnDisplay(),
             localDnsEnabled = dataSource.getLocalDnsEnabled(),
             fakeDnsEnabled = dataSource.getFakeDnsEnabled(),
+            bypassIranianSites = dataSource.getBypassIranianSites(),
+            hasAnyServer = dataSource.hasAnyServer(),
             delayTestUrl = dataSource.getDelayTestUrl(),
             languageCode = dataSource.getLanguageCode(),
         )
@@ -124,6 +127,10 @@ class MainViewModel(
     private var bulkTestJob: Job? = null
     private var pendingSmartConnectRequestId: String? = null
     private var smartConnectPreStopJob: Job? = null
+    private var smartConnectFallbackActive: Boolean = false
+    private val smartConnectAttemptedGuids = mutableSetOf<String>()
+    private val autoPingedGroups = ConcurrentHashMap<String, Long>()
+    private val singleServerPingRequestIds = ConcurrentHashMap.newKeySet<String>()
     private var sessionMetricsJob: Job? = null
     private var fallbackConnectionSession: ViraxConnectionSession? = null
 
@@ -151,11 +158,29 @@ class MainViewModel(
             MainServiceEvent.StateRunning -> updateRunningState(true, clearTestingText = false)
             MainServiceEvent.StateNotRunning -> updateRunningState(false, clearTestingText = false)
             MainServiceEvent.StateStartSuccess -> {
+                smartConnectFallbackActive = false
+                smartConnectAttemptedGuids.clear()
+                _uiState.update { it.copy(isSmartConnecting = false) }
                 toastSuccess(R.string.toast_services_success)
                 updateRunningState(true)
             }
 
             is MainServiceEvent.StateStartFailure -> {
+                if (smartConnectFallbackActive && smartConnectAttemptedGuids.size < MAX_SMART_CONNECT_ATTEMPTS) {
+                    val nextGuid = ViraxConnectionManager.findFastestServerGuidExcluding(
+                        currentServers(),
+                        smartConnectAttemptedGuids
+                    )
+                    if (nextGuid != null) {
+                        smartConnectAttemptedGuids.add(nextGuid)
+                        updateSelectedGuid(nextGuid)
+                        _uiEffects.trySend(MainUiEffect.ConnectOrRestart)
+                        return
+                    }
+                }
+                smartConnectFallbackActive = false
+                smartConnectAttemptedGuids.clear()
+                _uiState.update { it.copy(isSmartConnecting = false) }
                 if (!event.message.isNullOrBlank()) {
                     toastError(event.message)
                 } else {
@@ -189,6 +214,10 @@ class MainViewModel(
                     scheduledFlush?.cancelAndJoin()
                     if (testRequests.bulk?.id != request.id) return@launch
                     flushPendingTestResults(request)
+                    val isSingleServerPing = singleServerPingRequestIds.remove(request.id)
+                    if (!isSingleServerPing) {
+                        autoPingedGroups[request.groupId] = dataSource.getElapsedRealtimeMs()
+                    }
                     val isSmartTarget = (pendingSmartConnectRequestId == request.id)
                     if (isSmartTarget) {
                         pendingSmartConnectRequestId = null
@@ -206,8 +235,11 @@ class MainViewModel(
             }
 
             is MainServiceEvent.MeasureConfigCancelled -> {
+                singleServerPingRequestIds.remove(event.requestId)
                 if (pendingSmartConnectRequestId == event.requestId) {
                     pendingSmartConnectRequestId = null
+                    smartConnectFallbackActive = false
+                    smartConnectAttemptedGuids.clear()
                     _uiState.update { it.copy(isSmartConnecting = false) }
                     notifyStartFailure()
                 }
@@ -326,12 +358,22 @@ class MainViewModel(
             is MainAction.UpdateGroupSubscription -> importConfigViaSub(action.groupId)
             MainAction.ExportAll -> exportAllAsync()
             is MainAction.SelectGroup -> subscriptionIdChanged(action.groupId)
-            is MainAction.SelectServer -> updateSelectedGuid(action.guid)
-            is MainAction.SelectServerOnly -> updateSelectedGuid(action.guid)
+            is MainAction.SelectServer -> {
+                smartConnectFallbackActive = false
+                smartConnectAttemptedGuids.clear()
+                updateSelectedGuid(action.guid)
+            }
+            is MainAction.SelectServerOnly -> {
+                smartConnectFallbackActive = false
+                smartConnectAttemptedGuids.clear()
+                updateSelectedGuid(action.guid)
+            }
             is MainAction.RemoveServer -> removeServerAndRefresh(action.guid)
             is MainAction.Search -> filterConfig(action.query)
             is MainAction.ImportBatchConfig -> importBatchConfig(action.configText)
             is MainAction.ImportSubscriptionUrl -> importSubscriptionUrl(action.url)
+            is MainAction.ImportDedicatedCode -> importDedicatedCode(action.code)
+            is MainAction.TestSingleServer -> testSingleServerRealPing(action.guid)
             is MainAction.ToggleSubscriptionEnabled -> toggleSubscriptionEnabled(action.subId, action.enabled)
             is MainAction.ToggleSubscriptionAutoUpdate -> toggleSubscriptionAutoUpdate(action.subId, action.autoUpdate)
             is MainAction.DeleteSubscription -> deleteSubscription(action.subId)
@@ -343,6 +385,13 @@ class MainViewModel(
                 dataSource.setSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED, action.enabled)
                 _uiState.update { it.copy(fakeDnsEnabled = action.enabled) }
             }
+            is MainAction.SetBypassIranianSites -> {
+                dataSource.setBypassIranianSites(action.enabled)
+                _uiState.update { it.copy(bypassIranianSites = action.enabled) }
+                if (uiState.value.isRunning) {
+                    _uiEffects.trySend(MainUiEffect.ConnectOrRestart)
+                }
+            }
             is MainAction.SetDelayTestUrl -> {
                 dataSource.setSettingsString(AppConfig.PREF_DELAY_TEST_URL, action.url)
                 _uiState.update { it.copy(delayTestUrl = action.url) }
@@ -353,8 +402,12 @@ class MainViewModel(
             }
             MainAction.LocateHandled -> consumeLocateTarget()
             is MainAction.ShareQRCode -> {
-                val bitmap = dataSource.share2QRCode(action.guid)
-                _uiState.update { it.copy(shareQRCodeBitmap = bitmap) }
+                if (ViraxAccessManager.isProtectedServer(action.guid)) {
+                    toastError(R.string.virax_protected_edit_locked)
+                } else {
+                    val bitmap = dataSource.share2QRCode(action.guid)
+                    _uiState.update { it.copy(shareQRCodeBitmap = bitmap) }
+                }
             }
 
             MainAction.DismissQRCodeDialog -> {
@@ -399,10 +452,12 @@ class MainViewModel(
         _uiState.update {
             it.copy(
                 subscriptions = dataSource.getAllRawSubscriptions(),
+                hasAnyServer = dataSource.hasAnyServer(),
                 confirmRemove = dataSource.getConfirmRemove(),
                 doubleColumnDisplay = dataSource.getDoubleColumnDisplay(),
                 localDnsEnabled = dataSource.getLocalDnsEnabled(),
                 fakeDnsEnabled = dataSource.getFakeDnsEnabled(),
+                bypassIranianSites = dataSource.getBypassIranianSites(),
                 delayTestUrl = dataSource.getDelayTestUrl(),
                 languageCode = dataSource.getLanguageCode(),
             )
@@ -452,10 +507,17 @@ class MainViewModel(
         }
         return servers.filter { cache ->
             val profile = cache.profile
+            val isProtected = ViraxAccessManager.isProtectedServer(
+                guid = cache.guid,
+                profile = profile,
+                subscriptionLookup = { subId -> dataSource.getSubscriptionItem(subId) }
+            )
             profile.remarks.matchesPattern(regex, keyword) ||
+                profile.configType.name.matchesPattern(regex, keyword) ||
+                (!isProtected && (
                     profile.description.orEmpty().matchesPattern(regex, keyword) ||
-                    profile.server.orEmpty().matchesPattern(regex, keyword) ||
-                    profile.configType.name.matchesPattern(regex, keyword)
+                        profile.server.orEmpty().matchesPattern(regex, keyword)
+                ))
         }
     }
 
@@ -468,21 +530,19 @@ class MainViewModel(
     }
 
     private fun buildServerRows(groupId: String, servers: List<ServersCache>): List<ServerRowUiModel> {
-        val subscriptionRemarks = if (groupId.isEmpty()) {
-            servers.asSequence()
-                .map { it.profile.subscriptionId }
-                .filter { it.isNotEmpty() }
-                .distinct()
-                .associateWith { subscriptionId ->
-                    dataSource.getSubscriptionItem(subscriptionId)?.remarks.orEmpty()
-                }
-        } else {
-            emptyMap()
-        }
+        val subscriptionItems = servers.asSequence()
+            .map { it.profile.subscriptionId }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .associateWith { subscriptionId ->
+                dataSource.getSubscriptionItem(subscriptionId)
+            }
         return servers.map { server ->
+            val subItem = subscriptionItems[server.profile.subscriptionId]
             buildServerRowUiModel(
                 server = server,
-                subscriptionRemarks = subscriptionRemarks[server.profile.subscriptionId].orEmpty()
+                subscriptionRemarks = if (groupId.isEmpty()) subItem?.remarks.orEmpty() else "",
+                isSubscriptionProtected = ViraxAccessManager.isProtectedSubscription(subItem),
             )
         }
     }
@@ -525,11 +585,13 @@ class MainViewModel(
                     cacheMutex.withLock { groupDataCache.clear() }
                 }
                 val groups = dataSource.getSubscriptions().map {
+                    val isProtectedSub = ViraxAccessManager.isProtectedSubscription(it.subscription)
                     GroupMapItem(
                         id = it.guid,
                         remarks = it.subscription.remarks,
                         usageInfo = it.subscription.usageInfo?.let { info ->
-                            SubscriptionInfoParser.withWebPageFallback(info, it.subscription.url)
+                            if (isProtectedSub) info.copy(webPageUrl = null)
+                            else SubscriptionInfoParser.withWebPageFallback(info, it.subscription.url)
                         },
                     )
                 }
@@ -557,6 +619,7 @@ class MainViewModel(
                         groups = groups,
                         groupsLoaded = true,
                         subscriptions = rawSubscriptions,
+                        hasAnyServer = dataSource.hasAnyServer() || selectedServers.isNotEmpty(),
                         selectedGroupId = selectedGroup,
                         selectedGuid = currentSelectedGuid,
                     )
@@ -564,6 +627,12 @@ class MainViewModel(
 
                 if (!initialPageReady.isCompleted) {
                     initialPageReady.complete(Unit)
+                }
+
+                if (selectedServers.isNotEmpty()) {
+                    withContext(Dispatchers.Main.immediate) {
+                        triggerAutoPingIfNeeded(selectedGroup, selectedServers)
+                    }
                 }
 
                 if (groups.isEmpty()) {
@@ -633,8 +702,13 @@ class MainViewModel(
                         dataSource.syncSubscriptions()
                     }
                     lastSubGuid?.let { guid ->
+                        autoPingedGroups.remove(guid)
                         dataSource.setSelectedSubscriptionId(guid)
                         _uiState.update { it.copy(selectedGroupId = guid) }
+                    }
+                    if (importedConfigs > 0 || importedSubConfigs > 0) {
+                        autoPingedGroups.remove(uiState.value.selectedGroupId)
+                        autoPingedGroups.remove("")
                     }
 
                     when {
@@ -674,6 +748,46 @@ class MainViewModel(
             return
         }
         importBatchConfig(clean)
+    }
+
+    private fun importDedicatedCode(code: String) {
+        if (ViraxAccessManager.buildProtectedSubscriptionUrl(code) == null) {
+            toastError(R.string.virax_invalid_dedicated_code)
+            return
+        }
+        launchLoading {
+            withContext(ioDispatcher) {
+                try {
+                    val (subGuid, result) = dataSource.importDedicatedCode(code)
+                    if (subGuid != null && (result.configCount > 0 || result.successCount > 0)) {
+                        dataSource.syncSubscriptions()
+                        autoPingedGroups.remove(subGuid)
+                        autoPingedGroups.remove("")
+                        dataSource.setSelectedSubscriptionId(subGuid)
+                        _uiState.update { it.copy(selectedGroupId = subGuid) }
+                        if (result.configCount > 0) {
+                            toast(
+                                getQuantityString(
+                                    R.plurals.title_update_config_count,
+                                    result.configCount,
+                                    result.configCount,
+                                )
+                            )
+                        } else {
+                            toastSuccess(R.string.toast_success)
+                        }
+                        setupGroupTab(forceRefresh = true)
+                    } else {
+                        toastError(R.string.toast_failure)
+                    }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (e: Exception) {
+                    LogUtil.e(AppConfig.TAG, "Failed to import dedicated code", e)
+                    toastError(R.string.toast_failure)
+                }
+            }
+        }
     }
 
     private fun toggleSubscriptionEnabled(subId: String, enabled: Boolean) {
@@ -734,6 +848,8 @@ class MainViewModel(
                             toast(dataSource.getString(R.string.title_update_subscription_result, result.configCount, result.successCount, result.failureCount, result.skipCount))
                     }
                     if (result.configCount > 0 || result.successCount > 0) {
+                        autoPingedGroups.remove(subId)
+                        autoPingedGroups.remove("")
                         setupGroupTab(forceRefresh = true)
                         refreshSelectedGuid()
                     }
@@ -894,7 +1010,13 @@ class MainViewModel(
         selectedGroupLoadJob?.cancel()
         selectedGroupLoadJob = viewModelScope.launch(ioDispatcher) {
             try {
-                updateGroupUi(id, loadGroup(id))
+                val loadedServers = loadGroup(id)
+                updateGroupUi(id, loadedServers)
+                if (loadedServers.isNotEmpty()) {
+                    withContext(Dispatchers.Main.immediate) {
+                        triggerAutoPingIfNeeded(id, loadedServers)
+                    }
+                }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
@@ -988,12 +1110,15 @@ class MainViewModel(
         smartConnectPreStopJob?.cancel()
         smartConnectPreStopJob = null
         pendingSmartConnectRequestId = null
+        smartConnectFallbackActive = false
+        smartConnectAttemptedGuids.clear()
         bulkTestJob?.cancel()
         bulkTestJob = null
+        singleServerPingRequestIds.clear()
         testRequests.cancelBulk()
         testRequests.invalidateCurrent()
         cancelPendingTestResults()
-        _uiState.update { it.copy(isSmartConnecting = false) }
+        _uiState.update { it.copy(isSmartConnecting = false, isAutoPinging = false) }
         resetTestStatus()
         dataSource.cancelAllPing()
     }
@@ -1002,6 +1127,7 @@ class MainViewModel(
         _uiState.update {
             it.copy(
                 isTesting = testRequests.isTesting,
+                isAutoPinging = if (testRequests.bulk != null) it.isAutoPinging else false,
                 status = if (testRequests.isTesting) MainStatus.Testing
                 else if (it.isRunning) MainStatus.Connected else MainStatus.Disconnected
             )
@@ -1013,47 +1139,93 @@ class MainViewModel(
         startBulkRealPing(onlyTcp = onlyTcp, explicitGroupId = activeGroupId())
     }
 
-    private fun startBulkRealPing(onlyTcp: Boolean, explicitGroupId: String): String? {
+    private fun testSingleServerRealPing(guid: String) {
+        if (guid.isBlank()) return
+        cancelAllPing()
+        val requestId = startBulkRealPing(
+            onlyTcp = false,
+            explicitGroupId = activeGroupId(),
+            targetGuids = listOf(guid),
+            clearPreviousDelays = false
+        )
+        if (requestId != null) {
+            singleServerPingRequestIds.add(requestId)
+        }
+    }
+
+    private fun isGroupPingFresh(groupId: String): Boolean {
+        val lastTestedAt = autoPingedGroups[groupId] ?: return false
+        return (dataSource.getElapsedRealtimeMs() - lastTestedAt) <= AUTO_PING_FRESHNESS_MS
+    }
+
+    private fun triggerAutoPingIfNeeded(groupId: String, servers: List<ServersCache>) {
+        if (servers.isEmpty()) return
+        if (uiState.value.isRunning || uiState.value.isSmartConnecting || testRequests.isTesting) return
+        if (isGroupPingFresh(groupId)) return
+        autoPingedGroups[groupId] = dataSource.getElapsedRealtimeMs()
+        startBulkRealPing(
+            onlyTcp = false,
+            explicitGroupId = groupId,
+            clearPreviousDelays = false
+        )
+    }
+
+    private fun startBulkRealPing(
+        onlyTcp: Boolean,
+        explicitGroupId: String,
+        targetGuids: List<String>? = null,
+        clearPreviousDelays: Boolean = true
+    ): String? {
         val groupId = explicitGroupId
         val servers = mutableServerGroupState(groupId).value.servers
         if (servers.isEmpty()) {
             return null
         }
-        val serverGuids = servers.map { it.guid }
-        mutableServerGroupState(groupId).update { current ->
-            current.copy(
-                servers = current.servers.map { server ->
-                    if (server.testDelayMillis == 0L) server
-                    else server.copy(testDelayMillis = 0L)
-                },
-                rows = current.rows.map { row ->
-                    if (row.testDelayMillis == 0L) row
-                    else row.copy(testDelayMillis = 0L)
-                }
-            )
+        val effectiveTargetGuids = if (!targetGuids.isNullOrEmpty()) {
+            targetGuids
+        } else {
+            servers.map { it.guid }
+        }
+        val resetGuids = effectiveTargetGuids.toHashSet()
+        val shouldClear = clearPreviousDelays || !targetGuids.isNullOrEmpty()
+        if (shouldClear) {
+            mutableServerGroupState(groupId).update { current ->
+                current.copy(
+                    servers = current.servers.map { server ->
+                        if (server.guid !in resetGuids || server.testDelayMillis == 0L) server
+                        else server.copy(testDelayMillis = 0L)
+                    },
+                    rows = current.rows.map { row ->
+                        if (row.guid !in resetGuids || row.testDelayMillis == 0L) row
+                        else row.copy(testDelayMillis = 0L)
+                    }
+                )
+            }
         }
         val request = testRequests.beginBulk(groupId)
         val message = TestServiceMessage(
             key = AppConfig.MSG_MEASURE_CONFIG_START,
             subscriptionId = groupId,
-            serverGuids = if (keywordFilter.isNotEmpty()) serverGuids else emptyList(),
+            serverGuids = if (!targetGuids.isNullOrEmpty() || keywordFilter.isNotEmpty()) effectiveTargetGuids else emptyList(),
             onlyTcp = onlyTcp
         )
         _uiState.update {
             it.copy(
                 isTesting = true,
+                isAutoPinging = targetGuids.isNullOrEmpty() && pendingSmartConnectRequestId == null,
                 status = MainStatus.Testing
             )
         }
         bulkTestJob = viewModelScope.launch {
-            withContext(ioDispatcher) {
-                dataSource.clearAllTestDelayResults(serverGuids)
-                val resetGuids = serverGuids.toHashSet()
-                cacheMutex.withLock {
-                    groupDataCache[groupId]?.let { cached ->
-                        groupDataCache[groupId] = cached.map { server ->
-                            if (server.guid !in resetGuids || server.testDelayMillis == 0L) server
-                            else server.copy(testDelayMillis = 0L)
+            if (shouldClear) {
+                withContext(ioDispatcher) {
+                    dataSource.clearAllTestDelayResults(effectiveTargetGuids)
+                    cacheMutex.withLock {
+                        groupDataCache[groupId]?.let { cached ->
+                            groupDataCache[groupId] = cached.map { server ->
+                                if (server.guid !in resetGuids || server.testDelayMillis == 0L) server
+                                else server.copy(testDelayMillis = 0L)
+                            }
                         }
                     }
                 }
@@ -1064,16 +1236,46 @@ class MainViewModel(
     }
 
     private fun smartConnect() {
-        cancelAllPing()
+        smartConnectAttemptedGuids.clear()
         val groupId = activeGroupId()
         val servers = mutableServerGroupState(groupId).value.servers
         if (servers.isEmpty()) {
+            smartConnectFallbackActive = false
             _uiState.update { it.copy(isSmartConnecting = false) }
             notifyStartFailure()
             toastError(R.string.virax_no_servers_found)
             return
         }
-        _uiState.update { it.copy(isSmartConnecting = true) }
+
+        // Reuse an in-flight background startup ping for this group rather than cancelling and restarting it.
+        val activeBulk = testRequests.bulk
+        if (!uiState.value.isRunning &&
+            activeBulk != null &&
+            activeBulk.groupId == groupId &&
+            activeBulk.id !in singleServerPingRequestIds
+        ) {
+            pendingSmartConnectRequestId = activeBulk.id
+            smartConnectFallbackActive = true
+            _uiState.update { it.copy(isSmartConnecting = true, isAutoPinging = false) }
+            return
+        }
+
+        // Connect immediately if this group already has fresh healthy ping measurements while disconnected.
+        if (!uiState.value.isRunning && isGroupPingFresh(groupId)) {
+            val fastestGuid = ViraxConnectionManager.findFastestServerGuid(servers)
+            if (fastestGuid != null) {
+                smartConnectFallbackActive = true
+                smartConnectAttemptedGuids.add(fastestGuid)
+                updateSelectedGuid(fastestGuid)
+                _uiState.update { it.copy(isSmartConnecting = false) }
+                _uiEffects.trySend(MainUiEffect.ConnectOrRestart)
+                return
+            }
+        }
+
+        cancelAllPing()
+        smartConnectFallbackActive = true
+        _uiState.update { it.copy(isSmartConnecting = true, isAutoPinging = false) }
         smartConnectPreStopJob = viewModelScope.launch {
             if (uiState.value.isRunning) {
                 _uiEffects.send(MainUiEffect.StopForSmartConnect)
@@ -1085,6 +1287,7 @@ class MainViewModel(
             if (requestId != null) {
                 pendingSmartConnectRequestId = requestId
             } else {
+                smartConnectFallbackActive = false
                 _uiState.update { it.copy(isSmartConnecting = false) }
                 notifyStartFailure()
             }
@@ -1092,12 +1295,19 @@ class MainViewModel(
     }
 
     private fun completeSmartConnect(testedServers: List<ServersCache>) {
-        val bestGuid = ViraxConnectionManager.findFastestServerGuid(testedServers)
+        val bestGuid = ViraxConnectionManager.findFastestServerGuidExcluding(
+            testedServers,
+            smartConnectAttemptedGuids
+        )
         if (bestGuid != null) {
+            smartConnectFallbackActive = true
+            smartConnectAttemptedGuids.add(bestGuid)
             updateSelectedGuid(bestGuid)
             _uiState.update { it.copy(isSmartConnecting = false) }
             _uiEffects.trySend(MainUiEffect.ConnectOrRestart)
         } else {
+            smartConnectFallbackActive = false
+            smartConnectAttemptedGuids.clear()
             _uiState.update { it.copy(isSmartConnecting = false) }
             notifyStartFailure()
             toastError(R.string.virax_no_healthy_server)
@@ -1237,5 +1447,7 @@ class MainViewModel(
 
     private companion object {
         const val TEST_RESULT_FLUSH_INTERVAL_MS = 500L
+        const val AUTO_PING_FRESHNESS_MS = 180_000L
+        const val MAX_SMART_CONNECT_ATTEMPTS = 3
     }
 }

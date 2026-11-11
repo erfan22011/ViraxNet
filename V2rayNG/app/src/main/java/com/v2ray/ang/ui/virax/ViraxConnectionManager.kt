@@ -78,8 +78,18 @@ object ViraxConnectionManager {
      * Returns the GUID of the server with the lowest positive ping delay, or null if none succeeded.
      */
     fun findFastestServerGuid(servers: List<ServersCache>): String? {
+        return findFastestServerGuidExcluding(servers, emptySet())
+    }
+
+    /**
+     * Returns the GUID of the lowest-ping healthy server not in [excludedGuids].
+     */
+    fun findFastestServerGuidExcluding(
+        servers: List<ServersCache>,
+        excludedGuids: Set<String>
+    ): String? {
         return servers
-            .filter { it.testDelayMillis > 0L }
+            .filter { it.testDelayMillis > 0L && it.guid !in excludedGuids }
             .minByOrNull { it.testDelayMillis }
             ?.guid
     }

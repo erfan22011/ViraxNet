@@ -46,7 +46,7 @@ object CoreConfigContextBuilder {
         val routingResolvedOutbounds = resolveRoutingOutbounds()
         val resolvedOutbounds = listOf(primaryResolvedOutbound) + routingResolvedOutbounds
         val fallbackResolvedOutbounds = resolveFallbackOutbounds(resolvedOutbounds)
-        val routingDomainRules = collectRoutingDomainRulesForDns()
+        val routingDomainRules = collectRoutingDomainRulesForDns(context)
 
         return CoreConfigContext(
             context = context,
@@ -225,9 +225,20 @@ object CoreConfigContextBuilder {
      *
      * outbounds are normalized into three tags only: proxy / direct / block.
      */
-    private fun collectRoutingDomainRulesForDns(): List<CoreConfigContext.RoutingDomainRule> {
-        val rulesetItems = MmkvManager.decodeRoutingRulesets() ?: return emptyList()
+    private fun collectRoutingDomainRulesForDns(context: Context): List<CoreConfigContext.RoutingDomainRule> {
         val result = mutableListOf<CoreConfigContext.RoutingDomainRule>()
+        val bypassIranianSites = MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_IRANIAN_SITES, false)
+        if (bypassIranianSites) {
+            val hasGeositeDat = CoreRoutingBypassHelper.hasAssetFile(context, AppConfig.GEOSITE_DAT)
+            result.add(
+                CoreConfigContext.RoutingDomainRule(
+                    domain = CoreRoutingBypassHelper.buildBypassIranianDomains(hasGeositeDat),
+                    outboundTag = AppConfig.TAG_DIRECT
+                )
+            )
+        }
+
+        val rulesetItems = MmkvManager.decodeRoutingRulesets() ?: return result
 
         rulesetItems
             .asSequence()

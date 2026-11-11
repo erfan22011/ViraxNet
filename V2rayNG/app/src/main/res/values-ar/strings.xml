@@ -14,7 +14,7 @@
     <string name="pull_down_to_refresh">اسحب لأسفل للتحديث!</string>
 
     <!-- Notifications -->
-    <string name="notification_channel_service">خدمة v2rayNG</string>
+    <string name="notification_channel_service">خدمة ViraxNet</string>
     <string name="notification_channel_subscription_updates">تحديثات الاشتراكات</string>
     <string name="notification_channel_connection_checks">فحوص الاتصال</string>
     <string name="notification_action_stop_v2ray">إيقاف</string>
@@ -611,7 +611,7 @@
     <string name="virax_fake_dns">Fake DNS</string>
     <string name="virax_fake_dns_subtitle">Enable Fake DNS</string>
     <string name="virax_ping_test_url">Ping Test URL</string>
-    <string name="virax_ping_type_note">Ping type: Similar to V2rayNG (Ping = Google)</string>
+    <string name="virax_ping_type_note">Ping type: URL Test (204)</string>
     <string name="virax_connecting">Connecting...</string>
     <string name="virax_connecting_subtitle">Connecting to server, please wait...</string>
     <string name="virax_cancel">Cancel</string>
@@ -656,4 +656,20 @@
     <string name="virax_smart_ping_title">جاري البحث عن أفضل خادم...</string>
     <string name="virax_smart_ping_subtitle">جاري فحص البينغ والاتصال بأسرع خادم...</string>
     <string name="virax_no_healthy_server">لم يستجب أي خادم سليم لفحص البينغ. تحقق من الاتصال أو الاشتراك.</string>
+    <string name="virax_plan_custom">مخصص</string>
+    <string name="virax_protected_sub_label">اشتراك مخصص محمي</string>
+    <string name="virax_protected_server_label">خادم مخصص محمي</string>
+    <string name="virax_protected_edit_locked">لا يمكن تعديل أو تصدير الخوادم والاشتراكات المخصصة المحمية</string>
+    <string name="virax_dedicated_code_title">الرمز المخصص</string>
+    <string name="virax_dedicated_code_desc">أدخل الرمز المخصص الخاص بك لجلب الخوادم والاتصال</string>
+    <string name="virax_dedicated_code_hint">أدخل الرمز المخصص</string>
+    <string name="virax_dedicated_code_import_btn">تفعيل بالرمز المخصص</string>
+    <string name="virax_invalid_dedicated_code">يرجى إدخال رمز مخصص صالح</string>
+    <string name="virax_bypass_iran_title">تجاوز المواقع الإيرانية</string>
+    <string name="virax_bypass_iran_desc">توجيه المواقع الإيرانية ونطاقات .ir مباشرة عبر عنوان IP الحقيقي</string>
+    <string name="virax_tools_section_title">الأدوات والإدارة المتقدمة</string>
+    <string name="virax_ip_fetching">جارٍ جلب IP الخادم...</string>
+    <string name="virax_ping_action">فحص البنق</string>
+    <string name="virax_sub_add_mode_link">رابط الاشتراك</string>
+    <string name="virax_sub_add_mode_code">الرمز المخصص</string>
 </resources>

@@ -92,7 +92,7 @@ object HttpUtil {
 
             val ipList = sortedAddresses.mapNotNull { it.hostAddress }
 
-            LogUtil.i(AppConfig.TAG, "Resolved IPs for $host: ${ipList.joinToString()}")
+            LogUtil.i(AppConfig.TAG, "Resolved IPs for ${ViraxAccessManager.sanitizeTextForLogs(host)}: ${ipList.joinToString()}")
 
             return ipList
         } catch (e: Exception) {
@@ -157,7 +157,7 @@ object HttpUtil {
             if (currentUrl == null) continue
             val client = buildOkHttpClient(request.timeout, request.httpPort, request.proxyUsername, request.proxyPassword, followRedirects = false)
             val finalUserAgent = if (request.userAgent.isNullOrBlank()) {
-                "v2rayNG/${BuildConfig.VERSION_NAME}"
+                "ViraxNet/${BuildConfig.VERSION_NAME}"
             } else {
                 request.userAgent
             }
@@ -292,7 +292,7 @@ object HttpUtil {
         return try {
             client.newCall(requestBuilder.build()).execute().use { response ->
                 if (!response.isSuccessful) {
-                    LogUtil.w(AppConfig.TAG, "Failed to download file, code=${response.code}, url=$url")
+                    LogUtil.w(AppConfig.TAG, "Failed to download file, code=${response.code}, url=${ViraxAccessManager.sanitizeTextForLogs(url)}")
                     return false
                 }
                 val body = response.body ?: return false
@@ -304,7 +304,7 @@ object HttpUtil {
                 true
             }
         } catch (e: Exception) {
-            LogUtil.e(AppConfig.TAG, "Failed to download file: $url", e)
+            LogUtil.e(AppConfig.TAG, "Failed to download file: ${ViraxAccessManager.sanitizeTextForLogs(url)}", e)
             false
         }
     }

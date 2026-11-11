@@ -49,6 +49,7 @@ import com.v2ray.ang.enums.RoutingType
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.MmkvManager.rememberMmkvBool
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.ui.base.HelperBaseComponentActivity
 import com.v2ray.ang.ui.compose.AppDropdownMenuItems
@@ -58,6 +59,7 @@ import com.v2ray.ang.ui.compose.NavigationBarsBottomPadding
 import com.v2ray.ang.ui.compose.ReorderableListItem
 import com.v2ray.ang.ui.compose.SelectListDialog
 import com.v2ray.ang.ui.compose.SettingsListItem
+import com.v2ray.ang.ui.compose.SettingsSwitchItem
 import com.v2ray.ang.ui.compose.colorConfigType
 import com.v2ray.ang.ui.compose.verticalScrollbar
 import com.v2ray.ang.util.JsonUtil
@@ -271,6 +273,16 @@ fun RoutingSettingScreen(
                     selectedValue = domainStrategy,
                     onSelected = { onDomainStrategySelected(it) }
                 )
+            }
+            item(key = "bypass_iranian_sites") {
+                var bypassIranianSites by rememberMmkvBool(AppConfig.PREF_BYPASS_IRANIAN_SITES, false)
+                SettingsSwitchItem(
+                    title = stringResource(R.string.virax_bypass_iran_title),
+                    summary = stringResource(R.string.virax_bypass_iran_desc),
+                    checked = bypassIranianSites,
+                    onCheckedChange = { bypassIranianSites = it }
+                )
+                ItemDivider()
             }
             item {
                 Text(

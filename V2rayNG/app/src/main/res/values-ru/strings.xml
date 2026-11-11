@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">ViraxNet</string>
-    <string name="app_widget_name">v2rayNG</string>
-    <string name="app_tile_name">v2rayNG</string>
+    <string name="app_widget_name">ViraxNet</string>
+    <string name="app_tile_name">ViraxNet</string>
     <string name="app_tile_first_use">Добавьте профиль в приложении перед использованием этой функции.</string>
     <string name="navigation_drawer_open">Открыть панель навигации</string>
     <string name="navigation_drawer_close">Закрыть панель навигации</string>
@@ -14,7 +14,7 @@
     <string name="pull_down_to_refresh">Потяните вниз для обновления!</string>
 
     <!-- Notifications -->
-    <string name="notification_channel_service">Служба v2rayNG</string>
+    <string name="notification_channel_service">Служба ViraxNet</string>
     <string name="notification_channel_subscription_updates">Обновления подписок</string>
     <string name="notification_channel_connection_checks">Проверки соединения</string>
     <string name="notification_action_stop_v2ray">Остановить</string>
@@ -607,7 +607,7 @@
     <string name="virax_fake_dns">Fake DNS</string>
     <string name="virax_fake_dns_subtitle">Enable Fake DNS</string>
     <string name="virax_ping_test_url">Ping Test URL</string>
-    <string name="virax_ping_type_note">Ping type: Similar to V2rayNG (Ping = Google)</string>
+    <string name="virax_ping_type_note">Ping type: URL Test (204)</string>
     <string name="virax_connecting">Connecting...</string>
     <string name="virax_connecting_subtitle">Connecting to server, please wait...</string>
     <string name="virax_cancel">Cancel</string>
@@ -652,4 +652,20 @@
     <string name="virax_smart_ping_title">Finding Best Server...</string>
     <string name="virax_smart_ping_subtitle">Testing server pings and connecting to the fastest one...</string>
     <string name="virax_no_healthy_server">No healthy server responded to ping. Check your internet or subscription.</string>
+    <string name="virax_plan_custom">Обычный</string>
+    <string name="virax_protected_sub_label">Защищённая подписка</string>
+    <string name="virax_protected_server_label">Выделенный защищённый сервер</string>
+    <string name="virax_protected_edit_locked">Защищённые выделенные конфигурации нельзя редактировать или экспортировать</string>
+    <string name="virax_dedicated_code_title">Персональный код</string>
+    <string name="virax_dedicated_code_desc">Введите ваш персональный код доступа для загрузки серверов</string>
+    <string name="virax_dedicated_code_hint">Введите персональный код</string>
+    <string name="virax_dedicated_code_import_btn">Активировать по коду</string>
+    <string name="virax_invalid_dedicated_code">Пожалуйста, введите корректный персональный код</string>
+    <string name="virax_bypass_iran_title">Обход иранских сайтов</string>
+    <string name="virax_bypass_iran_desc">Направлять иранские сайты и домены .ir напрямую через ваш реальный IP</string>
+    <string name="virax_tools_section_title">Инструменты и управление</string>
+    <string name="virax_ip_fetching">Получение IP сервера...</string>
+    <string name="virax_ping_action">Тест пинга</string>
+    <string name="virax_sub_add_mode_link">Ссылка подписки</string>
+    <string name="virax_sub_add_mode_code">Персональный код</string>
 </resources>

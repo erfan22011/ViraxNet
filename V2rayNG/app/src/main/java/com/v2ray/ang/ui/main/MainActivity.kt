@@ -27,6 +27,7 @@ import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionInfoParser
+import com.v2ray.ang.handler.ViraxAccessManager
 import com.v2ray.ang.ui.AboutActivity
 import com.v2ray.ang.ui.backup.BackupActivity
 import com.v2ray.ang.ui.base.HelperBaseComponentActivity
@@ -148,12 +149,20 @@ class MainActivity : HelperBaseComponentActivity() {
     }
 
     private fun shareToClipboard(guid: String): Boolean {
+        if (ViraxAccessManager.isProtectedServer(guid)) {
+            toastError(R.string.virax_protected_edit_locked)
+            return false
+        }
         val ok = AngConfigManager.share2Clipboard(this, guid) == 0
         if (ok) toastSuccess(R.string.toast_success) else toastError(R.string.toast_failure)
         return ok
     }
 
     private fun shareFullContentAsync(guid: String) {
+        if (ViraxAccessManager.isProtectedServer(guid)) {
+            toastError(R.string.virax_protected_edit_locked)
+            return
+        }
         lifecycleScope.launch(Dispatchers.IO) {
             val result = AngConfigManager.shareFullContent2Clipboard(this@MainActivity, guid)
             withContext(Dispatchers.Main) {
@@ -180,13 +189,6 @@ class MainActivity : HelperBaseComponentActivity() {
             MainDestination.CheckUpdate -> Intent(this, CheckUpdateActivity::class.java)
             MainDestination.BackupRestore -> Intent(this, BackupActivity::class.java)
             MainDestination.About -> Intent(this, AboutActivity::class.java)
-            MainDestination.Promotion -> {
-                Utils.openUri(
-                    this,
-                    "${Utils.decode(AppConfig.APP_PROMOTION_URL)}?t=${System.currentTimeMillis()}"
-                )
-                return
-            }
         }
         settingsActivityLauncher.launch(intent)
     }
@@ -279,6 +281,10 @@ class MainActivity : HelperBaseComponentActivity() {
     }
 
     private fun editServer(guid: String, profile: ProfileItem) {
+        if (ViraxAccessManager.isProtectedServer(guid, profile)) {
+            toastError(R.string.virax_protected_edit_locked)
+            return
+        }
         val activityClass = when (profile.configType) {
             EConfigType.CUSTOM -> ServerCustomConfigActivity::class.java
             EConfigType.POLICYGROUP -> ServerGroupActivity::class.java

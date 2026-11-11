@@ -14,7 +14,7 @@
     <string name="pull_down_to_refresh">请下拉刷新!</string>
 
     <!-- Notifications -->
-    <string name="notification_channel_service">v2rayNG 服务</string>
+    <string name="notification_channel_service">ViraxNet 服务</string>
     <string name="notification_channel_subscription_updates">订阅更新</string>
     <string name="notification_channel_connection_checks">连接检查</string>
     <string name="notification_action_stop_v2ray">停止</string>
@@ -601,7 +601,7 @@
     <string name="virax_fake_dns">Fake DNS</string>
     <string name="virax_fake_dns_subtitle">Enable Fake DNS</string>
     <string name="virax_ping_test_url">Ping Test URL</string>
-    <string name="virax_ping_type_note">Ping type: Similar to V2rayNG (Ping = Google)</string>
+    <string name="virax_ping_type_note">Ping type: URL Test (204)</string>
     <string name="virax_connecting">Connecting...</string>
     <string name="virax_connecting_subtitle">Connecting to server, please wait...</string>
     <string name="virax_cancel">Cancel</string>
@@ -646,4 +646,20 @@
     <string name="virax_smart_ping_title">Finding Best Server...</string>
     <string name="virax_smart_ping_subtitle">Testing server pings and connecting to the fastest one...</string>
     <string name="virax_no_healthy_server">No healthy server responded to ping. Check your internet or subscription.</string>
+    <string name="virax_plan_custom">自定义</string>
+    <string name="virax_protected_sub_label">受保护的专属订阅</string>
+    <string name="virax_protected_server_label">专属加密服务器</string>
+    <string name="virax_protected_edit_locked">受保护的专属配置无法编辑或导出</string>
+    <string name="virax_dedicated_code_title">专属访问代码</string>
+    <string name="virax_dedicated_code_desc">输入您的专属访问代码以获取服务器并连接</string>
+    <string name="virax_dedicated_code_hint">输入专属代码</string>
+    <string name="virax_dedicated_code_import_btn">使用代码激活</string>
+    <string name="virax_invalid_dedicated_code">请输入有效的专属访问代码</string>
+    <string name="virax_bypass_iran_title">绕过伊朗网站</string>
+    <string name="virax_bypass_iran_desc">通过真实 IP 直接访问伊朗网站和 .ir 域名</string>
+    <string name="virax_tools_section_title">工具与高级管理</string>
+    <string name="virax_ip_fetching">正在获取服务器 IP...</string>
+    <string name="virax_ping_action">测试延迟</string>
+    <string name="virax_sub_add_mode_link">订阅或链接</string>
+    <string name="virax_sub_add_mode_code">专属代码</string>
 </resources>

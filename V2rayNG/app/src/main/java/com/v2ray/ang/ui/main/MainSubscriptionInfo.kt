@@ -114,11 +114,7 @@ internal fun SubscriptionInfoCard(
                 )
                 model.supportUrl?.let { url ->
                     CardIconButton(
-                        iconRes = if (SubscriptionInfoParser.isTelegramLink(url)) {
-                            R.drawable.ic_telegram_24dp
-                        } else {
-                            R.drawable.ic_feedback_24dp
-                        },
+                        iconRes = R.drawable.ic_feedback_24dp,
                         contentDescription = stringResource(R.string.sub_info_open_support),
                         onClick = { onOpenLink(url) },
                     )

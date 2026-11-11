@@ -53,6 +53,8 @@ import androidx.compose.ui.unit.sp
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.entities.SubscriptionCache
 import com.v2ray.ang.extension.toTrafficString
+import com.v2ray.ang.handler.ViraxAccessManager
+import com.v2ray.ang.handler.ViraxPlanBadge
 import com.v2ray.ang.ui.compose.DeleteConfirmDialog
 import com.v2ray.ang.util.Utils
 
@@ -96,7 +98,7 @@ fun ViraxSubscriptionScreen(
     subscriptions: List<SubscriptionCache>,
     selectedSubId: String,
     isLoading: Boolean,
-    showPremiumBadge: Boolean,
+    planBadge: ViraxPlanBadge = ViraxPlanBadge.NONE,
     onSelectSubscription: (String) -> Unit,
     onAddSubscriptionClick: () -> Unit,
     onImportClipboardClick: () -> Unit,
@@ -235,7 +237,7 @@ fun ViraxSubscriptionScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // ViraxNet Title (+ Premium ONLY when active subscription link exists)
+        // ViraxNet Title (+ Premium / Custom badge based on active plan)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -246,14 +248,26 @@ fun ViraxSubscriptionScreen(
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
-            if (showPremiumBadge) {
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.virax_premium),
-                    color = colors.gold,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
+            when (planBadge) {
+                ViraxPlanBadge.PREMIUM -> {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.virax_premium),
+                        color = colors.gold,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                ViraxPlanBadge.CUSTOM -> {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.virax_plan_custom),
+                        color = colors.primaryPurple,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                ViraxPlanBadge.NONE -> Unit
             }
         }
 
@@ -537,6 +551,7 @@ fun ViraxSubscriptionScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            val isProtectedSub = ViraxAccessManager.isProtectedSubscription(subCache.subscription)
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = subCache.subscription.remarks.ifBlank { stringResource(R.string.virax_user_subscription) },
@@ -546,6 +561,15 @@ fun ViraxSubscriptionScreen(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
+                                if (isProtectedSub) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = stringResource(R.string.virax_protected_sub_label),
+                                        color = colors.gold,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = stringResource(

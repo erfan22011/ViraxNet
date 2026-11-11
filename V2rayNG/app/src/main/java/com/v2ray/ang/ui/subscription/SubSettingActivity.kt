@@ -40,8 +40,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.MmkvManager.rememberMmkvBool
+import com.v2ray.ang.handler.ViraxAccessManager
 import com.v2ray.ang.ui.base.BaseComponentActivity
 import com.v2ray.ang.ui.compose.AppTopBar
 import com.v2ray.ang.ui.compose.DeleteConfirmDialog
@@ -80,7 +82,11 @@ class SubSettingActivity : BaseComponentActivity() {
             onAddClick = { startActivity(Intent(this, SubEditActivity::class.java)) },
             onSubUpdate = { viewModel.updateSubscriptions() },
             onEditSub = { subId ->
-                startActivity(Intent(this, SubEditActivity::class.java).putExtra("subId", subId))
+                if (ViraxAccessManager.isProtectedSubscriptionId(subId)) {
+                    toastError(R.string.virax_protected_edit_locked)
+                } else {
+                    startActivity(Intent(this, SubEditActivity::class.java).putExtra("subId", subId))
+                }
             },
             onRemoveSub = { subId -> removeSub(subId) },
             onShareQRCode = viewModel::shareQRCode,
@@ -167,6 +173,7 @@ fun SubSettingScreen(
                                 .padding(horizontal = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            val isProtectedSub = ViraxAccessManager.isProtectedSubscription(subCache.subscription)
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = subCache.subscription.remarks,
@@ -174,7 +181,16 @@ fun SubSettingScreen(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
-                                if (subCache.subscription.url.isNotEmpty()) {
+                                if (isProtectedSub) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = stringResource(R.string.virax_protected_sub_label),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                } else if (subCache.subscription.url.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = subCache.subscription.url,
@@ -197,7 +213,7 @@ fun SubSettingScreen(
                                 modifier = Modifier.padding(start = 8.dp)
                             ) {
                                 Row {
-                                    if (subCache.subscription.url.isNotEmpty()) {
+                                    if (subCache.subscription.url.isNotEmpty() && !isProtectedSub) {
                                         IconButton(onClick = {
                                             shareTarget = Pair(subCache.guid, subCache.subscription.url)
                                         }) {
@@ -207,11 +223,13 @@ fun SubSettingScreen(
                                             )
                                         }
                                     }
-                                    IconButton(onClick = { onEditSub(subCache.guid) }) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_edit_24dp),
-                                            contentDescription = stringResource(R.string.acc_edit)
-                                        )
+                                    if (!isProtectedSub) {
+                                        IconButton(onClick = { onEditSub(subCache.guid) }) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_edit_24dp),
+                                                contentDescription = stringResource(R.string.acc_edit)
+                                            )
+                                        }
                                     }
                                     IconButton(onClick = {
                                         if (confirmRemove) removeTarget = SubscriptionDeleteTarget(subCache.guid, subCache.subscription.remarks)

@@ -15,5 +15,6 @@ data class SubscriptionItem(
     var userAgent: String? = null,
     var requestHeaders: String? = null,
     var usageInfo: SubscriptionUsageInfo? = null,
+    var isProtected: Boolean = false,
 )
 

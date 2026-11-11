@@ -211,6 +211,9 @@ class MainRepository(
     ): Pair<String?, SubscriptionUpdateResult> =
         AngConfigManager.importOrUpdateSubscriptionUrl(url, allowInsecure)
 
+    override fun importDedicatedCode(code: String): Pair<String?, SubscriptionUpdateResult> =
+        AngConfigManager.importDedicatedCode(code)
+
     override fun updateSubscriptionItem(subId: String, item: SubscriptionItem) {
         MmkvManager.encodeSubscription(subId, item)
         SubscriptionUpdater.syncOne(app, subId)
@@ -247,6 +250,16 @@ class MainRepository(
 
     override fun getFakeDnsEnabled(): Boolean =
         MmkvManager.decodeSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED, false)
+
+    override fun getBypassIranianSites(): Boolean =
+        MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_IRANIAN_SITES, false)
+
+    override fun setBypassIranianSites(enabled: Boolean) {
+        MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_IRANIAN_SITES, enabled)
+    }
+
+    override fun hasAnyServer(): Boolean =
+        MmkvManager.decodeAllServerList().isNotEmpty()
 
     override fun getDelayTestUrl(): String =
         MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL, AppConfig.DELAY_TEST_URL)

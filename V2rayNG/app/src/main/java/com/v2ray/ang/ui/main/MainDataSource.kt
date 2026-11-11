@@ -56,6 +56,8 @@ interface MainDataSource : Closeable {
         allowInsecure: Boolean = true
     ): Pair<String?, SubscriptionUpdateResult>
 
+    fun importDedicatedCode(code: String): Pair<String?, SubscriptionUpdateResult>
+
     fun updateSubscriptionItem(subId: String, item: SubscriptionItem)
     fun deleteSubscription(subId: String)
 
@@ -69,6 +71,9 @@ interface MainDataSource : Closeable {
     fun setSettingsString(key: String, value: String)
     fun getLocalDnsEnabled(): Boolean
     fun getFakeDnsEnabled(): Boolean
+    fun getBypassIranianSites(): Boolean
+    fun setBypassIranianSites(enabled: Boolean)
+    fun hasAnyServer(): Boolean
     fun getDelayTestUrl(): String
     fun getLanguageCode(): String
     fun setLanguageCode(code: String)

@@ -3,6 +3,8 @@ package com.v2ray.ang.ui.main
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.dto.LocateTarget
+import com.v2ray.ang.handler.ViraxAccessManager
+import com.v2ray.ang.handler.ViraxPlanBadge
 
 /** Locale-neutral state formatted only when it reaches the main UI. */
 sealed interface MainStatus {
@@ -31,10 +33,13 @@ data class MainUiState(
     val shareQRCodeBitmap: android.graphics.Bitmap? = null,
     val localDnsEnabled: Boolean = false,
     val fakeDnsEnabled: Boolean = false,
+    val bypassIranianSites: Boolean = false,
     val delayTestUrl: String = com.v2ray.ang.AppConfig.DELAY_TEST_URL,
     val languageCode: String = "auto",
     val startFailureCounter: Long = 0L,
     val isSmartConnecting: Boolean = false,
+    val isAutoPinging: Boolean = false,
+    val hasAnyServer: Boolean = false,
     val sessionDurationText: String = "00:00:00",
     val sessionDownloadText: String = "0 B",
     val sessionUploadText: String = "0 B",
@@ -44,6 +49,12 @@ data class MainUiState(
 
     val hasActiveSubscription: Boolean
         get() = activeSubscriptions.any { it.subscription.enabled }
+
+    val planBadge: ViraxPlanBadge
+        get() = ViraxAccessManager.resolvePlanBadge(
+            subscriptions = activeSubscriptions.map { it.subscription },
+            hasAnyServer = hasAnyServer
+        )
 }
 
 /**
@@ -88,11 +99,14 @@ sealed interface MainAction {
 
     data class ImportBatchConfig(val configText: String) : MainAction
     data class ImportSubscriptionUrl(val url: String) : MainAction
+    data class ImportDedicatedCode(val code: String) : MainAction
+    data class TestSingleServer(val guid: String) : MainAction
     data class ToggleSubscriptionEnabled(val subId: String, val enabled: Boolean) : MainAction
     data class ToggleSubscriptionAutoUpdate(val subId: String, val autoUpdate: Boolean) : MainAction
     data class DeleteSubscription(val subId: String) : MainAction
     data class SetLocalDnsEnabled(val enabled: Boolean) : MainAction
     data class SetFakeDnsEnabled(val enabled: Boolean) : MainAction
+    data class SetBypassIranianSites(val enabled: Boolean) : MainAction
     data class SetDelayTestUrl(val url: String) : MainAction
     data class SetLanguageCode(val code: String) : MainAction
 

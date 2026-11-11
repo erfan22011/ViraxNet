@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.v2ray.ang.R
+import com.v2ray.ang.ui.main.MainDestination
 
 @Composable
 fun ViraxSettingsScreen(
@@ -54,13 +56,15 @@ fun ViraxSettingsScreen(
     onLocalDnsToggled: (Boolean) -> Unit,
     fakeDnsEnabled: Boolean,
     onFakeDnsToggled: (Boolean) -> Unit,
+    bypassIranianSites: Boolean,
+    onBypassIranianSitesToggled: (Boolean) -> Unit,
     pingTestUrl: String,
     onPingTestUrlChanged: (String) -> Unit,
     currentThemeMode: String,
     onThemeModeChanged: (String) -> Unit,
     currentLanguageCode: String,
     onLanguageChanged: (String) -> Unit,
-    onRoutingSettingsClick: () -> Unit,
+    onNavigate: (MainDestination) -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -107,14 +111,25 @@ fun ViraxSettingsScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 1. Routing Settings
+        // 1. Bypass Iranian Sites Toggle
+        ViraxSettingsToggleCard(
+            iconRes = R.drawable.ic_virax_shield_check,
+            title = stringResource(R.string.virax_bypass_iran_title),
+            subtitle = stringResource(R.string.virax_bypass_iran_desc),
+            checked = bypassIranianSites,
+            onCheckedChange = onBypassIranianSitesToggled
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // 2. Routing Settings
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(colors.cardBackground)
                 .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
-                .clickable(onClick = onRoutingSettingsClick)
+                .clickable { onNavigate(MainDestination.Routing) }
                 .semantics { role = Role.Button }
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
@@ -416,6 +431,54 @@ fun ViraxSettingsScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(22.dp))
+
+        // Consolidated Drawer Options Section (Subscriptions, Per-app Proxy, Assets, Core Settings, Logcat, Update, Backup, About)
+        Text(
+            text = stringResource(R.string.virax_tools_section_title),
+            color = colors.textSecondary,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        val consolidatedDestinations = listOf(
+            MainDestination.Subscriptions,
+            MainDestination.PerAppProxy,
+            MainDestination.UserAssets,
+            MainDestination.Settings,
+            MainDestination.Logcat,
+            MainDestination.CheckUpdate,
+            MainDestination.BackupRestore,
+            MainDestination.About
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.cardBackground)
+                .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                consolidatedDestinations.forEachIndexed { index, destination ->
+                    ViraxSettingsToolRow(
+                        iconRes = destination.iconRes,
+                        title = stringResource(destination.labelRes),
+                        onClick = { onNavigate(destination) }
+                    )
+                    if (index < consolidatedDestinations.lastIndex) {
+                        HorizontalDivider(
+                            color = colors.cardBorder,
+                            thickness = 0.75.dp,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         // Footer Note
@@ -581,6 +644,115 @@ fun ViraxSettingsScreen(
                 }
             },
             containerColor = colors.cardBackgroundElevated
+        )
+    }
+}
+
+@Composable
+private fun ViraxSettingsToggleCard(
+    iconRes: Int,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val colors = ViraxTheme.colors
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.cardBackground)
+            .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 12.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = null,
+                    tint = colors.primaryPurple,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+                Column {
+                    Text(
+                        text = title,
+                        color = colors.textPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        color = colors.textSecondary,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = colors.primaryPurple,
+                    uncheckedThumbColor = colors.textMuted,
+                    uncheckedTrackColor = colors.cardBorder
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun ViraxSettingsToolRow(
+    iconRes: Int,
+    title: String,
+    onClick: () -> Unit
+) {
+    val colors = ViraxTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .semantics { role = Role.Button }
+            .padding(horizontal = 16.dp, vertical = 15.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                tint = colors.primaryPurple,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(14.dp))
+            Text(
+                text = title,
+                color = colors.textPrimary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        Icon(
+            painter = painterResource(id = R.drawable.ic_virax_arrow_forward),
+            contentDescription = null,
+            tint = colors.textMuted,
+            modifier = Modifier.size(16.dp)
         )
     }
 }

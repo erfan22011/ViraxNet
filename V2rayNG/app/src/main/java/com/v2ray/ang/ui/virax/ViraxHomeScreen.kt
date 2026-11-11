@@ -50,12 +50,14 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.v2ray.ang.R
+import com.v2ray.ang.handler.ViraxPlanBadge
 
 @Composable
 fun ViraxHomeScreen(
     isConnected: Boolean,
     isConnecting: Boolean,
-    showPremiumBadge: Boolean,
+    planBadge: ViraxPlanBadge = ViraxPlanBadge.NONE,
+    isFetchingIp: Boolean = false,
     serverName: String?,
     serverPing: Long,
     ipAddress: String?,
@@ -65,7 +67,6 @@ fun ViraxHomeScreen(
     onPowerClick: () -> Unit,
     onShieldClick: () -> Unit,
     onIpCardClick: () -> Unit,
-    onMenuClick: () -> Unit,
     onCrownClick: () -> Unit,
     onSmartSelectClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -81,7 +82,7 @@ fun ViraxHomeScreen(
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Top Header
+        // Top Header (symmetry spacer on start, ViraxNet + badge centered, crown on end)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -89,13 +90,7 @@ fun ViraxHomeScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_menu_24dp),
-                    contentDescription = stringResource(R.string.navigation_drawer_open),
-                    tint = colors.textPrimary
-                )
-            }
+            Spacer(modifier = Modifier.size(48.dp))
 
             // Logo & Brand
             Row(
@@ -115,25 +110,48 @@ fun ViraxHomeScreen(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
-                if (showPremiumBadge) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(colors.gold, colors.goldLight)
+                when (planBadge) {
+                    ViraxPlanBadge.PREMIUM -> {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(colors.gold, colors.goldLight)
+                                    )
                                 )
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.virax_premium),
+                                color = Color.Black,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.ExtraBold
                             )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.virax_premium),
-                            color = Color.Black,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
+                        }
                     }
+                    ViraxPlanBadge.CUSTOM -> {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(colors.primaryPurple, colors.secondaryPurple)
+                                    )
+                                )
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.virax_plan_custom),
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                    }
+                    ViraxPlanBadge.NONE -> Unit
                 }
             }
 
@@ -181,10 +199,11 @@ fun ViraxHomeScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // IP Address Card (tappable to run connection & IP check)
+            // IP Address Card (auto-fetched on connect, also tappable to refresh)
             ViraxIpCard(
                 ip = ipAddress,
                 isConnected = true,
+                isFetchingIp = isFetchingIp,
                 onClick = onIpCardClick
             )
 
@@ -575,6 +594,7 @@ private fun ViraxStatsCard(
 private fun ViraxIpCard(
     ip: String?,
     isConnected: Boolean,
+    isFetchingIp: Boolean = false,
     onClick: (() -> Unit)?
 ) {
     val colors = ViraxTheme.colors
@@ -608,7 +628,11 @@ private fun ViraxIpCard(
                     fontSize = 11.sp
                 )
                 Text(
-                    text = ip ?: if (isConnected) stringResource(R.string.virax_tap_to_test_ip) else "-",
+                    text = ip ?: when {
+                        isConnected && isFetchingIp -> stringResource(R.string.virax_ip_fetching)
+                        isConnected -> stringResource(R.string.virax_tap_to_test_ip)
+                        else -> "-"
+                    },
                     color = colors.textPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,

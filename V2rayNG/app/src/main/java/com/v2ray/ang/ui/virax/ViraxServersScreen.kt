@@ -73,7 +73,8 @@ data class ViraxServerItem(
     val pingMillis: Long,
     val isSelected: Boolean,
     val profile: ProfileItem? = null,
-    val typeDescription: String = ""
+    val typeDescription: String = "",
+    val isProtected: Boolean = false
 )
 
 fun filterServers(
@@ -112,6 +113,8 @@ fun ViraxServersScreen(
     onImportQrClick: () -> Unit,
     onImportLocalClick: () -> Unit,
     onOpenManualLinkImport: () -> Unit,
+    onOpenDedicatedCodeImport: () -> Unit,
+    onPingServer: (String) -> Unit,
     onEditServer: (String, ProfileItem) -> Unit,
     onDeleteServer: (String) -> Unit,
     onShareServerQr: (String) -> Unit,
@@ -229,6 +232,14 @@ fun ViraxServersScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     ServerDialogActionRow(
+                        iconRes = R.drawable.ic_lock_24dp,
+                        label = stringResource(R.string.virax_dedicated_code_title),
+                        onClick = {
+                            showImportMenu = false
+                            onOpenDedicatedCodeImport()
+                        }
+                    )
+                    ServerDialogActionRow(
                         iconRes = R.drawable.ic_copy,
                         label = stringResource(R.string.menu_item_import_config_clipboard),
                         onClick = {
@@ -270,9 +281,14 @@ fun ViraxServersScreen(
         )
     }
 
-    // 3. Long-press Server Context Menu (Edit, Delete, Share QR, Copy Link)
+    // 3. Long-press Server Context Menu (Ping + unlocked Edit / Delete / Share QR / Copy Link)
     contextTarget?.let { server ->
         val isComplex = server.profile?.configType?.isComplexType() == true
+        val subtitleText = if (server.isProtected) {
+            stringResource(R.string.virax_protected_server_label)
+        } else {
+            server.typeDescription
+        }
         AlertDialog(
             onDismissRequest = { contextTarget = null },
             containerColor = colors.cardBackgroundElevated,
@@ -286,11 +302,11 @@ fun ViraxServersScreen(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    if (server.typeDescription.isNotBlank()) {
+                    if (subtitleText.isNotBlank()) {
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = server.typeDescription,
-                            color = colors.textSecondary,
+                            text = subtitleText,
+                            color = if (server.isProtected) colors.gold else colors.textSecondary,
                             fontSize = 12.sp
                         )
                     }
@@ -298,43 +314,53 @@ fun ViraxServersScreen(
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    server.profile?.let { profile ->
-                        ServerDialogActionRow(
-                            iconRes = R.drawable.ic_edit_24dp,
-                            label = stringResource(R.string.action_edit),
-                            onClick = {
-                                contextTarget = null
-                                onEditServer(server.guid, profile)
-                            }
-                        )
-                    }
-                    if (!isComplex) {
-                        ServerDialogActionRow(
-                            iconRes = R.drawable.ic_scan_24dp,
-                            label = stringResource(R.string.virax_share_qr),
-                            onClick = {
-                                contextTarget = null
-                                onShareServerQr(server.guid)
-                            }
-                        )
-                        ServerDialogActionRow(
-                            iconRes = R.drawable.ic_copy,
-                            label = stringResource(R.string.virax_copy_link),
-                            onClick = {
-                                contextTarget = null
-                                onShareServerClipboard(server.guid)
-                            }
-                        )
-                    }
                     ServerDialogActionRow(
-                        iconRes = R.drawable.ic_delete_24dp,
-                        label = stringResource(R.string.action_delete),
-                        tint = colors.disconnectRed,
+                        iconRes = R.drawable.ic_virax_lightning,
+                        label = stringResource(R.string.virax_ping_action),
                         onClick = {
                             contextTarget = null
-                            deleteConfirmTarget = server
+                            onPingServer(server.guid)
                         }
                     )
+                    if (!server.isProtected) {
+                        server.profile?.let { profile ->
+                            ServerDialogActionRow(
+                                iconRes = R.drawable.ic_edit_24dp,
+                                label = stringResource(R.string.action_edit),
+                                onClick = {
+                                    contextTarget = null
+                                    onEditServer(server.guid, profile)
+                                }
+                            )
+                        }
+                        if (!isComplex) {
+                            ServerDialogActionRow(
+                                iconRes = R.drawable.ic_scan_24dp,
+                                label = stringResource(R.string.virax_share_qr),
+                                onClick = {
+                                    contextTarget = null
+                                    onShareServerQr(server.guid)
+                                }
+                            )
+                            ServerDialogActionRow(
+                                iconRes = R.drawable.ic_copy,
+                                label = stringResource(R.string.virax_copy_link),
+                                onClick = {
+                                    contextTarget = null
+                                    onShareServerClipboard(server.guid)
+                                }
+                            )
+                        }
+                        ServerDialogActionRow(
+                            iconRes = R.drawable.ic_delete_24dp,
+                            label = stringResource(R.string.action_delete),
+                            tint = colors.disconnectRed,
+                            onClick = {
+                                contextTarget = null
+                                deleteConfirmTarget = server
+                            }
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -693,7 +719,15 @@ fun ViraxServersScreen(
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
-                                        if (server.typeDescription.isNotBlank()) {
+                                        if (server.isProtected) {
+                                            Text(
+                                                text = stringResource(R.string.virax_protected_server_label),
+                                                color = colors.primaryPurple,
+                                                fontSize = 11.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        } else if (server.typeDescription.isNotBlank()) {
                                             Text(
                                                 text = server.typeDescription,
                                                 color = colors.textMuted,

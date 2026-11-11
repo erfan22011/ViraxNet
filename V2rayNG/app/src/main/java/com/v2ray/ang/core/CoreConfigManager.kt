@@ -1173,10 +1173,24 @@ object CoreConfigManager {
         v2rayConfig: V2rayConfig,
         policyGroupBalancerTags: Map<String, String>
     ) {
+        val bypassIranianSites = MmkvManager.decodeSettingsBool(AppConfig.PREF_BYPASS_IRANIAN_SITES, false)
+        val configuredStrategy = MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY)
+        v2rayConfig.routing.domainStrategy = CoreRoutingBypassHelper.resolveEffectiveDomainStrategy(
+            configuredStrategy = configuredStrategy,
+            bypassIranianSites = bypassIranianSites
+        )
 
-        v2rayConfig.routing.domainStrategy =
-            MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY)
-                ?: "AsIs"
+        if (bypassIranianSites) {
+            val hasGeositeDat = CoreRoutingBypassHelper.hasAssetFile(configContext.context, AppConfig.GEOSITE_DAT)
+            val hasGeoipDat = CoreRoutingBypassHelper.hasAssetFile(configContext.context, AppConfig.GEOIP_DAT)
+            CoreRoutingBypassHelper.buildBypassRulesets(
+                bypassIranianSites = true,
+                hasGeositeDat = hasGeositeDat,
+                hasGeoipDat = hasGeoipDat
+            ).forEach { bypassRule ->
+                appendRoutingUserRule(configContext, bypassRule, v2rayConfig, policyGroupBalancerTags)
+            }
+        }
 
         val rulesetItems = MmkvManager.decodeRoutingRulesets()
         rulesetItems?.forEach { key ->

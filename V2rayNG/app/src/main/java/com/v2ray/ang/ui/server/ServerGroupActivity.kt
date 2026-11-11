@@ -31,9 +31,11 @@ import com.v2ray.ang.enums.BalancerStrategyType
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.handler.ViraxAccessManager
 import com.v2ray.ang.ui.base.BaseComponentActivity
 import com.v2ray.ang.ui.compose.AppTopBar
 import com.v2ray.ang.ui.compose.DeleteConfirmDialog
@@ -84,6 +86,10 @@ class ServerGroupActivity : BaseComponentActivity() {
         } else if (subscriptionId.isNotNullEmpty()) {
             subIds.indexOf(subscriptionId).let { if (it >= 0) it else 0 }
         } else 0
+        if (config != null && ViraxAccessManager.isProtectedServer(editGuid, config)) {
+            toastError(R.string.virax_protected_edit_locked)
+            finish()
+        }
     }
 
     @Composable

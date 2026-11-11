@@ -29,11 +29,13 @@ import com.v2ray.ang.R
 import com.v2ray.ang.dto.entities.SubscriptionItem
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.toLongEx
+import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
+import com.v2ray.ang.handler.ViraxAccessManager
 import com.v2ray.ang.ui.base.BaseComponentActivity
 import com.v2ray.ang.ui.compose.AppTopBar
 import com.v2ray.ang.ui.compose.DeleteConfirmDialog
@@ -62,6 +64,10 @@ class SubEditActivity : BaseComponentActivity() {
             )
         )
         subItem = MmkvManager.decodeSubscription(editSubId) ?: SubscriptionItem()
+        if (editSubId.isNotEmpty() && ViraxAccessManager.isProtectedSubscription(subItem)) {
+            toastError(R.string.virax_protected_edit_locked)
+            finish()
+        }
     }
 
     @Composable

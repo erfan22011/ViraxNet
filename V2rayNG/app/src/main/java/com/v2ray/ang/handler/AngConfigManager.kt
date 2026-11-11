@@ -134,6 +134,7 @@ object AngConfigManager {
     fun shareFullContent2Clipboard(context: Context, guid: String?): Int {
         try {
             if (guid == null) return -1
+            if (ViraxAccessManager.isProtectedServer(guid)) return -1
             val result = CoreConfigManager.getV2rayConfig(context, guid)
             if (result.status) {
                 Utils.setClipboard(context, result.content)
@@ -156,6 +157,9 @@ object AngConfigManager {
     private fun shareConfig(guid: String): String {
         try {
             val config = MmkvManager.decodeServerConfig(guid) ?: return ""
+            if (ViraxAccessManager.isProtectedServer(guid, config)) {
+                return ""
+            }
 
             return config.configType.protocolScheme + when (config.configType) {
                 EConfigType.VMESS -> VmessFmt.toUri(config)
@@ -300,11 +304,17 @@ object AngConfigManager {
         subid: String,
         append: Boolean,
     ) {
+        val subItem = subid.takeIf { it.isNotBlank() }?.let { MmkvManager.decodeSubscription(it) }
+        val isProtectedSub = ViraxAccessManager.isProtectedSubscription(subItem)
         val keyToProfile = linkedMapOf<String, ProfileItem>()
         val rawConfigs = mutableMapOf<String, String>()
 
         configs.forEach { parsed ->
             val key = Utils.getUuid()
+            if (isProtectedSub || parsed.profile.isProtected) {
+                parsed.profile.isProtected = true
+                parsed.profile.description = ""
+            }
             keyToProfile[key] = parsed.profile
             parsed.rawConfig?.let { raw -> rawConfigs[key] = raw }
         }
@@ -543,12 +553,16 @@ object AngConfigManager {
 
             val count = parseConfigViaSub(configText, it.guid, false)
             if (count > 0) {
+                val isProtectedSub = ViraxAccessManager.isProtectedSubscription(it.subscription)
+                it.subscription.isProtected = isProtectedSub
                 it.subscription.lastUpdated = System.currentTimeMillis()
                 // Replaced on every successful update so the box disappears if the panel stops sending the headers.
                 it.subscription.usageInfo = usageInfo
                 val headerTitle = usageInfo?.title?.trim().orEmpty()
                 val hostName = runCatching { URI(Utils.fixIllegalUrl(it.subscription.url)).host.orEmpty() }.getOrDefault("")
-                if (headerTitle.isNotEmpty() && it.subscription.remarks in setOf("", "import sub", "Subscription", hostName)) {
+                if (isProtectedSub && it.subscription.remarks in setOf("", "import sub", "Subscription", hostName)) {
+                    it.subscription.remarks = headerTitle.ifEmpty { ViraxAccessManager.PROTECTED_SUB_DEFAULT_REMARKS }
+                } else if (headerTitle.isNotEmpty() && it.subscription.remarks in setOf("", "import sub", "Subscription", hostName)) {
                     it.subscription.remarks = headerTitle
                 }
                 MmkvManager.encodeSubscription(it.guid, it.subscription)
@@ -629,6 +643,7 @@ object AngConfigManager {
      */
     private fun importUrlAsSubscription(url: String): Int {
         val cleanUrl = url.trim()
+        val isProtected = ViraxAccessManager.isProtectedUrl(cleanUrl)
         val subscriptions = MmkvManager.decodeSubscriptions()
         subscriptions.forEach {
             if (it.subscription.url == cleanUrl) {
@@ -639,15 +654,35 @@ object AngConfigManager {
         val decodedFragment = uri?.fragment?.takeIf { it.isNotBlank() }?.let { frag ->
             runCatching { java.net.URLDecoder.decode(frag, "UTF-8") }.getOrDefault(frag)
         }
+        val defaultRemarks = if (isProtected) {
+            ViraxAccessManager.PROTECTED_SUB_DEFAULT_REMARKS
+        } else {
+            uri?.host?.takeIf { it.isNotBlank() } ?: "Subscription"
+        }
         val subItem = SubscriptionItem(
-            remarks = decodedFragment ?: uri?.host?.takeIf { it.isNotBlank() } ?: "Subscription",
+            remarks = decodedFragment ?: defaultRemarks,
             url = cleanUrl,
             enabled = true,
             autoUpdate = true,
             updateInterval = DEFAULT_AUTO_UPDATE_MINUTES,
+            isProtected = isProtected,
         )
         MmkvManager.encodeSubscription("", subItem)
         return 1
+    }
+
+    /**
+     * Imports a dedicated access code by constructing its protected subscription URL
+     * without exposing the underlying base endpoint or server details.
+     */
+    fun importDedicatedCode(codeInput: String): Pair<String?, SubscriptionUpdateResult> {
+        val url = ViraxAccessManager.buildProtectedSubscriptionUrl(codeInput)
+            ?: return null to SubscriptionUpdateResult(failureCount = 1)
+        return importOrUpdateSubscriptionUrl(
+            url = url,
+            allowInsecure = false,
+            forceProtected = true
+        )
     }
 
     /**
@@ -656,9 +691,11 @@ object AngConfigManager {
      */
     fun importOrUpdateSubscriptionUrl(
         url: String,
-        allowInsecure: Boolean = true
+        allowInsecure: Boolean = true,
+        forceProtected: Boolean = false
     ): Pair<String?, SubscriptionUpdateResult> {
         val cleanUrl = url.trim()
+        val isProtected = forceProtected || ViraxAccessManager.isProtectedUrl(cleanUrl)
         if (!Utils.isValidUrl(cleanUrl)) {
             return null to SubscriptionUpdateResult(failureCount = 1)
         }
@@ -669,28 +706,43 @@ object AngConfigManager {
         val existing = MmkvManager.decodeSubscriptions().firstOrNull { it.subscription.url == cleanUrl }
         val targetGuid: String
         val targetItem: SubscriptionItem
+        val uri = runCatching { URI(Utils.fixIllegalUrl(cleanUrl)) }.getOrNull()
+        val uriHost = uri?.host?.takeIf { it.isNotBlank() }
         if (existing != null) {
             targetGuid = existing.guid
+            val effectiveProtected = existing.subscription.isProtected || isProtected
+            val sanitizedRemarks = if (effectiveProtected && uriHost != null && existing.subscription.remarks == uriHost) {
+                ViraxAccessManager.PROTECTED_SUB_DEFAULT_REMARKS
+            } else {
+                existing.subscription.remarks
+            }
             targetItem = existing.subscription.copy(
+                remarks = sanitizedRemarks,
                 enabled = true,
                 autoUpdate = true,
                 updateInterval = if (existing.subscription.updateInterval > 0) existing.subscription.updateInterval else DEFAULT_AUTO_UPDATE_MINUTES,
-                allowInsecureUrl = existing.subscription.allowInsecureUrl || !Utils.isValidSubUrl(cleanUrl)
+                allowInsecureUrl = existing.subscription.allowInsecureUrl || !Utils.isValidSubUrl(cleanUrl),
+                isProtected = effectiveProtected
             )
             MmkvManager.encodeSubscription(targetGuid, targetItem)
         } else {
-            val uri = runCatching { URI(Utils.fixIllegalUrl(cleanUrl)) }.getOrNull()
             val decodedFragment = uri?.fragment?.takeIf { it.isNotBlank() }?.let { frag ->
                 runCatching { java.net.URLDecoder.decode(frag, "UTF-8") }.getOrDefault(frag)
             }
+            val defaultRemarks = if (isProtected) {
+                ViraxAccessManager.PROTECTED_SUB_DEFAULT_REMARKS
+            } else {
+                uriHost ?: "Subscription"
+            }
             targetGuid = Utils.getUuid()
             targetItem = SubscriptionItem(
-                remarks = decodedFragment ?: uri?.host?.takeIf { it.isNotBlank() } ?: "Subscription",
+                remarks = decodedFragment ?: defaultRemarks,
                 url = cleanUrl,
                 enabled = true,
                 autoUpdate = true,
                 updateInterval = DEFAULT_AUTO_UPDATE_MINUTES,
-                allowInsecureUrl = allowInsecure && !Utils.isValidSubUrl(cleanUrl)
+                allowInsecureUrl = allowInsecure && !Utils.isValidSubUrl(cleanUrl),
+                isProtected = isProtected
             )
             MmkvManager.encodeSubscription(targetGuid, targetItem)
         }
@@ -711,6 +763,7 @@ object AngConfigManager {
      * @return The generated description.
      */
     fun generateDescription(profile: ProfileItem): String {
+        if (profile.isProtected) return ""
         // Hide xxx:xxx:***/xxx.xxx.xxx.***
         val server = profile.server
         val port = profile.serverPort
