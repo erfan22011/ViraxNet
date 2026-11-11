@@ -662,4 +662,25 @@
     <string name="virax_ping_action">測試延遲</string>
     <string name="virax_sub_add_mode_link">訂閱或連結</string>
     <string name="virax_sub_add_mode_code">專屬代碼</string>
+    <string name="virax_connect_selected">連線</string>
+    <string name="virax_sni_spoof_title">SNI 偽裝 (實驗性)</string>
+    <string name="virax_sni_spoof_subtitle">點擊設定 Fake SNI、Connect IP 及套用範圍</string>
+    <string name="virax_sni_configure_title">設定 SNI 偽裝</string>
+    <string name="virax_sni_status_enabled_fmt">%1$s → %2$s (%3$s)</string>
+    <string name="virax_sni_fake_label">Fake SNI</string>
+    <string name="virax_sni_fake_hint">chatgpt.com</string>
+    <string name="virax_sni_connect_ip_label">Connect IP</string>
+    <string name="virax_sni_connect_ip_hint">104.17.100.50</string>
+    <string name="virax_sni_spoof_explanation">Fake SNI：在 TLS 握手中替代真實網域發送的偽裝網域。建議使用乾淨且可存取的網域（如 CDN 或常見網站）。\n\nConnect IP：實際建立連線的 IP 位址。流量會傳送至此 IP，同時握手顯示 Fake SNI。\n\n兩個欄位皆為必填；任一為空時將略過偽裝。\n\n無需修改已儲存的伺服器設定，連線或測速時會自動重寫。</string>
+    <string name="virax_sni_scope_question">將 SNI 偽裝套用於：</string>
+    <string name="virax_sni_scope_single_server">單一伺服器</string>
+    <string name="virax_sni_scope_multi_server">多個伺服器</string>
+    <string name="virax_sni_scope_subscription">訂閱連結</string>
+    <string name="virax_sni_scope_global">整個應用程式</string>
+    <string name="virax_sni_select_servers_hint">選擇目標伺服器：</string>
+    <string name="virax_sni_select_subs_hint">選擇目標訂閱：</string>
+    <string name="virax_sni_search_servers">搜尋伺服器名稱...</string>
+    <string name="virax_sni_validation_fields">Fake SNI 和 Connect IP 皆為必填。</string>
+    <string name="virax_sni_validation_target">請至少選擇一個伺服器或訂閱。</string>
+    <string name="virax_save">儲存</string>
 </resources>

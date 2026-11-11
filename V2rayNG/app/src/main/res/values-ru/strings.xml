@@ -668,4 +668,25 @@
     <string name="virax_ping_action">Тест пинга</string>
     <string name="virax_sub_add_mode_link">Ссылка подписки</string>
     <string name="virax_sub_add_mode_code">Персональный код</string>
+    <string name="virax_connect_selected">Подключить</string>
+    <string name="virax_sni_spoof_title">SNI Spoofing (экспериментально)</string>
+    <string name="virax_sni_spoof_subtitle">Нажмите для настройки Fake SNI, Connect IP и области</string>
+    <string name="virax_sni_configure_title">Настроить SNI Spoofing</string>
+    <string name="virax_sni_status_enabled_fmt">%1$s → %2$s (%3$s)</string>
+    <string name="virax_sni_fake_label">Fake SNI</string>
+    <string name="virax_sni_fake_hint">chatgpt.com</string>
+    <string name="virax_sni_connect_ip_label">Connect IP</string>
+    <string name="virax_sni_connect_ip_hint">104.17.100.50</string>
+    <string name="virax_sni_spoof_explanation">Fake SNI: доменное имя, отправляемое в TLS handshake вместо реального. Используйте чистый и доступный домен (CDN или популярный сайт).\n\nConnect IP: IP-адрес, к которому фактически выполняется подключение. Трафик направляется на этот IP, а в handshake передаётся Fake SNI.\n\nОба поля обязательны; при пустом значении подмена пропускается.\n\nМенять сохранённые настройки серверов не нужно — подмена применяется автоматически при подключении.</string>
+    <string name="virax_sni_scope_question">Применять SNI Spoofing к:</string>
+    <string name="virax_sni_scope_single_server">Одному серверу</string>
+    <string name="virax_sni_scope_multi_server">Нескольким серверам</string>
+    <string name="virax_sni_scope_subscription">Ссылке подписки</string>
+    <string name="virax_sni_scope_global">Всему приложению</string>
+    <string name="virax_sni_select_servers_hint">Выберите серверы:</string>
+    <string name="virax_sni_select_subs_hint">Выберите подписки:</string>
+    <string name="virax_sni_search_servers">Поиск сервера...</string>
+    <string name="virax_sni_validation_fields">Заполните оба поля Fake SNI и Connect IP.</string>
+    <string name="virax_sni_validation_target">Выберите хотя бы один сервер или подписку.</string>
+    <string name="virax_save">Сохранить</string>
 </resources>

@@ -3,19 +3,77 @@ package com.v2ray.ang.ui.settings
 import android.app.Application
 import android.content.Intent
 import android.provider.Settings
+import androidx.lifecycle.viewModelScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import com.v2ray.ang.core.CoreSniSpoofManager
+import com.v2ray.ang.dto.SniSpoofConfig
+import com.v2ray.ang.dto.ViraxSniServerOption
+import com.v2ray.ang.dto.ViraxSniSubscriptionOption
 import com.v2ray.ang.root.RootManager
 import com.v2ray.ang.ui.base.BaseViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SettingsViewModel(application: Application) : BaseViewModel(application) {
+class SettingsViewModel internal constructor(
+    application: Application,
+    private val decodeSniConfig: () -> SniSpoofConfig,
+    private val encodeSniConfig: (SniSpoofConfig) -> Unit,
+    private val loadSniServers: () -> List<ViraxSniServerOption>,
+    private val loadSniSubscriptions: () -> List<ViraxSniSubscriptionOption>,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+) : BaseViewModel(application) {
+
+    @Suppress("unused")
+    constructor(application: Application) : this(
+        application = application,
+        decodeSniConfig = CoreSniSpoofManager::decodeConfig,
+        encodeSniConfig = CoreSniSpoofManager::encodeConfig,
+        loadSniServers = CoreSniSpoofManager::loadSniServerOptions,
+        loadSniSubscriptions = CoreSniSpoofManager::loadSniSubscriptionOptions,
+    )
 
     private val _systemVpnSettingsAvailable = MutableStateFlow(false)
     val systemVpnSettingsAvailable = _systemVpnSettingsAvailable.asStateFlow()
+
+    private val _sniSpoofConfig = MutableStateFlow(SniSpoofConfig())
+    val sniSpoofConfig = _sniSpoofConfig.asStateFlow()
+
+    private val _sniServerOptions = MutableStateFlow<List<ViraxSniServerOption>>(emptyList())
+    val sniServerOptions = _sniServerOptions.asStateFlow()
+
+    private val _sniSubscriptionOptions = MutableStateFlow<List<ViraxSniSubscriptionOption>>(emptyList())
+    val sniSubscriptionOptions = _sniSubscriptionOptions.asStateFlow()
+
+    suspend fun refreshSniSpoofingState() {
+        val loaded = withContext(ioDispatcher) {
+            Triple(
+                decodeSniConfig(),
+                loadSniServers(),
+                loadSniSubscriptions()
+            )
+        }
+        _sniSpoofConfig.value = loaded.first
+        _sniServerOptions.value = loaded.second
+        _sniSubscriptionOptions.value = loaded.third
+    }
+
+    internal suspend fun applyAndSaveSniSpoofConfig(config: SniSpoofConfig) {
+        _sniSpoofConfig.value = config
+        withContext(ioDispatcher) {
+            encodeSniConfig(config)
+        }
+    }
+
+    fun updateSniSpoofConfig(config: SniSpoofConfig) {
+        viewModelScope.launch {
+            applyAndSaveSniSpoofConfig(config)
+        }
+    }
 
     suspend fun refreshSystemVpnSettingsAvailability() {
         _systemVpnSettingsAvailable.value = withContext(Dispatchers.IO) {

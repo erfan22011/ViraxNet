@@ -1,7 +1,9 @@
 package com.v2ray.ang.ui.main
 
+import com.v2ray.ang.dto.SniSpoofConfig
 import com.v2ray.ang.dto.SubscriptionUpdateResult
 import com.v2ray.ang.dto.TestServiceMessage
+import com.v2ray.ang.dto.ViraxSniServerOption
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.dto.entities.ServerAffiliationInfo
 import com.v2ray.ang.dto.entities.SubscriptionCache
@@ -73,6 +75,9 @@ interface MainDataSource : Closeable {
     fun getFakeDnsEnabled(): Boolean
     fun getBypassIranianSites(): Boolean
     fun setBypassIranianSites(enabled: Boolean)
+    fun getSniSpoofingConfig(): SniSpoofConfig
+    fun setSniSpoofingConfig(config: SniSpoofConfig)
+    fun loadSniServerOptions(): List<ViraxSniServerOption>
     fun hasAnyServer(): Boolean
     fun getDelayTestUrl(): String
     fun getLanguageCode(): String

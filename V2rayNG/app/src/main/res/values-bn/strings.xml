@@ -664,4 +664,25 @@
     <string name="virax_ping_action">Test Ping</string>
     <string name="virax_sub_add_mode_link">Subscription / Link</string>
     <string name="virax_sub_add_mode_code">Dedicated Code</string>
+    <string name="virax_connect_selected">সংযুক্ত করুন</string>
+    <string name="virax_sni_spoof_title">SNI Spoofing (পরীক্ষামূলক)</string>
+    <string name="virax_sni_spoof_subtitle">Fake SNI, Connect IP এবং প্রয়োগের পরিধি সেট করুন</string>
+    <string name="virax_sni_configure_title">SNI Spoofing কনফিগার করুন</string>
+    <string name="virax_sni_status_enabled_fmt">%1$s → %2$s (%3$s)</string>
+    <string name="virax_sni_fake_label">Fake SNI</string>
+    <string name="virax_sni_fake_hint">chatgpt.com</string>
+    <string name="virax_sni_connect_ip_label">Connect IP</string>
+    <string name="virax_sni_connect_ip_hint">104.17.100.50</string>
+    <string name="virax_sni_spoof_explanation">Fake SNI: আসল ডোমেইনের পরিবর্তে TLS হ্যান্ডশেকে পাঠানো ডোমেইন নাম। একটি পরিচ্ছন্ন ও সচল ডোমেইন ব্যবহার করুন।\n\nConnect IP: যে IP ঠিকানায় আসল সংযোগ স্থাপন করা হয়।\n\nউভয় ঘর পূরণ করা বাধ্যতামূলক; কোনো একটি ফাঁকা থাকলে এটি কার্যকর হবে না।\n\nসংরক্ষিত সার্ভার কনফিগ পরিবর্তনের প্রয়োজন নেই — সংযোগের সময় স্বয়ংক্রিয়ভাবে ব্যবহৃত হবে।</string>
+    <string name="virax_sni_scope_question">SNI Spoofing কোথায় প্রয়োগ হবে?</string>
+    <string name="virax_sni_scope_single_server">একটি সার্ভার</string>
+    <string name="virax_sni_scope_multi_server">একাধিক সার্ভার</string>
+    <string name="virax_sni_scope_subscription">সাবস্ক্রিপশন লিংক</string>
+    <string name="virax_sni_scope_global">সম্পূর্ণ অ্যাপ</string>
+    <string name="virax_sni_select_servers_hint">টার্গেট সার্ভার নির্বাচন করুন:</string>
+    <string name="virax_sni_select_subs_hint">টার্গেট সাবস্ক্রিপশন নির্বাচন করুন:</string>
+    <string name="virax_sni_search_servers">সার্ভার খুঁজুন...</string>
+    <string name="virax_sni_validation_fields">Fake SNI এবং Connect IP উভয়ই প্রয়োজন।</string>
+    <string name="virax_sni_validation_target">অন্তত একটি সার্ভার বা সাবস্ক্রিপশন নির্বাচন করুন।</string>
+    <string name="virax_save">সংরক্ষণ করুন</string>
 </resources>

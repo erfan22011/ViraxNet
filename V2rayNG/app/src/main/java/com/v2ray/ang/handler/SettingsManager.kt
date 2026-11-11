@@ -202,19 +202,29 @@ object SettingsManager {
     }
 
     /**
-     * Get server via remarks.
-     * @param remarks The remarks of the server.
-     * @return The ProfileItem.
+     * Get server GUID and ProfileItem via remarks.
      */
-    fun getServerViaRemarks(remarks: String?): ProfileItem? {
+    fun getServerWithGuidViaRemarks(remarks: String?): Pair<String, ProfileItem>? {
         if (remarks.isNullOrEmpty()) {
             return null
         }
         val serverList = decodeAllServerList()
-        return serverList
-            .mapNotNull { guid -> decodeServerConfig(guid) }
-            .firstOrNull { it.remarks == remarks }
+        for (guid in serverList) {
+            val profile = decodeServerConfig(guid) ?: continue
+            if (profile.remarks == remarks) {
+                return guid to profile
+            }
+        }
+        return null
     }
+
+    /**
+     * Get server via remarks.
+     * @param remarks The remarks of the server.
+     * @return The ProfileItem.
+     */
+    fun getServerViaRemarks(remarks: String?): ProfileItem? =
+        getServerWithGuidViaRemarks(remarks)?.second
 
     /**
      * Collects non-empty profile remarks while excluding specific config types.

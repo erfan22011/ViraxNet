@@ -36,6 +36,7 @@ object AppConfig {
     const val PREF_ROUTING_DOMAIN_STRATEGY = "pref_routing_domain_strategy"
     const val PREF_ROUTING_RULESET = "pref_routing_ruleset"
     const val PREF_BYPASS_IRANIAN_SITES = "pref_bypass_iranian_sites"
+    const val PREF_SNI_SPOOFING_CONFIG = "pref_sni_spoofing_config"
     const val PREF_MUX_ENABLED = "pref_mux_enabled"
     const val PREF_MUX_CONCURRENCY = "pref_mux_concurrency"
     const val PREF_MUX_XUDP_CONCURRENCY = "pref_mux_xudp_concurrency"

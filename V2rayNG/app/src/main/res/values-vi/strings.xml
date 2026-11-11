@@ -662,4 +662,25 @@
     <string name="virax_ping_action">Test Ping</string>
     <string name="virax_sub_add_mode_link">Subscription / Link</string>
     <string name="virax_sub_add_mode_code">Dedicated Code</string>
+    <string name="virax_connect_selected">Kết nối</string>
+    <string name="virax_sni_spoof_title">SNI Spoofing (Thử nghiệm)</string>
+    <string name="virax_sni_spoof_subtitle">Chạm để đặt Fake SNI, Connect IP và phạm vi áp dụng</string>
+    <string name="virax_sni_configure_title">Cấu hình SNI Spoofing</string>
+    <string name="virax_sni_status_enabled_fmt">%1$s → %2$s (%3$s)</string>
+    <string name="virax_sni_fake_label">Fake SNI</string>
+    <string name="virax_sni_fake_hint">chatgpt.com</string>
+    <string name="virax_sni_connect_ip_label">Connect IP</string>
+    <string name="virax_sni_connect_ip_hint">104.17.100.50</string>
+    <string name="virax_sni_spoof_explanation">Fake SNI: tên miền được gửi trong bắt tay TLS thay cho tên miền thật. Hãy dùng một tên miền sạch, truy cập được (CDN hoặc trang phổ biến).\n\nConnect IP: địa chỉ IP thực sự được kết nối tới. Lưu lượng sẽ đi qua IP này trong khi bắt tay TLS hiển thị Fake SNI.\n\nCả hai trường đều bắt buộc; nếu trống sẽ bỏ qua.\n\nKhông cần chỉnh sửa cấu hình máy chủ đã lưu — hệ thống sẽ tự động áp dụng khi kết nối.</string>
+    <string name="virax_sni_scope_question">Áp dụng SNI Spoofing cho:</string>
+    <string name="virax_sni_scope_single_server">Một máy chủ</string>
+    <string name="virax_sni_scope_multi_server">Nhiều máy chủ</string>
+    <string name="virax_sni_scope_subscription">Liên kết đăng ký</string>
+    <string name="virax_sni_scope_global">Toàn bộ ứng dụng</string>
+    <string name="virax_sni_select_servers_hint">Chọn máy chủ mục tiêu:</string>
+    <string name="virax_sni_select_subs_hint">Chọn gói đăng ký mục tiêu:</string>
+    <string name="virax_sni_search_servers">Tìm tên máy chủ...</string>
+    <string name="virax_sni_validation_fields">Cần nhập cả Fake SNI và Connect IP.</string>
+    <string name="virax_sni_validation_target">Vui lòng chọn ít nhất một máy chủ hoặc đăng ký.</string>
+    <string name="virax_save">Lưu</string>
 </resources>

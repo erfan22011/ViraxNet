@@ -42,12 +42,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.v2ray.ang.R
+import com.v2ray.ang.core.CoreSniSpoofManager
+import com.v2ray.ang.dto.SniSpoofConfig
+import com.v2ray.ang.dto.ViraxSniServerOption
+import com.v2ray.ang.dto.ViraxSniSubscriptionOption
 import com.v2ray.ang.ui.main.MainDestination
 
 @Composable
@@ -58,6 +64,10 @@ fun ViraxSettingsScreen(
     onFakeDnsToggled: (Boolean) -> Unit,
     bypassIranianSites: Boolean,
     onBypassIranianSitesToggled: (Boolean) -> Unit,
+    sniSpoofConfig: SniSpoofConfig = SniSpoofConfig(),
+    sniServerOptions: List<ViraxSniServerOption> = emptyList(),
+    sniSubscriptionOptions: List<ViraxSniSubscriptionOption> = emptyList(),
+    onUpdateSniSpoofConfig: (SniSpoofConfig) -> Unit = {},
     pingTestUrl: String,
     onPingTestUrlChanged: (String) -> Unit,
     currentThemeMode: String,
@@ -75,6 +85,8 @@ fun ViraxSettingsScreen(
 
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showSniSpoofDialog by remember { mutableStateOf(false) }
+    var sniSpoofInitialEnabled by remember { mutableStateOf(sniSpoofConfig.enabled) }
 
     Column(
         modifier = modifier
@@ -122,7 +134,83 @@ fun ViraxSettingsScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // 2. Routing Settings
+        // 2. SNI Spoofing (Experimental) Toggle & Config Card
+        val sniActive = CoreSniSpoofManager.isValidActiveConfig(sniSpoofConfig)
+        val sniSubtitle = sniSpoofSummaryText(sniSpoofConfig)
+        val sniSwitchDescription = stringResource(R.string.virax_sni_spoof_title)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.cardBackground)
+                .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
+                .clickable {
+                    sniSpoofInitialEnabled = sniSpoofConfig.enabled
+                    showSniSpoofDialog = true
+                }
+                .semantics { role = Role.Button }
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_virax_globe),
+                        contentDescription = null,
+                        tint = colors.primaryPurple,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.virax_sni_spoof_title),
+                            color = colors.textPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = sniSubtitle,
+                            color = if (sniActive) colors.primaryPurple else colors.textSecondary,
+                            fontSize = 12.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                Switch(
+                    checked = sniSpoofConfig.enabled,
+                    onCheckedChange = { enabled ->
+                        if (enabled) {
+                            sniSpoofInitialEnabled = true
+                            showSniSpoofDialog = true
+                        } else {
+                            onUpdateSniSpoofConfig(sniSpoofConfig.copy(enabled = false))
+                        }
+                    },
+                    modifier = Modifier.semantics { contentDescription = sniSwitchDescription },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = colors.primaryPurple,
+                        uncheckedThumbColor = colors.textMuted,
+                        uncheckedTrackColor = colors.cardBorder
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // 3. Routing Settings
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -644,6 +732,20 @@ fun ViraxSettingsScreen(
                 }
             },
             containerColor = colors.cardBackgroundElevated
+        )
+    }
+
+    if (showSniSpoofDialog) {
+        ViraxSniSpoofingDialog(
+            initialConfig = sniSpoofConfig,
+            initialEnabled = sniSpoofInitialEnabled,
+            serverOptions = sniServerOptions,
+            subscriptionOptions = sniSubscriptionOptions,
+            onSave = { updated ->
+                onUpdateSniSpoofConfig(updated)
+                showSniSpoofDialog = false
+            },
+            onDismiss = { showSniSpoofDialog = false }
         )
     }
 }

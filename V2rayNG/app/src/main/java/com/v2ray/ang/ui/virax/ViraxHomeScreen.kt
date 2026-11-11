@@ -253,16 +253,19 @@ fun ViraxHomeScreen(
             Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = stringResource(R.string.virax_auto_connect),
+                text = stringResource(R.string.virax_connect_selected),
                 color = colors.textPrimary,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = stringResource(R.string.virax_subtitle_disconnected),
+                text = serverName?.takeIf { it.isNotBlank() }
+                    ?: stringResource(R.string.virax_subtitle_disconnected),
                 color = colors.textSecondary,
-                fontSize = 13.sp
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -340,7 +343,7 @@ private fun DisconnectedPowerButton(onPowerClick: () -> Unit) {
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_virax_power),
-                contentDescription = stringResource(R.string.virax_auto_connect),
+                contentDescription = stringResource(R.string.virax_connect_selected),
                 tint = Color.White,
                 modifier = Modifier.size(52.dp)
             )

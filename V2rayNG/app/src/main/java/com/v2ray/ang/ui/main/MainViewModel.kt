@@ -10,6 +10,7 @@ import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.dto.LocateTarget
 import com.v2ray.ang.dto.RealPingResult
+import com.v2ray.ang.dto.SniSpoofConfig
 import com.v2ray.ang.dto.TestServiceMessage
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.dto.entities.ServersCache
@@ -96,6 +97,8 @@ class MainViewModel(
             localDnsEnabled = dataSource.getLocalDnsEnabled(),
             fakeDnsEnabled = dataSource.getFakeDnsEnabled(),
             bypassIranianSites = dataSource.getBypassIranianSites(),
+            sniSpoofConfig = dataSource.getSniSpoofingConfig(),
+            sniServerOptions = dataSource.loadSniServerOptions(),
             hasAnyServer = dataSource.hasAnyServer(),
             delayTestUrl = dataSource.getDelayTestUrl(),
             languageCode = dataSource.getLanguageCode(),
@@ -392,6 +395,13 @@ class MainViewModel(
                     _uiEffects.trySend(MainUiEffect.ConnectOrRestart)
                 }
             }
+            is MainAction.UpdateSniSpoofingConfig -> {
+                dataSource.setSniSpoofingConfig(action.config)
+                _uiState.update { it.copy(sniSpoofConfig = action.config) }
+                if (uiState.value.isRunning) {
+                    _uiEffects.trySend(MainUiEffect.ConnectOrRestart)
+                }
+            }
             is MainAction.SetDelayTestUrl -> {
                 dataSource.setSettingsString(AppConfig.PREF_DELAY_TEST_URL, action.url)
                 _uiState.update { it.copy(delayTestUrl = action.url) }
@@ -458,6 +468,8 @@ class MainViewModel(
                 localDnsEnabled = dataSource.getLocalDnsEnabled(),
                 fakeDnsEnabled = dataSource.getFakeDnsEnabled(),
                 bypassIranianSites = dataSource.getBypassIranianSites(),
+                sniSpoofConfig = dataSource.getSniSpoofingConfig(),
+                sniServerOptions = dataSource.loadSniServerOptions(),
                 delayTestUrl = dataSource.getDelayTestUrl(),
                 languageCode = dataSource.getLanguageCode(),
             )
@@ -596,6 +608,7 @@ class MainViewModel(
                     )
                 }
                 val rawSubscriptions = dataSource.getAllRawSubscriptions()
+                val sniServerOptions = dataSource.loadSniServerOptions()
                 val selectedGroup = resolveSelectedGroup(groups)
                 val validIds = groups.mapTo(HashSet()) { it.id }.apply { add("") }
                 groupUiFlows.keys.removeAll { it !in validIds }
@@ -619,6 +632,7 @@ class MainViewModel(
                         groups = groups,
                         groupsLoaded = true,
                         subscriptions = rawSubscriptions,
+                        sniServerOptions = sniServerOptions,
                         hasAnyServer = dataSource.hasAnyServer() || selectedServers.isNotEmpty(),
                         selectedGroupId = selectedGroup,
                         selectedGuid = currentSelectedGuid,
@@ -1260,19 +1274,6 @@ class MainViewModel(
             return
         }
 
-        // Connect immediately if this group already has fresh healthy ping measurements while disconnected.
-        if (!uiState.value.isRunning && isGroupPingFresh(groupId)) {
-            val fastestGuid = ViraxConnectionManager.findFastestServerGuid(servers)
-            if (fastestGuid != null) {
-                smartConnectFallbackActive = true
-                smartConnectAttemptedGuids.add(fastestGuid)
-                updateSelectedGuid(fastestGuid)
-                _uiState.update { it.copy(isSmartConnecting = false) }
-                _uiEffects.trySend(MainUiEffect.ConnectOrRestart)
-                return
-            }
-        }
-
         cancelAllPing()
         smartConnectFallbackActive = true
         _uiState.update { it.copy(isSmartConnecting = true, isAutoPinging = false) }
@@ -1286,6 +1287,7 @@ class MainViewModel(
             val requestId = startBulkRealPing(onlyTcp = false, explicitGroupId = groupId)
             if (requestId != null) {
                 pendingSmartConnectRequestId = requestId
+                _uiState.update { it.copy(isSmartConnecting = true, isAutoPinging = false) }
             } else {
                 smartConnectFallbackActive = false
                 _uiState.update { it.copy(isSmartConnecting = false) }

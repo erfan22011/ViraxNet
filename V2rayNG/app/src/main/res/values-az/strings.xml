@@ -665,4 +665,25 @@
     <string name="virax_ping_action">Test Ping</string>
     <string name="virax_sub_add_mode_link">Subscription / Link</string>
     <string name="virax_sub_add_mode_code">Dedicated Code</string>
+    <string name="virax_connect_selected">Qoşul</string>
+    <string name="virax_sni_spoof_title">SNI Spoofing (Sınaq)</string>
+    <string name="virax_sni_spoof_subtitle">Fake SNI, Connect IP və əhatə dairəsini təyin edin</string>
+    <string name="virax_sni_configure_title">SNI Spoofing tənzimlə</string>
+    <string name="virax_sni_status_enabled_fmt">%1$s → %2$s (%3$s)</string>
+    <string name="virax_sni_fake_label">Fake SNI</string>
+    <string name="virax_sni_fake_hint">chatgpt.com</string>
+    <string name="virax_sni_connect_ip_label">Connect IP</string>
+    <string name="virax_sni_connect_ip_hint">104.17.100.50</string>
+    <string name="virax_sni_spoof_explanation">Fake SNI: TLS handshake zamanı əsl domen əvəzinə göndərilən saxta domen adı. Təmiz və əlçatan domen seçin (CDN və ya məşhur saytlar).\n\nConnect IP: qoşulmanın faktiki edildiyi IP ünvanı. Trafik bu IP ünvanına gedir, handshake isə Fake SNI göstərir.\n\nHər iki xana məcburidir; biri boş olarsa tətbiq edilmir.\n\nYadda saxlanmış serverləri dəyişməyə ehtiyac yoxdur — qoşulma zamanı avtomatik tətbiq olunur.</string>
+    <string name="virax_sni_scope_question">SNI Spoofing hansı hissəyə tətbiq edilsin?</string>
+    <string name="virax_sni_scope_single_server">Bir server</string>
+    <string name="virax_sni_scope_multi_server">Bir neçə server</string>
+    <string name="virax_sni_scope_subscription">Abunəlik linki</string>
+    <string name="virax_sni_scope_global">Bütün tətbiq</string>
+    <string name="virax_sni_select_servers_hint">Hədəf serverləri seçin:</string>
+    <string name="virax_sni_select_subs_hint">Hədəf abunəlikləri seçin:</string>
+    <string name="virax_sni_search_servers">Server axtar...</string>
+    <string name="virax_sni_validation_fields">Fake SNI və Connect IP sahələri məcburidir.</string>
+    <string name="virax_sni_validation_target">Ən azı bir server və ya abunəlik seçin.</string>
+    <string name="virax_save">Yadda saxla</string>
 </resources>

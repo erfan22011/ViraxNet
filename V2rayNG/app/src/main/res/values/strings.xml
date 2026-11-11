@@ -665,4 +665,25 @@
     <string name="virax_ping_action">Test Ping</string>
     <string name="virax_sub_add_mode_link">Subscription / Link</string>
     <string name="virax_sub_add_mode_code">Dedicated Code</string>
+    <string name="virax_connect_selected">Connect</string>
+    <string name="virax_sni_spoof_title">SNI Spoofing (Experimental)</string>
+    <string name="virax_sni_spoof_subtitle">Tap to configure Fake SNI, Connect IP, and target scope</string>
+    <string name="virax_sni_configure_title">Configure SNI Spoofing</string>
+    <string name="virax_sni_status_enabled_fmt">%1$s → %2$s (%3$s)</string>
+    <string name="virax_sni_fake_label">Fake SNI</string>
+    <string name="virax_sni_fake_hint">chatgpt.com</string>
+    <string name="virax_sni_connect_ip_label">Connect IP</string>
+    <string name="virax_sni_connect_ip_hint">104.17.100.50</string>
+    <string name="virax_sni_spoof_explanation">Fake SNI: the domain name sent in the TLS handshake instead of the real one. Use a clean, reachable domain (a CDN or popular site works well).\n\nConnect IP: the IP address the connection is actually made to. Traffic is sent to this IP while the handshake presents the Fake SNI.\n\nBoth fields are required; spoofing is skipped if either is empty.\n\nYou do not need to edit your saved server configurations — addresses and SNI are rewritten automatically at runtime.</string>
+    <string name="virax_sni_scope_question">Apply SNI Spoofing to:</string>
+    <string name="virax_sni_scope_single_server">Single server</string>
+    <string name="virax_sni_scope_multi_server">Multiple servers</string>
+    <string name="virax_sni_scope_subscription">One or more subscription links</string>
+    <string name="virax_sni_scope_global">Entire app</string>
+    <string name="virax_sni_select_servers_hint">Choose target server(s):</string>
+    <string name="virax_sni_select_subs_hint">Choose target subscription(s):</string>
+    <string name="virax_sni_search_servers">Search server name...</string>
+    <string name="virax_sni_validation_fields">Both Fake SNI and Connect IP are required.</string>
+    <string name="virax_sni_validation_target">Please select at least one server or subscription.</string>
+    <string name="virax_save">Save</string>
 </resources>

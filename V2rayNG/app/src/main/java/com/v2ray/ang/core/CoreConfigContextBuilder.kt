@@ -3,6 +3,7 @@ package com.v2ray.ang.core
 import android.content.Context
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.dto.CoreConfigContext
+import com.v2ray.ang.dto.SniSpoofConfig
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.enums.BalancerStrategyType
 import com.v2ray.ang.enums.CoreResolvedType
@@ -36,14 +37,21 @@ object CoreConfigContextBuilder {
             return CoreConfigContext(context = context, guid = guid, isCustom = true)
         }
 
+        val spoofConfig = CoreSniSpoofManager.decodeConfig()
+
         // Step 1: Resolve the main outbound (always tag = TAG_PROXY).
-        val primaryResolvedOutbound = resolveOutbound(AppConfig.TAG_PROXY, config) ?: run {
+        val primaryResolvedOutbound = resolveOutbound(
+            tag = AppConfig.TAG_PROXY,
+            profile = config,
+            profileGuid = guid,
+            spoofConfig = spoofConfig
+        ) ?: run {
             LogUtil.e(AppConfig.TAG, "Failed to resolve main outbound for '${config.remarks}'")
             return null
         }
 
         // Step 2: Resolve all non-builtin routing outbound tags.
-        val routingResolvedOutbounds = resolveRoutingOutbounds()
+        val routingResolvedOutbounds = resolveRoutingOutbounds(spoofConfig)
         val resolvedOutbounds = listOf(primaryResolvedOutbound) + routingResolvedOutbounds
         val fallbackResolvedOutbounds = resolveFallbackOutbounds(resolvedOutbounds)
         val routingDomainRules = collectRoutingDomainRulesForDns(context)
@@ -61,25 +69,30 @@ object CoreConfigContextBuilder {
      *
      * Custom profiles are ignored at this stage and produce no entry.
      */
-    private fun resolveOutbound(tag: String, profile: ProfileItem): CoreConfigContext.ResolvedOutbound? {
+    private fun resolveOutbound(
+        tag: String,
+        profile: ProfileItem,
+        profileGuid: String? = null,
+        spoofConfig: SniSpoofConfig = CoreSniSpoofManager.decodeConfig()
+    ): CoreConfigContext.ResolvedOutbound? {
         if (profile.configType == EConfigType.CUSTOM) {
             return null
         }
 
         val (resolvedProfiles, resolvedType) = when (profile.configType) {
             EConfigType.POLICYGROUP -> Pair(
-                resolvePolicyGroupProfiles(profile),
+                resolvePolicyGroupProfiles(profile, spoofConfig),
                 CoreResolvedType.POLICYGROUP,
             )
 
             EConfigType.PROXYCHAIN -> {
-                val chainProfiles = resolveProxyChainProfiles(profile)
+                val chainProfiles = resolveProxyChainProfiles(profile, profileGuid, spoofConfig)
                 val type = if (chainProfiles.size <= 1) CoreResolvedType.NORMAL else CoreResolvedType.PROXYCHAIN
                 Pair(chainProfiles, type)
             }
 
             else -> {
-                val chainProfiles = resolveProxyChainProfilesFromGroup(profile)
+                val chainProfiles = resolveProxyChainProfilesFromGroup(profile, profileGuid, spoofConfig)
                 val type = if (chainProfiles.size <= 1) CoreResolvedType.NORMAL else CoreResolvedType.PROXYCHAIN
                 Pair(chainProfiles, type)
             }
@@ -98,7 +111,7 @@ object CoreConfigContextBuilder {
      *
      * Invalid or empty targets are skipped and handled by fallback logic later.
      */
-    private fun resolveRoutingOutbounds(): List<CoreConfigContext.ResolvedOutbound> {
+    private fun resolveRoutingOutbounds(spoofConfig: SniSpoofConfig): List<CoreConfigContext.ResolvedOutbound> {
         val rulesetItems = MmkvManager.decodeRoutingRulesets() ?: return emptyList()
         val resolvedOutbounds = mutableListOf<CoreConfigContext.ResolvedOutbound>()
         val processedTags = mutableSetOf<String>()
@@ -116,11 +129,16 @@ object CoreConfigContextBuilder {
                     processedTags.add(tag)
 
                     try {
-                        val profile = SettingsManager.getServerViaRemarks(tag) ?: run {
+                        val (targetGuid, profile) = SettingsManager.getServerWithGuidViaRemarks(tag) ?: run {
                             LogUtil.w(AppConfig.TAG, "Routing tag '$tag' has no matching profile — will fall back to proxy at routing time")
                             return@forEach
                         }
-                        val resolvedOutbound = resolveOutbound(tag, profile) ?: run {
+                        val resolvedOutbound = resolveOutbound(
+                            tag = tag,
+                            profile = profile,
+                            profileGuid = targetGuid,
+                            spoofConfig = spoofConfig
+                        ) ?: run {
                             LogUtil.w(AppConfig.TAG, "Cannot use CUSTOM profile as routing outbound for tag '$tag', skipping")
                             return@forEach
                         }
@@ -141,13 +159,16 @@ object CoreConfigContextBuilder {
         return resolvedOutbounds
     }
 
-    private fun resolvePolicyGroupProfiles(config: ProfileItem): List<ProfileItem> {
+    private fun resolvePolicyGroupProfiles(
+        config: ProfileItem,
+        spoofConfig: SniSpoofConfig
+    ): List<ProfileItem> {
         try {
             val serverList = MmkvManager.decodeAllServerList()
             return serverList
                 .asSequence()
-                .mapNotNull { id -> MmkvManager.decodeServerConfig(id) }
-                .filter { profile ->
+                .mapNotNull { id -> MmkvManager.decodeServerConfig(id)?.let { id to it } }
+                .filter { (_, profile) ->
                     val subscriptionId = config.policyGroupSubscriptionId
                     if (subscriptionId.isNullOrBlank()) {
                         true
@@ -155,7 +176,7 @@ object CoreConfigContextBuilder {
                         profile.subscriptionId == subscriptionId
                     }
                 }
-                .filter { profile ->
+                .filter { (_, profile) ->
                     val filter = config.policyGroupFilter
                     if (filter.isNullOrBlank()) {
                         true
@@ -167,9 +188,10 @@ object CoreConfigContextBuilder {
                         }
                     }
                 }
-                .filter { it.server.isNotNullEmpty() }
-                .filter { Utils.isPureIpAddress(it.server!!) || Utils.isValidUrl(it.server!!) }
-                .filter { !it.configType.isComplexType() }
+                .filter { (_, profile) -> profile.server.isNotNullEmpty() }
+                .filter { (_, profile) -> Utils.isPureIpAddress(profile.server!!) || Utils.isValidUrl(profile.server!!) }
+                .filter { (_, profile) -> !profile.configType.isComplexType() }
+                .map { (id, profile) -> CoreSniSpoofManager.applySpoofIfEligible(id, profile, spoofConfig) }
                 .toList()
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to resolve policy group profiles for '${config.remarks}'", e)
@@ -177,18 +199,23 @@ object CoreConfigContextBuilder {
         }
     }
 
-    private fun resolveProxyChainProfiles(config: ProfileItem): List<ProfileItem> {
+    private fun resolveProxyChainProfiles(
+        config: ProfileItem,
+        configGuid: String?,
+        spoofConfig: SniSpoofConfig
+    ): List<ProfileItem> {
         if (config.proxyChainProfiles.isNullOrBlank()) {
-            return listOf(config)
+            return listOf(CoreSniSpoofManager.applySpoofIfEligible(configGuid, config, spoofConfig))
         }
 
         try {
             return config.proxyChainProfiles.orEmpty().split(",")
                 .asSequence()
-                .mapNotNull { remark -> SettingsManager.getServerViaRemarks(remark) }
-                .filter { it.server.isNotNullEmpty() }
-                .filter { Utils.isPureIpAddress(it.server!!) || Utils.isValidUrl(it.server!!) }
-                .filter { !it.configType.isComplexType() }
+                .mapNotNull { remark -> SettingsManager.getServerWithGuidViaRemarks(remark) }
+                .filter { (_, profile) -> profile.server.isNotNullEmpty() }
+                .filter { (_, profile) -> Utils.isPureIpAddress(profile.server!!) || Utils.isValidUrl(profile.server!!) }
+                .filter { (_, profile) -> !profile.configType.isComplexType() }
+                .map { (id, profile) -> CoreSniSpoofManager.applySpoofIfEligible(id, profile, spoofConfig) }
                 .toList()
                 .reversed()
         } catch (e: Exception) {
@@ -202,21 +229,30 @@ object CoreConfigContextBuilder {
      *
      * When no chain is available, return a single-node result.
      */
-    private fun resolveProxyChainProfilesFromGroup(config: ProfileItem): List<ProfileItem> {
+    private fun resolveProxyChainProfilesFromGroup(
+        config: ProfileItem,
+        configGuid: String?,
+        spoofConfig: SniSpoofConfig
+    ): List<ProfileItem> {
+        val currentEffective = CoreSniSpoofManager.applySpoofIfEligible(configGuid, config, spoofConfig)
         if (config.subscriptionId.isEmpty()) {
-            return listOf(config)
+            return listOf(currentEffective)
         }
 
         try {
-            val subItem = MmkvManager.decodeSubscription(config.subscriptionId) ?: return listOf(config)
+            val subItem = MmkvManager.decodeSubscription(config.subscriptionId) ?: return listOf(currentEffective)
             val resolved = mutableListOf<ProfileItem>()
-            SettingsManager.getServerViaRemarks(subItem.nextProfile)?.let { resolved.add(it) }
-            resolved.add(config)
-            SettingsManager.getServerViaRemarks(subItem.prevProfile)?.let { resolved.add(it) }
+            SettingsManager.getServerWithGuidViaRemarks(subItem.nextProfile)?.let { (nextId, nextProfile) ->
+                resolved.add(CoreSniSpoofManager.applySpoofIfEligible(nextId, nextProfile, spoofConfig))
+            }
+            resolved.add(currentEffective)
+            SettingsManager.getServerWithGuidViaRemarks(subItem.prevProfile)?.let { (prevId, prevProfile) ->
+                resolved.add(CoreSniSpoofManager.applySpoofIfEligible(prevId, prevProfile, spoofConfig))
+            }
             return resolved
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to resolve proxy chain from group for '${config.remarks}'", e)
-            return listOf(config)
+            return listOf(currentEffective)
         }
     }
 

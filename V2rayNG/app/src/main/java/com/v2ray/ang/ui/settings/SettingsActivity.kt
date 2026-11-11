@@ -51,6 +51,9 @@ import com.v2ray.ang.ui.compose.SettingsMenuItem
 import com.v2ray.ang.ui.compose.SettingsSwitchItem
 import com.v2ray.ang.ui.compose.ThemeManager
 import com.v2ray.ang.ui.compose.verticalScrollbar
+import com.v2ray.ang.ui.virax.ViraxSniSpoofingDialog
+import com.v2ray.ang.ui.virax.ViraxThemeProvider
+import com.v2ray.ang.ui.virax.sniSpoofSummaryText
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.launch
@@ -63,7 +66,8 @@ class SettingsActivity : BaseComponentActivity() {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                viewModel.refreshSystemVpnSettingsAvailability()
+                launch { viewModel.refreshSystemVpnSettingsAvailability() }
+                launch { viewModel.refreshSniSpoofingState() }
             }
         }
     }
@@ -103,6 +107,11 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val systemVpnSettingsAvailable by viewModel.systemVpnSettingsAvailable.collectAsStateWithLifecycle()
+    val sniSpoofConfig by viewModel.sniSpoofConfig.collectAsStateWithLifecycle()
+    val sniServerOptions by viewModel.sniServerOptions.collectAsStateWithLifecycle()
+    val sniSubscriptionOptions by viewModel.sniSubscriptionOptions.collectAsStateWithLifecycle()
+    var showSniSpoofDialog by rememberSaveable { mutableStateOf(false) }
+    var sniSpoofInitialEnabled by rememberSaveable { mutableStateOf(false) }
     var uiSettingsExpanded by rememberSaveable { mutableStateOf(true) }
     var vpnSettingsExpanded by rememberSaveable { mutableStateOf(true) }
     var coreSettingsExpanded by rememberSaveable { mutableStateOf(true) }
@@ -410,6 +419,28 @@ fun SettingsScreen(
                     summary = stringResource(R.string.virax_bypass_iran_desc),
                     checked = bypassIranianSites,
                     onCheckedChange = { bypassIranianSites = it }
+                )
+                val sniSummary = sniSpoofSummaryText(sniSpoofConfig)
+                SettingsSwitchItem(
+                    title = stringResource(R.string.virax_sni_spoof_title),
+                    summary = sniSummary,
+                    checked = sniSpoofConfig.enabled,
+                    onCheckedChange = { enabled ->
+                        if (enabled) {
+                            sniSpoofInitialEnabled = true
+                            showSniSpoofDialog = true
+                        } else {
+                            viewModel.updateSniSpoofConfig(sniSpoofConfig.copy(enabled = false))
+                        }
+                    }
+                )
+                SettingsMenuItem(
+                    title = stringResource(R.string.virax_sni_configure_title),
+                    subtitle = sniSummary,
+                    onClick = {
+                        sniSpoofInitialEnabled = sniSpoofConfig.enabled
+                        showSniSpoofDialog = true
+                    }
                 )
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_sniffing_enabled),
@@ -719,6 +750,22 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
             NavigationBarsSpacer()
+        }
+    }
+
+    if (showSniSpoofDialog) {
+        ViraxThemeProvider(themeMode = uiModeNight) {
+            ViraxSniSpoofingDialog(
+                initialConfig = sniSpoofConfig,
+                initialEnabled = sniSpoofInitialEnabled,
+                serverOptions = sniServerOptions,
+                subscriptionOptions = sniSubscriptionOptions,
+                onSave = { updated ->
+                    viewModel.updateSniSpoofConfig(updated)
+                    showSniSpoofDialog = false
+                },
+                onDismiss = { showSniSpoofDialog = false }
+            )
         }
     }
 }

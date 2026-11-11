@@ -664,4 +664,25 @@
     <string name="virax_ping_action">Test Ping</string>
     <string name="virax_sub_add_mode_link">Subscription / Link</string>
     <string name="virax_sub_add_mode_code">Dedicated Code</string>
+    <string name="virax_connect_selected">اتصال</string>
+    <string name="virax_sni_spoof_title">SNI Spoofing (آزمایشی)</string>
+    <string name="virax_sni_spoof_subtitle">برای تنظیم Fake SNI، آی‌پی اتصال و محدوده اعمال لمس کنید</string>
+    <string name="virax_sni_configure_title">تنظیمات SNI Spoofing</string>
+    <string name="virax_sni_status_enabled_fmt">%1$s → %2$s (%3$s)</string>
+    <string name="virax_sni_fake_label">Fake SNI</string>
+    <string name="virax_sni_fake_hint">chatgpt.com</string>
+    <string name="virax_sni_connect_ip_label">Connect IP</string>
+    <string name="virax_sni_connect_ip_hint">104.17.100.50</string>
+    <string name="virax_sni_spoof_explanation">Fake SNI: نام دامنه‌ای که به‌جای دامنه اصلی در هندشیک TLS ارسال می‌شود. از یک دامنه تمیز و در دسترس (مثل CDN یا سایت‌های معتبر) استفاده کنید.\n\nConnect IP: آدرس IP که اتصال واقعاً به آن برقرار می‌شود. ترافیک به این IP ارسال می‌شود در حالی که در هندشیک SNI جعلی نمایش داده می‌شود.\n\nپر کردن هر دو فیلد الزامی است؛ در صورت خالی بودن هر کدام، این قابلیت اعمال نمی‌شود.\n\nنیازی به تغییر تنظیمات ذخیره‌شده سرور نیست — هنگام اتصال یا پینگ‌گیری به‌صورت خودکار اعمال می‌شود.</string>
+    <string name="virax_sni_scope_question">SNI Spoofing روی کدام بخش اعمال شود؟</string>
+    <string name="virax_sni_scope_single_server">یک سرور مشخص</string>
+    <string name="virax_sni_scope_multi_server">چند سرور انتخابی</string>
+    <string name="virax_sni_scope_subscription">یک یا چند لینک اشتراک</string>
+    <string name="virax_sni_scope_global">کل برنامه (همه سرورها)</string>
+    <string name="virax_sni_select_servers_hint">سرورهای هدف را انتخاب کنید:</string>
+    <string name="virax_sni_select_subs_hint">لینک‌های اشتراک هدف را انتخاب کنید:</string>
+    <string name="virax_sni_search_servers">جستجوی نام سرور...</string>
+    <string name="virax_sni_validation_fields">هر دو فیلد Fake SNI و Connect IP الزامی هستند.</string>
+    <string name="virax_sni_validation_target">لطفاً حداقل یک سرور یا لینک اشتراک انتخاب کنید.</string>
+    <string name="virax_save">ذخیره</string>
 </resources>

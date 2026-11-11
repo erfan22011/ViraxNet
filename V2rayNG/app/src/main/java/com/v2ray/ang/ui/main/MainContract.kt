@@ -3,6 +3,8 @@ package com.v2ray.ang.ui.main
 import com.v2ray.ang.dto.ConnectionTestResult
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.dto.LocateTarget
+import com.v2ray.ang.dto.SniSpoofConfig
+import com.v2ray.ang.dto.ViraxSniServerOption
 import com.v2ray.ang.handler.ViraxAccessManager
 import com.v2ray.ang.handler.ViraxPlanBadge
 
@@ -34,6 +36,8 @@ data class MainUiState(
     val localDnsEnabled: Boolean = false,
     val fakeDnsEnabled: Boolean = false,
     val bypassIranianSites: Boolean = false,
+    val sniSpoofConfig: SniSpoofConfig = SniSpoofConfig(),
+    val sniServerOptions: List<ViraxSniServerOption> = emptyList(),
     val delayTestUrl: String = com.v2ray.ang.AppConfig.DELAY_TEST_URL,
     val languageCode: String = "auto",
     val startFailureCounter: Long = 0L,
@@ -107,6 +111,7 @@ sealed interface MainAction {
     data class SetLocalDnsEnabled(val enabled: Boolean) : MainAction
     data class SetFakeDnsEnabled(val enabled: Boolean) : MainAction
     data class SetBypassIranianSites(val enabled: Boolean) : MainAction
+    data class UpdateSniSpoofingConfig(val config: SniSpoofConfig) : MainAction
     data class SetDelayTestUrl(val url: String) : MainAction
     data class SetLanguageCode(val code: String) : MainAction
 

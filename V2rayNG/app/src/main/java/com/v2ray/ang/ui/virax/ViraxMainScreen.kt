@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.GroupMapItem
+import com.v2ray.ang.dto.ViraxSniSubscriptionOption
 import com.v2ray.ang.handler.SubscriptionInfoParser
 import com.v2ray.ang.handler.ViraxAccessManager
 import com.v2ray.ang.ui.compose.ConfirmDialog
@@ -124,9 +125,37 @@ fun ViraxMainScreen(
         list
     }
 
-    val currentServerRow = groupState.rows.firstOrNull { it.guid == selectedGuid }
+    val effectiveServersSelectedGuid = remember(viraxServers, selectedGuid) {
+        ViraxConnectionManager.resolveExplicitOrFirstServerGuid(viraxServers, selectedGuid)
+    }
+
+    val selectedTargetGuid = remember(
+        viraxServers,
+        selectedGuid,
+        uiState.sniServerOptions,
+    ) {
+        val allValidGuids = uiState.sniServerOptions.mapTo(HashSet()) { it.guid }
+        ViraxConnectionManager.resolveLastSelectedOrFirstGuid(
+            groupServers = viraxServers,
+            allValidGuids = allValidGuids,
+            preferredGuid = selectedGuid
+        )
+    }
+
+    val currentServerRow = groupState.rows.firstOrNull { it.guid == selectedTargetGuid }
     val currentServerName = currentServerRow?.remarks
+        ?: uiState.sniServerOptions.firstOrNull { it.guid == selectedTargetGuid }?.remarks
     val currentServerPing = currentServerRow?.testDelayMillis ?: 0L
+
+    val sniSubscriptionOptions = remember(activeSubscriptions) {
+        activeSubscriptions.map { sub ->
+            ViraxSniSubscriptionOption(
+                id = sub.guid,
+                remarks = sub.subscription.remarks,
+                isProtected = ViraxAccessManager.isProtectedSubscription(sub.subscription)
+            )
+        }
+    }
 
     var selectedTab by rememberSaveable { mutableStateOf(ViraxTab.HOME) }
     var isConnectingModalVisible by remember { mutableStateOf(false) }
@@ -212,22 +241,21 @@ fun ViraxMainScreen(
         }
     }
 
-    val effectiveServersSelectedGuid = remember(viraxServers, selectedGuid) {
-        ViraxConnectionManager.resolveExplicitOrFirstServerGuid(viraxServers, selectedGuid)
-    }
-
     val handleConnectOrDisconnect: () -> Unit = {
         if (isRunning) {
             // Ensure disconnect never triggers Connecting modal
             isConnectingModalVisible = false
             onAction(MainAction.ToggleService)
-        } else if (viraxServers.isEmpty()) {
-            isConnectingModalVisible = false
-            manualImportMode = ViraxImportMode.DEDICATED_CODE
-            showManualSubInputDialog = true
         } else {
-            isConnectingModalVisible = true
-            onAction(MainAction.SmartConnect)
+            val targetGuid = selectedTargetGuid
+            if (targetGuid.isNullOrBlank()) {
+                isConnectingModalVisible = false
+                manualImportMode = ViraxImportMode.DEDICATED_CODE
+                showManualSubInputDialog = true
+            } else {
+                isConnectingModalVisible = true
+                onAction(MainAction.ConnectServer(targetGuid))
+            }
         }
     }
 
@@ -464,6 +492,12 @@ fun ViraxMainScreen(
                                 bypassIranianSites = uiState.bypassIranianSites,
                                 onBypassIranianSitesToggled = { enabled ->
                                     onAction(MainAction.SetBypassIranianSites(enabled))
+                                },
+                                sniSpoofConfig = uiState.sniSpoofConfig,
+                                sniServerOptions = uiState.sniServerOptions,
+                                sniSubscriptionOptions = sniSubscriptionOptions,
+                                onUpdateSniSpoofConfig = { updatedConfig ->
+                                    onAction(MainAction.UpdateSniSpoofingConfig(updatedConfig))
                                 },
                                 pingTestUrl = uiState.delayTestUrl,
                                 onPingTestUrlChanged = { newUrl ->

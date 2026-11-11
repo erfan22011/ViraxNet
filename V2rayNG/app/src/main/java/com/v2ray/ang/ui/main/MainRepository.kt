@@ -258,6 +258,16 @@ class MainRepository(
         MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_IRANIAN_SITES, enabled)
     }
 
+    override fun getSniSpoofingConfig(): SniSpoofConfig =
+        com.v2ray.ang.core.CoreSniSpoofManager.decodeConfig()
+
+    override fun setSniSpoofingConfig(config: SniSpoofConfig) {
+        com.v2ray.ang.core.CoreSniSpoofManager.encodeConfig(config)
+    }
+
+    override fun loadSniServerOptions(): List<ViraxSniServerOption> =
+        com.v2ray.ang.core.CoreSniSpoofManager.loadSniServerOptions()
+
     override fun hasAnyServer(): Boolean =
         MmkvManager.decodeAllServerList().isNotEmpty()
 

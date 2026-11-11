@@ -672,4 +672,25 @@
     <string name="virax_ping_action">فحص البنق</string>
     <string name="virax_sub_add_mode_link">رابط الاشتراك</string>
     <string name="virax_sub_add_mode_code">الرمز المخصص</string>
+    <string name="virax_connect_selected">اتصال</string>
+    <string name="virax_sni_spoof_title">SNI Spoofing (تجريبي)</string>
+    <string name="virax_sni_spoof_subtitle">انقر لتعيين Fake SNI وعنوان IP والنطاق</string>
+    <string name="virax_sni_configure_title">إعداد SNI Spoofing</string>
+    <string name="virax_sni_status_enabled_fmt">%1$s → %2$s (%3$s)</string>
+    <string name="virax_sni_fake_label">Fake SNI</string>
+    <string name="virax_sni_fake_hint">chatgpt.com</string>
+    <string name="virax_sni_connect_ip_label">Connect IP</string>
+    <string name="virax_sni_connect_ip_hint">104.17.100.50</string>
+    <string name="virax_sni_spoof_explanation">Fake SNI: اسم النطاق المرسل في مصافحة TLS بدلاً من النطاق الحقيقي. استخدم نطاقاً نظيفاً ومتاحاً (مثل CDN أو موقع شائع).\n\nConnect IP: عنوان IP الذي يتم الاتصال به فعلياً. يتم إرسال حركة المرور إلى هذا العنوان بينما يعرض الاتصال SNI المزيف.\n\nكلا الحقلين مطلوبان؛ يتم تخطي التمويه إذا كان أحدهما فارغاً.\n\nلا تحتاج إلى تعديل إعدادات الخادم المحفوظة — يتم تطبيقها تلقائياً أثناء الاتصال.</string>
+    <string name="virax_sni_scope_question">تطبيق SNI Spoofing على:</string>
+    <string name="virax_sni_scope_single_server">خادم واحد</string>
+    <string name="virax_sni_scope_multi_server">عدة خوادم</string>
+    <string name="virax_sni_scope_subscription">رابط اشتراك واحد أو أكثر</string>
+    <string name="virax_sni_scope_global">التطبيق بالكامل</string>
+    <string name="virax_sni_select_servers_hint">اختر الخوادم المستهدفة:</string>
+    <string name="virax_sni_select_subs_hint">اختر الاشتراكات المستهدفة:</string>
+    <string name="virax_sni_search_servers">البحث عن اسم الخادم...</string>
+    <string name="virax_sni_validation_fields">كلا الحقلين Fake SNI و Connect IP مطلوبان.</string>
+    <string name="virax_sni_validation_target">يرجى اختيار خادم واحد أو اشتراك على الأقل.</string>
+    <string name="virax_save">حفظ</string>
 </resources>

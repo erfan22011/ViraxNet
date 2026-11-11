@@ -431,4 +431,37 @@ class ViraxConnectionManagerTest {
         assertNull(SpeedtestManager.parseRemoteEndpointInfo(""))
         assertNull(SpeedtestManager.parseRemoteEndpointInfo("{}"))
     }
+
+    @Test
+    fun testResolveLastSelectedOrFirstGuidPreservesValidCrossGroupSelection() {
+        val groupServers = listOf(
+            ViraxServerItem("g1", "Node 1", 80L, false),
+            ViraxServerItem("g2", "Node 2", 40L, false)
+        )
+        val allGuids = setOf("g1", "g2", "other-group-node")
+
+        assertEquals(
+            "g2",
+            ViraxConnectionManager.resolveLastSelectedOrFirstGuid(groupServers, allGuids, "g2")
+        )
+        assertEquals(
+            "other-group-node",
+            ViraxConnectionManager.resolveLastSelectedOrFirstGuid(groupServers, allGuids, "other-group-node")
+        )
+        assertEquals(
+            "g1",
+            ViraxConnectionManager.resolveLastSelectedOrFirstGuid(groupServers, allGuids, "deleted-node")
+        )
+        assertEquals(
+            "g1",
+            ViraxConnectionManager.resolveLastSelectedOrFirstGuid(groupServers, allGuids, null)
+        )
+        assertEquals(
+            "other-group-node",
+            ViraxConnectionManager.resolveLastSelectedOrFirstGuid(emptyList(), allGuids, "other-group-node")
+        )
+        assertNull(
+            ViraxConnectionManager.resolveLastSelectedOrFirstGuid(emptyList(), emptySet(), "deleted-node")
+        )
+    }
 }

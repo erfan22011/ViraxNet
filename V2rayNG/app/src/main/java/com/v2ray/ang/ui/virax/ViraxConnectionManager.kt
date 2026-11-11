@@ -75,6 +75,23 @@ object ViraxConnectionManager {
     }
 
     /**
+     * Resolves the user's last explicitly selected server GUID if it still exists in [groupServers]
+     * or [allValidGuids], falling back to the first server in [groupServers].
+     */
+    fun resolveLastSelectedOrFirstGuid(
+        groupServers: List<ViraxServerItem>,
+        allValidGuids: Set<String>,
+        preferredGuid: String?
+    ): String? {
+        if (!preferredGuid.isNullOrBlank() &&
+            (groupServers.any { it.guid == preferredGuid } || preferredGuid in allValidGuids)
+        ) {
+            return preferredGuid
+        }
+        return groupServers.firstOrNull()?.guid
+    }
+
+    /**
      * Returns the GUID of the server with the lowest positive ping delay, or null if none succeeded.
      */
     fun findFastestServerGuid(servers: List<ServersCache>): String? {
