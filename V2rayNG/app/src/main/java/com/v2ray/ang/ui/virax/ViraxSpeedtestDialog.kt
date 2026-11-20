@@ -115,7 +115,7 @@ fun ViraxSpeedtestDialog(
                         modifier = Modifier
                             .size(7.dp)
                             .clip(CircleShape)
-                            .background(if (isTesting) colors.statusConnected else colors.primaryPurple)
+                            .background(if (isTesting) colors.greenNeon else colors.primaryPurple)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
@@ -325,7 +325,7 @@ fun ViraxSpeedtestDialog(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_delete_24dp),
                                 contentDescription = stringResource(R.string.virax_speedtest_clear_history),
-                                tint = colors.statusDisconnected,
+                                tint = colors.disconnectRed,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -390,7 +390,7 @@ fun ViraxSpeedtestDialog(
                                         )
                                         Text(
                                             text = "↑${item.uploadMbps}M",
-                                            color = colors.statusConnected,
+                                            color = colors.greenNeon,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -410,7 +410,7 @@ fun ViraxSpeedtestDialog(
                         currentPhase = SpeedtestPhase.Idle
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colors.statusDisconnected,
+                        containerColor = colors.disconnectRed,
                         contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp)
@@ -480,7 +480,7 @@ fun ViraxSpeedtestDialog(
                 ) {
                     Text(
                         text = stringResource(R.string.action_delete),
-                        color = colors.statusDisconnected,
+                        color = colors.disconnectRed,
                         fontWeight = FontWeight.Bold
                     )
                 }
