@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="MissingLeanbackLauncher">
 
-    <uses-sdk tools:overrideLibrary="go.libv2ray.gojni,androidx.work.multiprocess,androidx.appcompat,androidx.appcompat.resources,androidx.activity,androidx.activity.compose,coil3,coil3.singleton,coil3.core,coil3.compose,coil3.compose.core,coil3.compose.singleton,coil3.network,coil3.network.core,coil3.network.okhttp,coil3.network.cache,coil3.svg,coil3.gif,coil3.video" />
+    <uses-sdk tools:overrideLibrary="go.libv2ray.gojni,androidx.work,androidx.work.ktx,androidx.work.multiprocess,androidx.work.impl,androidx.lifecycle,androidx.lifecycle.viewmodel,androidx.lifecycle.viewmodel.ktx,androidx.lifecycle.runtime,androidx.lifecycle.runtime.ktx,androidx.lifecycle.runtime.compose,androidx.lifecycle.process,androidx.lifecycle.livedata.core,androidx.activity,androidx.activity.ktx,androidx.activity.compose,androidx.appcompat,androidx.appcompat.resources,androidx.camera.core,androidx.camera.camera2,androidx.camera.lifecycle,androidx.camera.compose,androidx.camera.camera2.pipe,coil3,coil3.singleton,coil3.core,coil3.compose,coil3.compose.core,coil3.compose.singleton,coil3.network,coil3.network.core,coil3.network.okhttp,coil3.network.cache,coil3.svg,coil3.gif,coil3.video,sh.calvin.reorderable" />
 
     <supports-screens
         android:anyDensity="true"
