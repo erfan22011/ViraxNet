@@ -327,6 +327,14 @@ private fun copyApnAndOpenSettings(context: Context, apnValue: String) {
                     putExtra("subscription_id", subId)
                     putExtra("android.provider.extra.SUB_ID", subId)
                 }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                @Suppress("DEPRECATION")
+                val subId = SubscriptionManager.getDefaultSubscriptionId()
+                if (subId != SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
+                    putExtra("sub_id", subId)
+                    putExtra("subscription_id", subId)
+                    putExtra("android.provider.extra.SUB_ID", subId)
+                }
             }
         }
         context.startActivity(apnIntent)

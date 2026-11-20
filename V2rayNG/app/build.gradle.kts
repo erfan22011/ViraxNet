@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.viraxnet.app"
-        minSdk = 24
+        minSdk = 21
         targetSdk = 37
         versionCode = 758
         versionName = "1.0.6"
@@ -47,6 +47,10 @@ android {
                 keyAlias = "viraxnet_release"
                 keyPassword = "viraxnet_prod_secret_2026"
             }
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
         }
     }
 

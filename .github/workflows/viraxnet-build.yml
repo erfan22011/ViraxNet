@@ -150,7 +150,9 @@ jobs:
               -Pandroid.injected.signing.store.file="$KEYSTORE_PATH" \
               -Pandroid.injected.signing.store.password="$KEYSTORE_PASS" \
               -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-              -Pandroid.injected.signing.key.password="$KEY_PASS"
+              -Pandroid.injected.signing.key.password="$KEY_PASS" \
+              -Pandroid.injected.signing.v1-signing-enabled=true \
+              -Pandroid.injected.signing.v2-signing-enabled=true
           fi
 
       - name: Organize & Rename ViraxNet APKs
@@ -194,6 +196,11 @@ jobs:
                 cp "$apk" "${{ github.workspace }}/viraxnet-apks/arm64/${target_name}"
               elif [ "$abi" = "universal" ]; then
                 cp "$apk" "${{ github.workspace }}/viraxnet-apks/universal/${target_name}"
+                cp "$apk" "${{ github.workspace }}/viraxnet-apks/release/ViraxNet-Legacy-Older-Android-Universal.apk"
+                cp "$apk" "${{ github.workspace }}/viraxnet-apks/all/ViraxNet-Legacy-Older-Android-Universal.apk"
+              elif [ "$abi" = "armeabi-v7a" ]; then
+                cp "$apk" "${{ github.workspace }}/viraxnet-apks/release/ViraxNet-Legacy-Older-Android-armeabi-v7a.apk"
+                cp "$apk" "${{ github.workspace }}/viraxnet-apks/all/ViraxNet-Legacy-Older-Android-armeabi-v7a.apk"
               fi
               echo "Processed: ${target_name}"
             done
@@ -268,7 +275,7 @@ jobs:
       - name: Prepare Release Directory
         run: |
           mkdir -p release-files
-          find release-artifacts -type f -name "ViraxNet-release-*.apk" -exec cp {} release-files/ \;
+          find release-artifacts -type f -name "ViraxNet-*.apk" -exec cp {} release-files/ \;
           ls -la release-files
 
       - name: Determine Release Tag
@@ -290,10 +297,19 @@ jobs:
             
             Welcome to the official build of **ViraxNet**!
             
-            ### Included Packages:
-            - **Universal APK**: Compatible with all Android architectures.
-            - **ARM64-v8a APK**: Optimized for modern Android smartphones (smaller size, peak performance).
-            - **ARMeabi-v7a & x86_64**: For legacy devices and emulators.
+            ### Included Packages / بسته‌های دانلودی:
+            - **📱 ViraxNet-Legacy-Older-Android-armeabi-v7a.apk**: نسخه ویژه گوشی‌های قدیمی و پردازنده‌های ۳۲ بیتی (سازگار با اندروید ۵.۰ و ۶.۰ و بالاتر بدون خطای تجزیه بسته).
+            - **📱 ViraxNet-Legacy-Older-Android-Universal.apk**: نسخه کامل سازگار با تمامی مدل‌ها و گوشی‌های قدیمی اندروید ۵.۰ به بالا.
+            - **⚡ ViraxNet-release-arm64-v8a.apk**: نسخه بهینه‌سازی‌شده ۶۴ بیتی با حداکثر سرعت برای گوشی‌های جدید.
+            - **🌐 ViraxNet-release-universal.apk**: نسخه همه‌منظوره شامل تمامی معماری‌های پردازنده.
+            
+            ### Fixes & Enhancements:
+            - پشتیبانی از اندروید ۵.۰ و ۶.۰ با امضای دوگانه V1 (JAR) و V2 و رفع خطای ناشناخته در تجزیه بسته (Parse Error).
+            - سیستم آپدیت داخلی بدون نیاز به مرورگر و نصب مستقیم.
+            - ابزار اختصاصی Speedtest با نمایش لحظه‌ای پینگ، دانلود و آپلود به همراه تاریخچه تست‌ها.
+            - اصلاح تنظیمات APN ایرانسل و همراه اول با دکمه‌های کپی تک‌لمسی.
+            - ماندگاری گزینه مرتب‌سازی بر اساس پینگ در تب سرورها.
+            - رفع باگ قفل شدن برنامه و آزادسازی کامل پورت‌ها و اینترفیس VPN.
             
             ### SHA-256 Checksums:
             Checksums are automatically generated for all attached APK files.
