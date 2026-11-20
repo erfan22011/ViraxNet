@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="MissingLeanbackLauncher">
 
-    <uses-sdk tools:overrideLibrary="go.libv2ray.gojni, coil3.compose.singleton, coil3.compose, coil3.compose.core, coil3.core, coil3" />
+    <uses-sdk tools:overrideLibrary="go.libv2ray.gojni, coil3, coil3.singleton, coil3.compose, coil3.compose.singleton, coil3.core, coil3.core.singleton, coil3.network, coil3.network.okhttp, coil3.svg, coil3.gif, coil3.video" />
 
     <supports-screens
         android:anyDensity="true"
