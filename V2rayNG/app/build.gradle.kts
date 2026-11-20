@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.viraxnet.app"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 37
         versionCode = 758
         versionName = "1.0.6"
