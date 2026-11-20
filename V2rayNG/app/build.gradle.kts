@@ -13,8 +13,8 @@ android {
         applicationId = "com.viraxnet.app"
         minSdk = 24
         targetSdk = 37
-        versionCode = 757
-        versionName = "1.0.5"
+        versionCode = 758
+        versionName = "1.0.6"
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
         splits {
@@ -51,6 +51,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            val keystoreFile = rootProject.file("keystore/viraxnet_release.jks")
+            if (keystoreFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")

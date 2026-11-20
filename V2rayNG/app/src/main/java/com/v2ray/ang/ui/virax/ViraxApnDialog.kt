@@ -5,7 +5,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
+import android.telephony.SubscriptionManager
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -71,7 +73,7 @@ val IRANIAN_OPERATORS_APN = listOf(
         id = "irancell",
         operatorNameFa = "ایرانسل",
         operatorNameEn = "MTN Irancell",
-        apnName = "Irancell-GPRS",
+        apnName = "Irancell-Internet",
         apnValue = "mtnirancell"
     ),
     ViraxApnItem(
@@ -183,20 +185,45 @@ fun ViraxApnDialog(
                         .background(colors.cardBackground)
                         .border(1.dp, colors.cardBorder, RoundedCornerShape(14.dp))
                         .padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     ApnDetailRow(
                         label = stringResource(R.string.virax_apn_name_label),
-                        value = selectedOperator.apnName
+                        value = selectedOperator.apnName,
+                        onCopy = {
+                            copySingleField(context, context.getString(R.string.virax_apn_name_label), selectedOperator.apnName)
+                        }
                     )
                     ApnDetailRow(
                         label = stringResource(R.string.virax_apn_field_label),
                         value = selectedOperator.apnValue,
-                        isHighlight = true
+                        isHighlight = true,
+                        onCopy = {
+                            copySingleField(context, context.getString(R.string.virax_apn_field_label), selectedOperator.apnValue)
+                        }
                     )
                     ApnDetailRow(
                         label = stringResource(R.string.virax_apn_protocol_label),
                         value = selectedOperator.protocol
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Guidance hint for blank APN screen
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(colors.cardBackground)
+                        .border(1.dp, colors.cardBorder, RoundedCornerShape(10.dp))
+                        .padding(10.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.virax_apn_empty_hint),
+                        color = colors.textSecondary,
+                        fontSize = 11.sp,
+                        lineHeight = 16.sp
                     )
                 }
             }
@@ -236,7 +263,8 @@ fun ViraxApnDialog(
 private fun ApnDetailRow(
     label: String,
     value: String,
-    isHighlight: Boolean = false
+    isHighlight: Boolean = false,
+    onCopy: (() -> Unit)? = null
 ) {
     val colors = ViraxTheme.colors
     Row(
@@ -249,12 +277,37 @@ private fun ApnDetailRow(
             color = colors.textSecondary,
             fontSize = 12.sp
         )
-        Text(
-            text = value,
-            color = if (isHighlight) colors.primaryPurple else colors.textPrimary,
-            fontSize = 13.sp,
-            fontWeight = if (isHighlight) FontWeight.Bold else FontWeight.SemiBold
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = value,
+                color = if (isHighlight) colors.primaryPurple else colors.textPrimary,
+                fontSize = 13.sp,
+                fontWeight = if (isHighlight) FontWeight.Bold else FontWeight.SemiBold
+            )
+            if (onCopy != null) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_copy),
+                    contentDescription = "Copy $label",
+                    tint = colors.primaryPurple,
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { onCopy() }
+                )
+            }
+        }
+    }
+}
+
+private fun copySingleField(context: Context, label: String, value: String) {
+    try {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText(label, value)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(context, "$label: $value", Toast.LENGTH_SHORT).show()
+    } catch (_: Exception) {
     }
 }
 
@@ -267,19 +320,34 @@ private fun copyApnAndOpenSettings(context: Context, apnValue: String) {
 
         val apnIntent = Intent(Settings.ACTION_APN_SETTINGS).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                val subId = SubscriptionManager.getDefaultDataSubscriptionId()
+                if (subId != SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
+                    putExtra("sub_id", subId)
+                    putExtra("subscription_id", subId)
+                    putExtra("android.provider.extra.SUB_ID", subId)
+                }
+            }
         }
         context.startActivity(apnIntent)
     } catch (_: ActivityNotFoundException) {
         try {
-            val wirelessIntent = Intent(Settings.ACTION_WIRELESS_SETTINGS).apply {
+            val netIntent = Intent(Settings.ACTION_NETWORK_OPERATOR_SETTINGS).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
-            context.startActivity(wirelessIntent)
+            context.startActivity(netIntent)
         } catch (_: Exception) {
-            val mainSettings = Intent(Settings.ACTION_SETTINGS).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            try {
+                val wirelessIntent = Intent(Settings.ACTION_WIRELESS_SETTINGS).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(wirelessIntent)
+            } catch (_: Exception) {
+                val mainSettings = Intent(Settings.ACTION_SETTINGS).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(mainSettings)
             }
-            context.startActivity(mainSettings)
         }
     } catch (e: Exception) {
         Toast.makeText(context, e.message ?: "Failed to open settings", Toast.LENGTH_SHORT).show()

@@ -85,9 +85,9 @@ fun ViraxSettingsScreen(
 
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
-    var showSniSpoofDialog by remember { mutableStateOf(false) }
     var showApnDialog by remember { mutableStateOf(false) }
-    var sniSpoofInitialEnabled by remember { mutableStateOf(sniSpoofConfig.enabled) }
+    var showSpeedtestConfirmDialog by remember { mutableStateOf(false) }
+    var showSpeedtestDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -135,83 +135,7 @@ fun ViraxSettingsScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // 2. SNI Spoofing (Experimental) Toggle & Config Card
-        val sniActive = CoreSniSpoofManager.isValidActiveConfig(sniSpoofConfig)
-        val sniSubtitle = sniSpoofSummaryText(sniSpoofConfig)
-        val sniSwitchDescription = stringResource(R.string.virax_sni_spoof_title)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(colors.cardBackground)
-                .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
-                .clickable {
-                    sniSpoofInitialEnabled = sniSpoofConfig.enabled
-                    showSniSpoofDialog = true
-                }
-                .semantics { role = Role.Button }
-                .padding(horizontal = 16.dp, vertical = 14.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 12.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_virax_globe),
-                        contentDescription = null,
-                        tint = colors.primaryPurple,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(14.dp))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.virax_sni_spoof_title),
-                            color = colors.textPrimary,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = sniSubtitle,
-                            color = if (sniActive) colors.primaryPurple else colors.textSecondary,
-                            fontSize = 12.sp,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                Switch(
-                    checked = sniSpoofConfig.enabled,
-                    onCheckedChange = { enabled ->
-                        if (enabled) {
-                            sniSpoofInitialEnabled = true
-                            showSniSpoofDialog = true
-                        } else {
-                            onUpdateSniSpoofConfig(sniSpoofConfig.copy(enabled = false))
-                        }
-                    },
-                    modifier = Modifier.semantics { contentDescription = sniSwitchDescription },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = colors.primaryPurple,
-                        uncheckedThumbColor = colors.textMuted,
-                        uncheckedTrackColor = colors.cardBorder
-                    )
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // 3. Routing Settings
+        // 2. Routing Settings
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -301,6 +225,62 @@ fun ViraxSettingsScreen(
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = stringResource(R.string.virax_apn_settings_subtitle),
+                            color = colors.textSecondary,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+
+                Icon(
+                    painter = painterResource(R.drawable.ic_virax_arrow_forward),
+                    contentDescription = null,
+                    tint = colors.textMuted,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // 5. Speedtest Card
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.cardBackground)
+                .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
+                .clickable { showSpeedtestConfirmDialog = true }
+                .semantics { role = Role.Button }
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_virax_speedtest),
+                        contentDescription = null,
+                        tint = colors.primaryPurple,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.virax_speedtest_card_title),
+                            color = colors.textPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = stringResource(R.string.virax_speedtest_card_subtitle),
                             color = colors.textSecondary,
                             fontSize = 12.sp
                         )
@@ -792,22 +772,69 @@ fun ViraxSettingsScreen(
         )
     }
 
-    if (showSniSpoofDialog) {
-        ViraxSniSpoofingDialog(
-            initialConfig = sniSpoofConfig,
-            initialEnabled = sniSpoofInitialEnabled,
-            serverOptions = sniServerOptions,
-            subscriptionOptions = sniSubscriptionOptions,
-            onSave = { updated ->
-                onUpdateSniSpoofConfig(updated)
-                showSniSpoofDialog = false
+    if (showApnDialog) {
+        ViraxApnDialog(onDismiss = { showApnDialog = false })
+    }
+
+    if (showSpeedtestConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showSpeedtestConfirmDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_virax_speedtest),
+                        contentDescription = null,
+                        tint = colors.primaryPurple,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.virax_speedtest_confirm_title),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
             },
-            onDismiss = { showSniSpoofDialog = false }
+            text = {
+                Text(
+                    text = stringResource(R.string.virax_speedtest_confirm_desc),
+                    fontSize = 13.sp,
+                    color = colors.textSecondary,
+                    lineHeight = 18.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSpeedtestConfirmDialog = false
+                        showSpeedtestDialog = true
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colors.primaryPurple,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.virax_speedtest_confirm_start),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSpeedtestConfirmDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.action_cancel),
+                        color = colors.textSecondary
+                    )
+                }
+            },
+            containerColor = colors.cardBackgroundElevated
         )
     }
 
-    if (showApnDialog) {
-        ViraxApnDialog(onDismiss = { showApnDialog = false })
+    if (showSpeedtestDialog) {
+        ViraxSpeedtestDialog(onDismiss = { showSpeedtestDialog = false })
     }
 }
 

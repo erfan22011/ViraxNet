@@ -695,4 +695,39 @@
     <string name="virax_apn_protocol_label">APN 协议</string>
     <string name="virax_apn_open_settings">复制 APN 并打开设置</string>
     <string name="virax_apn_copied_toast">APN 已复制！请在系统设置中粘贴并保存。</string>
+
+    <!-- In-App Updater & APN Enhancements -->
+    <string name="virax_update_downloading">正在下载更新…</string>
+    <string name="virax_update_ready_title">更新准备就绪</string>
+    <string name="virax_update_ready_desc">ViraxNet 最新版本已下载完成。点击安装以完成更新。</string>
+    <string name="virax_update_install_now">安装</string>
+    <string name="virax_update_error_title">下载失败</string>
+    <string name="virax_update_failed_desc">无法下载更新文件：%1$s</string>
+    <string name="virax_update_retry">重试</string>
+    <string name="virax_update_grant_install_permission">请授予安装未知应用权限以更新 ViraxNet</string>
+    <string name="virax_apn_empty_hint">如果 APN 界面为空，请在设置中点击 +（新建 APN），填入上方的名称和 APN 并保存。</string>
+    <string name="virax_apn_field_copied">%1$s 已复制</string>
+
+    <!-- Speedtest Strings -->
+    <string name="virax_speedtest_card_title">测速</string>
+    <string name="virax_speedtest_card_subtitle">实时测试网络延迟、下载与上传速度</string>
+    <string name="virax_speedtest_confirm_title">确认开始测速</string>
+    <string name="virax_speedtest_confirm_desc">测速过程将消耗部分网络流量以精确测量延迟和带宽。是否继续？</string>
+    <string name="virax_speedtest_confirm_start">开始测速</string>
+    <string name="virax_speedtest_phase_ready">准备测速</string>
+    <string name="virax_speedtest_phase_ping">正在测试延迟与抖动…</string>
+    <string name="virax_speedtest_phase_download">正在测试下载速度…</string>
+    <string name="virax_speedtest_phase_upload">正在测试上传速度…</string>
+    <string name="virax_speedtest_phase_completed">测速完成</string>
+    <string name="virax_speedtest_phase_failed">连接测速服务器失败</string>
+    <string name="virax_speedtest_metric_ping">延迟</string>
+    <string name="virax_speedtest_metric_download">下载</string>
+    <string name="virax_speedtest_metric_upload">上传</string>
+    <string name="virax_speedtest_history_title">最近 5 次测速</string>
+    <string name="virax_speedtest_clear_history">清除历史</string>
+    <string name="virax_speedtest_clear_confirm">确定要清空所有测速历史记录吗？</string>
+    <string name="virax_speedtest_no_history">暂无测速记录</string>
+    <string name="virax_speedtest_stop">停止</string>
+    <string name="virax_speedtest_run_again">重新测速</string>
+    <string name="virax_speedtest_close">关闭</string>
 </resources>

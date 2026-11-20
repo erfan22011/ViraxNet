@@ -93,8 +93,12 @@ object CoreServiceManager {
      */
     fun startCoreLoop(vpnInterface: ParcelFileDescriptor?): Boolean {
         if (isRunning()) {
-            LogUtil.w(AppConfig.TAG, "StartCore-Manager: Core already running")
-            return false
+            LogUtil.w(AppConfig.TAG, "StartCore-Manager: Core already running, stopping previous loop first")
+            try {
+                coreController.stopLoop()
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to stop previous core loop", e)
+            }
         }
 
         val service = getService()
@@ -209,12 +213,10 @@ object CoreServiceManager {
         currentVpnInterface = null
 
         if (isRunning()) {
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    coreController.stopLoop()
-                } catch (e: Exception) {
-                    LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to stop V2Ray loop", e)
-                }
+            try {
+                coreController.stopLoop()
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to stop V2Ray loop", e)
             }
         }
 

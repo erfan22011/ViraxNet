@@ -54,10 +54,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.GroupMapItem
 import com.v2ray.ang.dto.entities.ProfileItem
 import com.v2ray.ang.extension.isComplexType
+import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.ui.compose.DeleteConfirmDialog
 
 enum class ViraxServerFilter(val labelRes: Int) {
@@ -125,7 +127,9 @@ fun ViraxServersScreen(
     val colors = ViraxTheme.colors
     val haptics = LocalHapticFeedback.current
     var activeFilter by remember { mutableStateOf(ViraxServerFilter.ALL) }
-    var sortByPing by remember { mutableStateOf(false) }
+    var sortByPing by remember {
+        mutableStateOf(MmkvManager.decodeSettingsBool(AppConfig.PREF_SORT_BY_PING, false))
+    }
     var isSearchOpen by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var showSubscriptionPicker by remember { mutableStateOf(false) }
@@ -568,7 +572,9 @@ fun ViraxServersScreen(
                             )
                             .clickable {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                sortByPing = !sortByPing
+                                val newSort = !sortByPing
+                                sortByPing = newSort
+                                MmkvManager.encodeSettings(AppConfig.PREF_SORT_BY_PING, newSort)
                             }
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {

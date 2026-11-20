@@ -698,4 +698,39 @@
     <string name="virax_apn_protocol_label">APN Protokolu</string>
     <string name="virax_apn_open_settings">APN-i kopyala və parametrləri aç</string>
     <string name="virax_apn_copied_toast">APN kopyalandı! Cihaz parametrlərində qeyd edin.</string>
+
+    <!-- In-App Updater & APN Enhancements -->
+    <string name="virax_update_downloading">Yeniləmə endirilir…</string>
+    <string name="virax_update_ready_title">Yeniləmə quraşdırmaya hazırdır</string>
+    <string name="virax_update_ready_desc">ViraxNet-in ən son versiyası uğurla endirildi. Yeniləməni tamamlamaq üçün quraşdırın.</string>
+    <string name="virax_update_install_now">Quraşdır</string>
+    <string name="virax_update_error_title">Endirmə uğursuz oldu</string>
+    <string name="virax_update_failed_desc">Yeniləmə faylı endirilə bilmədi: %1$s</string>
+    <string name="virax_update_retry">Yenidən cəhd et</string>
+    <string name="virax_update_grant_install_permission">Zəhmət olmasa ViraxNet-i yeniləmək üçün naməlum tətbiqləri quraşdırmaq icazəsini verin</string>
+    <string name="virax_apn_empty_hint">Əgər APN ekranı boşdursa, parametrlərdə + (Yeni APN əlavə et) vurun və yuxarıdakı Ad və APN dəyərlərini daxil edib yadda saxlayın.</string>
+    <string name="virax_apn_field_copied">%1$s kopyalandı</string>
+
+    <!-- Speedtest Strings -->
+    <string name="virax_speedtest_card_title">Sürət testi</string>
+    <string name="virax_speedtest_card_subtitle">Bağlantı keyfiyyəti və sürətinin canlı testi</string>
+    <string name="virax_speedtest_confirm_title">Sürət testini təsdiqləyin</string>
+    <string name="virax_speedtest_confirm_desc">Sürət testinin aparılması ping, yükləmə və göndərmə sürətini ölçmək üçün bir qədər internet trafiki istifadə edəcək. Davam etmək istəyirsiniz?</string>
+    <string name="virax_speedtest_confirm_start">Testə başla</string>
+    <string name="virax_speedtest_phase_ready">Testə hazırdır</string>
+    <string name="virax_speedtest_phase_ping">Ping və titrəmə ölçülür…</string>
+    <string name="virax_speedtest_phase_download">Endirmə sürəti ölçülür…</string>
+    <string name="virax_speedtest_phase_upload">Göndərmə sürəti ölçülür…</string>
+    <string name="virax_speedtest_phase_completed">Sürət testi tamamlandı</string>
+    <string name="virax_speedtest_phase_failed">Test serveri ilə əlaqə qurulmadı</string>
+    <string name="virax_speedtest_metric_ping">Ping</string>
+    <string name="virax_speedtest_metric_download">Endirmə</string>
+    <string name="virax_speedtest_metric_upload">Göndərmə</string>
+    <string name="virax_speedtest_history_title">Son 5 test</string>
+    <string name="virax_speedtest_clear_history">Tarixçəni təmizlə</string>
+    <string name="virax_speedtest_clear_confirm">Bütün sürət testi qeydlərini silmək istədiyinizə əminsiniz?</string>
+    <string name="virax_speedtest_no_history">Hələlik test qeydi yoxdur</string>
+    <string name="virax_speedtest_stop">Dayandır</string>
+    <string name="virax_speedtest_run_again">Yenidən test et</string>
+    <string name="virax_speedtest_close">Bağla</string>
 </resources>

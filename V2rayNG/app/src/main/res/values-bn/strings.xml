@@ -697,4 +697,39 @@
     <string name="virax_apn_protocol_label">এপিএন প্রোটোকল</string>
     <string name="virax_apn_open_settings">এপিএন কপি করুন এবং সেটিংস খুলুন</string>
     <string name="virax_apn_copied_toast">এপিএন কপি করা হয়েছে! ডিভাইস সেটিংসে এটি সংরক্ষণ করুন।</string>
+
+    <!-- In-App Updater & APN Enhancements -->
+    <string name="virax_update_downloading">আপডেট ডাউনলোড হচ্ছে…</string>
+    <string name="virax_update_ready_title">আপডেট ইনস্টল করার জন্য প্রস্তুত</string>
+    <string name="virax_update_ready_desc">ViraxNet-এর সর্বশেষ সংস্করণ সফলভাবে ডাউনলোড হয়েছে। আপডেট সম্পূর্ণ করতে ইনস্টল করুন।</string>
+    <string name="virax_update_install_now">ইনস্টল করুন</string>
+    <string name="virax_update_error_title">ডাউনলোড ব্যর্থ হয়েছে</string>
+    <string name="virax_update_failed_desc">আপডেট ফাইল ডাউনলোড ব্যর্থ: %1$s</string>
+    <string name="virax_update_retry">পুনরায় চেষ্টা করুন</string>
+    <string name="virax_update_grant_install_permission">ViraxNet আপডেট করার জন্য অজানা অ্যাপ ইনস্টল করার অনুমতি দিন</string>
+    <string name="virax_apn_empty_hint">যদি ফোনের এপিএন স্ক্রিন খালি থাকে, তবে সেটিংসে + (নতুন এপিএন যোগ করুন) চাপুন এবং উপরের নাম ও এপিএন মান লিখে সংরক্ষণ করুন।</string>
+    <string name="virax_apn_field_copied">%1$s কপি করা হয়েছে</string>
+
+    <!-- Speedtest Strings -->
+    <string name="virax_speedtest_card_title">স্পিড টেস্ট</string>
+    <string name="virax_speedtest_card_subtitle">লাইভ সংযোগ গুণমান এবং গতি পরীক্ষা</string>
+    <string name="virax_speedtest_confirm_title">স্পিড টেস্ট নিশ্চিতকরণ</string>
+    <string name="virax_speedtest_confirm_desc">স্পিড টেস্ট চালালে পিং, ডাউনলোড ও আপলোড গতি মাপতে কিছুটা ইন্টারনেট ডেটা খরচ হবে। আপনি কি চালিয়ে যেতে চান?</string>
+    <string name="virax_speedtest_confirm_start">টেস্ট শুরু করুন</string>
+    <string name="virax_speedtest_phase_ready">টেস্টের জন্য প্রস্তুত</string>
+    <string name="virax_speedtest_phase_ping">পিং ও জিটার মাপা হচ্ছে…</string>
+    <string name="virax_speedtest_phase_download">ডাউনলোড গতি মাপা হচ্ছে…</string>
+    <string name="virax_speedtest_phase_upload">আপলোড গতি মাপা হচ্ছে…</string>
+    <string name="virax_speedtest_phase_completed">স্পিড টেস্ট সম্পন্ন হয়েছে</string>
+    <string name="virax_speedtest_phase_failed">টেস্ট সার্ভারের সাথে সংযোগ ব্যর্থ হয়েছে</string>
+    <string name="virax_speedtest_metric_ping">পিং</string>
+    <string name="virax_speedtest_metric_download">ডাউনলোড</string>
+    <string name="virax_speedtest_metric_upload">আপলোড</string>
+    <string name="virax_speedtest_history_title">সর্বশেষ ৫টি টেস্ট</string>
+    <string name="virax_speedtest_clear_history">ইতিহাস মুছুন</string>
+    <string name="virax_speedtest_clear_confirm">আপনি কি স্পিড টেস্টের সমস্ত রেকর্ড মুছে ফেলতে চান?</string>
+    <string name="virax_speedtest_no_history">এখনও কোনো টেস্ট রেকর্ড নেই</string>
+    <string name="virax_speedtest_stop">থামান</string>
+    <string name="virax_speedtest_run_again">আবার টেস্ট করুন</string>
+    <string name="virax_speedtest_close">বন্ধ করুন</string>
 </resources>

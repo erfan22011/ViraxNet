@@ -697,4 +697,39 @@
     <string name="virax_apn_protocol_label">پروتکل APN</string>
     <string name="virax_apn_open_settings">کپی APN و باز کردن تنظیمات گوشی</string>
     <string name="virax_apn_copied_toast">نام APN در کلیپ‌بورد کپی شد! در تنظیمات گوشی آن را ذخیره کنید.</string>
+
+    <!-- In-App Updater & APN Enhancements -->
+    <string name="virax_update_downloading">در حال دانلود به‌روزرسانی…</string>
+    <string name="virax_update_ready_title">به‌روزرسانی آماده نصب است</string>
+    <string name="virax_update_ready_desc">نسخه جدید ویراکس‌نت با موفقیت دانلود شد. برای تکمیل به‌روزرسانی روی دکمه نصب بزنید.</string>
+    <string name="virax_update_install_now">نصب</string>
+    <string name="virax_update_error_title">خطا در دانلود به‌روزرسانی</string>
+    <string name="virax_update_failed_desc">خطا در دانلود فایل به‌روزرسانی: %1$s</string>
+    <string name="virax_update_retry">تلاش مجدد</string>
+    <string name="virax_update_grant_install_permission">لطفاً مجوز نصب برنامه‌های ناشناس را برای به‌روزرسانی ویراکس‌نت فعال کنید</string>
+    <string name="virax_apn_empty_hint">اگر صفحه تنظیمات APN در گوشی شما خالی است، روی علامت + (افزودن APN جدید) بزنید و مقادیر نام و APN بالا را وارد کرده و ذخیره نمایید.</string>
+    <string name="virax_apn_field_copied">%1$s کپی شد</string>
+
+    <!-- Speedtest Strings -->
+    <string name="virax_speedtest_card_title">تست سرعت</string>
+    <string name="virax_speedtest_card_subtitle">سنجش لحظه‌ای کیفیت و سرعت اتصال اینترنت</string>
+    <string name="virax_speedtest_confirm_title">تایید اجرای تست سرعت</string>
+    <string name="virax_speedtest_confirm_desc">اجرای تست سرعت مقداری از حجم اینترنت شما را جهت سنجش دقیق پینگ، سرعت دانلود و آپلود مصرف می‌کند. آیا ادامه می‌دهید؟</string>
+    <string name="virax_speedtest_confirm_start">شروع تست</string>
+    <string name="virax_speedtest_phase_ready">آماده برای تست</string>
+    <string name="virax_speedtest_phase_ping">در حال سنجش پینگ و نوسان…</string>
+    <string name="virax_speedtest_phase_download">در حال سنجش سرعت دانلود…</string>
+    <string name="virax_speedtest_phase_upload">در حال سنجش سرعت آپلود…</string>
+    <string name="virax_speedtest_phase_completed">تست سرعت پایان یافت</string>
+    <string name="virax_speedtest_phase_failed">خطا در برقراری ارتباط با سرور تست</string>
+    <string name="virax_speedtest_metric_ping">پینگ</string>
+    <string name="virax_speedtest_metric_download">دانلود</string>
+    <string name="virax_speedtest_metric_upload">آپلود</string>
+    <string name="virax_speedtest_history_title">تاریخچه ۵ تست اخیر</string>
+    <string name="virax_speedtest_clear_history">حذف تاریخچه</string>
+    <string name="virax_speedtest_clear_confirm">آیا از حذف تمامی رکوردهای تاریخچه تست سرعت مطمئن هستید؟</string>
+    <string name="virax_speedtest_no_history">هنوز تستی ثبت نشده است</string>
+    <string name="virax_speedtest_stop">توقف</string>
+    <string name="virax_speedtest_run_again">تست مجدد</string>
+    <string name="virax_speedtest_close">بستن</string>
 </resources>

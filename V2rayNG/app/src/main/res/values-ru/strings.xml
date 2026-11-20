@@ -701,4 +701,39 @@
     <string name="virax_apn_protocol_label">Протокол APN</string>
     <string name="virax_apn_open_settings">Скопировать APN и открыть настройки</string>
     <string name="virax_apn_copied_toast">APN скопирован в буфер! Вставьте и сохраните в настройках.</string>
+
+    <!-- In-App Updater & APN Enhancements -->
+    <string name="virax_update_downloading">Загрузка обновления…</string>
+    <string name="virax_update_ready_title">Обновление готово к установке</string>
+    <string name="virax_update_ready_desc">Последняя версия ViraxNet успешно загружена. Нажмите «Установить» для завершения обновления.</string>
+    <string name="virax_update_install_now">Установить</string>
+    <string name="virax_update_error_title">Ошибка загрузки</string>
+    <string name="virax_update_failed_desc">Не удалось загрузить файл обновления: %1$s</string>
+    <string name="virax_update_retry">Повторить</string>
+    <string name="virax_update_grant_install_permission">Пожалуйста, разрешите установку приложений из неизвестных источников для обновления ViraxNet</string>
+    <string name="virax_apn_empty_hint">Если список APN пуст, нажмите «+» (Добавить APN) в настройках, введите имя и значение APN выше и сохраните.</string>
+    <string name="virax_apn_field_copied">%1$s скопировано</string>
+
+    <!-- Speedtest Strings -->
+    <string name="virax_speedtest_card_title">Тест скорости</string>
+    <string name="virax_speedtest_card_subtitle">Точное измерение пинга, скорости скачивания и отдачи</string>
+    <string name="virax_speedtest_confirm_title">Подтверждение теста скорости</string>
+    <string name="virax_speedtest_confirm_desc">Тест скорости расходует интернет-трафик для измерения пинга, скорости скачивания и отдачи. Продолжить?</string>
+    <string name="virax_speedtest_confirm_start">Начать тест</string>
+    <string name="virax_speedtest_phase_ready">Готово к тестированию</string>
+    <string name="virax_speedtest_phase_ping">Измерение пинга и джиттера…</string>
+    <string name="virax_speedtest_phase_download">Измерение скорости скачивания…</string>
+    <string name="virax_speedtest_phase_upload">Измерение скорости отдачи…</string>
+    <string name="virax_speedtest_phase_completed">Тест завершен</string>
+    <string name="virax_speedtest_phase_failed">Ошибка подключения к серверу теста</string>
+    <string name="virax_speedtest_metric_ping">Пинг</string>
+    <string name="virax_speedtest_metric_download">Скачивание</string>
+    <string name="virax_speedtest_metric_upload">Отдача</string>
+    <string name="virax_speedtest_history_title">Последние 5 тестов</string>
+    <string name="virax_speedtest_clear_history">Очистить историю</string>
+    <string name="virax_speedtest_clear_confirm">Вы уверены, что хотите удалить всю историю тестов скорости?</string>
+    <string name="virax_speedtest_no_history">История тестов пуста</string>
+    <string name="virax_speedtest_stop">Остановить</string>
+    <string name="virax_speedtest_run_again">Повторить тест</string>
+    <string name="virax_speedtest_close">Закрыть</string>
 </resources>

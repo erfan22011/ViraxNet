@@ -698,4 +698,39 @@
     <string name="virax_apn_protocol_label">APN Protocol</string>
     <string name="virax_apn_open_settings">Copy APN &amp; Open Settings</string>
     <string name="virax_apn_copied_toast">APN copied to clipboard! Paste and save it in device settings.</string>
+
+    <!-- In-App Updater & APN Enhancements -->
+    <string name="virax_update_downloading">Downloading update…</string>
+    <string name="virax_update_ready_title">Update Ready to Install</string>
+    <string name="virax_update_ready_desc">The latest version of ViraxNet has been downloaded successfully. Tap install to complete the update.</string>
+    <string name="virax_update_install_now">Install</string>
+    <string name="virax_update_error_title">Download Failed</string>
+    <string name="virax_update_failed_desc">Failed to download update: %1$s</string>
+    <string name="virax_update_retry">Retry</string>
+    <string name="virax_update_grant_install_permission">Please grant permission to install unknown apps to update ViraxNet</string>
+    <string name="virax_apn_empty_hint">If the APN settings screen is empty, tap + (Add APN) in settings, paste the Name and APN values above, and save.</string>
+    <string name="virax_apn_field_copied">%1$s copied</string>
+
+    <!-- Speedtest Strings -->
+    <string name="virax_speedtest_card_title">Speedtest</string>
+    <string name="virax_speedtest_card_subtitle">Real-time connection test (Ping, Download, Upload)</string>
+    <string name="virax_speedtest_confirm_title">Run Speedtest</string>
+    <string name="virax_speedtest_confirm_desc">Running a speedtest will transfer sample data over your network connection to measure ping, download, and upload speeds. Do you want to proceed?</string>
+    <string name="virax_speedtest_confirm_start">Start Test</string>
+    <string name="virax_speedtest_phase_ready">Ready to test</string>
+    <string name="virax_speedtest_phase_ping">Testing Ping &amp; Jitter…</string>
+    <string name="virax_speedtest_phase_download">Testing Download Speed…</string>
+    <string name="virax_speedtest_phase_upload">Testing Upload Speed…</string>
+    <string name="virax_speedtest_phase_completed">Test completed</string>
+    <string name="virax_speedtest_phase_failed">Test failed</string>
+    <string name="virax_speedtest_metric_ping">Ping</string>
+    <string name="virax_speedtest_metric_download">Download</string>
+    <string name="virax_speedtest_metric_upload">Upload</string>
+    <string name="virax_speedtest_history_title">Recent Tests</string>
+    <string name="virax_speedtest_clear_history">Clear History</string>
+    <string name="virax_speedtest_clear_confirm">Are you sure you want to delete all speedtest history?</string>
+    <string name="virax_speedtest_no_history">No speedtest records yet</string>
+    <string name="virax_speedtest_stop">Stop</string>
+    <string name="virax_speedtest_run_again">Run Again</string>
+    <string name="virax_speedtest_close">Close</string>
 </resources>
