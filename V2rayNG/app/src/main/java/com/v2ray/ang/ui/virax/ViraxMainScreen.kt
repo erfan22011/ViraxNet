@@ -241,11 +241,19 @@ fun ViraxMainScreen(
         }
     }
 
+    val isConnectingActive = (isConnectingModalVisible || uiState.isSmartConnecting) && !isRunning
+
     val handleConnectOrDisconnect: () -> Unit = {
         if (isRunning) {
             // Ensure disconnect never triggers Connecting modal
             isConnectingModalVisible = false
             onAction(MainAction.ToggleService)
+        } else if (isConnectingActive) {
+            // Cancel pending connection attempt on power button tap
+            isConnectingModalVisible = false
+            if (uiState.isSmartConnecting) {
+                onAction(MainAction.CancelTesting)
+            }
         } else {
             val targetGuid = selectedTargetGuid
             if (targetGuid.isNullOrBlank()) {
@@ -371,7 +379,7 @@ fun ViraxMainScreen(
                         ViraxTab.HOME -> {
                             ViraxHomeScreen(
                                 isConnected = isRunning,
-                                isConnecting = isConnectingModalVisible,
+                                isConnecting = isConnectingActive,
                                 planBadge = planBadge,
                                 isFetchingIp = isFetchingIp,
                                 serverName = currentServerName,
@@ -515,18 +523,6 @@ fun ViraxMainScreen(
                                 onBackClick = { selectedTab = ViraxTab.HOME }
                             )
                         }
-                    }
-
-                    if (uiState.isSmartConnecting || (isConnectingModalVisible && !isRunning)) {
-                        ViraxConnectingDialog(
-                            isSmartPinging = uiState.isSmartConnecting,
-                            onCancel = {
-                                isConnectingModalVisible = false
-                                if (uiState.isSmartConnecting || isTesting) {
-                                    onAction(MainAction.CancelTesting)
-                                }
-                            }
-                        )
                     }
                 }
             }

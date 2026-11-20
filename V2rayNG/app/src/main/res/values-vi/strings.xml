@@ -680,7 +680,9 @@
     <string name="virax_sni_select_servers_hint">Chọn máy chủ mục tiêu:</string>
     <string name="virax_sni_select_subs_hint">Chọn gói đăng ký mục tiêu:</string>
     <string name="virax_sni_search_servers">Tìm tên máy chủ...</string>
-    <string name="virax_sni_validation_fields">Cần nhập cả Fake SNI và Connect IP.</string>
+    <string name="virax_sni_validation_fields">Định dạng Fake SNI hoặc Connect IP không hợp lệ.</string>
     <string name="virax_sni_validation_target">Vui lòng chọn ít nhất một máy chủ hoặc đăng ký.</string>
+    <string name="virax_sni_default_target">Máy chủ gốc</string>
+    <string name="virax_sni_status_fragment_fmt">Phân mảnh Anti-DPI TLS (%1$s)</string>
     <string name="virax_save">Lưu</string>
 </resources>

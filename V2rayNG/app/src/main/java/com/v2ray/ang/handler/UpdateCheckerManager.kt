@@ -76,12 +76,12 @@ object UpdateCheckerManager {
     }
 
     private fun compareVersions(version1: String, version2: String): Int {
-        val v1 = version1.split(".")
-        val v2 = version2.split(".")
+        val v1 = version1.removePrefix("v").split(".")
+        val v2 = version2.removePrefix("v").split(".")
 
         for (i in 0 until maxOf(v1.size, v2.size)) {
-            val num1 = if (i < v1.size) v1[i].toInt() else 0
-            val num2 = if (i < v2.size) v2[i].toInt() else 0
+            val num1 = if (i < v1.size) v1[i].toIntOrNull() ?: 0 else 0
+            val num2 = if (i < v2.size) v2[i].toIntOrNull() ?: 0 else 0
             if (num1 != num2) return num1 - num2
         }
         return 0
@@ -91,14 +91,16 @@ object UpdateCheckerManager {
         val fDroid = "fdroid"
 
         val assetsByAbi = release.assets.filter {
-            (it.name.contains(abi, true))
+            it.name.contains(abi, true)
         }
 
-        val asset = if (BuildConfig.APPLICATION_ID.contains(fDroid, ignoreCase = true)) {
-            assetsByAbi.firstOrNull { it.name.contains(fDroid) }
+        val asset = (if (BuildConfig.APPLICATION_ID.contains(fDroid, ignoreCase = true)) {
+            assetsByAbi.firstOrNull { it.name.contains(fDroid, true) }
+                ?: release.assets.firstOrNull { it.name.contains(fDroid, true) && it.name.contains("universal", true) }
         } else {
-            assetsByAbi.firstOrNull { !it.name.contains(fDroid) }
-        }
+            assetsByAbi.firstOrNull { !it.name.contains(fDroid, true) }
+                ?: release.assets.firstOrNull { !it.name.contains(fDroid, true) && it.name.contains("universal", true) }
+        }) ?: release.assets.firstOrNull { it.name.endsWith(".apk", true) }
 
         return asset?.browserDownloadUrl
             ?: throw IllegalStateException("No compatible APK found")

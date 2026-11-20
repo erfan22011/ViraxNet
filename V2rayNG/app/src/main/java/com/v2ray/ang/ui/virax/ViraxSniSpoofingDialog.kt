@@ -79,12 +79,16 @@ fun sniSpoofSummaryText(config: SniSpoofConfig): String {
         SniSpoofScope.GLOBAL -> stringResource(R.string.virax_sni_scope_global)
     }
     return if (CoreSniSpoofManager.isValidActiveConfig(config)) {
-        stringResource(
-            R.string.virax_sni_status_enabled_fmt,
-            config.fakeSni.trim(),
-            config.connectIp.trim(),
-            scopeLabel
-        )
+        if (config.fakeSni.isNotBlank()) {
+            stringResource(
+                R.string.virax_sni_status_enabled_fmt,
+                config.fakeSni.trim(),
+                if (config.connectIp.isNotBlank()) config.connectIp.trim() else stringResource(R.string.virax_sni_default_target),
+                scopeLabel
+            )
+        } else {
+            stringResource(R.string.virax_sni_status_fragment_fmt, scopeLabel)
+        }
     } else {
         stringResource(R.string.virax_sni_spoof_subtitle)
     }
@@ -588,7 +592,7 @@ fun ViraxSniSpoofingDialog(
                                 targetSubscriptionIds = selectedSubscriptionIds,
                             )
                             if (candidate.enabled) {
-                                if (!CoreSniSpoofManager.hasRequiredFields(candidate)) {
+                                if (!CoreSniSpoofManager.hasValidFieldFormats(candidate)) {
                                     validationErrorRes = R.string.virax_sni_validation_fields
                                     return@Button
                                 }

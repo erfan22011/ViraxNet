@@ -1,5 +1,7 @@
 package com.v2ray.ang.core
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.dto.SniSpoofConfig
 import com.v2ray.ang.dto.SniSpoofScope
@@ -71,8 +73,16 @@ object CoreSniSpoofManager {
         return JsonUtil.toJson(config)
     }
 
+    fun hasValidFieldFormats(config: SniSpoofConfig): Boolean {
+        val fake = config.fakeSni.trim()
+        val ip = config.connectIp.trim()
+        if (fake.isNotEmpty() && !isDomainHost(fake)) return false
+        if (ip.isNotEmpty() && !Utils.isPureIpAddress(ip)) return false
+        return true
+    }
+
     fun hasRequiredFields(config: SniSpoofConfig): Boolean {
-        return config.fakeSni.trim().isNotEmpty() && config.connectIp.trim().isNotEmpty()
+        return hasValidFieldFormats(config)
     }
 
     fun hasValidTargetSelection(config: SniSpoofConfig): Boolean {
@@ -85,7 +95,7 @@ object CoreSniSpoofManager {
     }
 
     fun isValidActiveConfig(config: SniSpoofConfig): Boolean {
-        return config.enabled && hasRequiredFields(config) && hasValidTargetSelection(config)
+        return config.enabled && hasValidTargetSelection(config) && hasValidFieldFormats(config)
     }
 
     fun doesProfileMatchScope(
@@ -121,8 +131,16 @@ object CoreSniSpoofManager {
         val cleanConnectIp = config.connectIp.trim()
         val originalServer = profile.server.orEmpty().trim()
 
-        // Preserve domain-based CDN Host headers when rewriting server address to Connect IP
-        val effectiveHost = if (profile.host.isNullOrBlank() &&
+        // 1. Preserve destination server unless an explicit IP redirect is provided
+        val effectiveServer = if (cleanConnectIp.isNotEmpty() && Utils.isPureIpAddress(cleanConnectIp)) {
+            cleanConnectIp
+        } else {
+            originalServer
+        }
+
+        // 2. Preserve domain-based CDN Host headers when rewriting server address to Connect IP
+        val effectiveHost = if (cleanConnectIp.isNotEmpty() &&
+            profile.host.isNullOrBlank() &&
             profile.network in HOST_PRESERVING_TRANSPORTS &&
             isDomainHost(originalServer)
         ) {
@@ -131,11 +149,53 @@ object CoreSniSpoofManager {
             profile.host
         }
 
+        // 3. Fake SNI if specified, otherwise keep original SNI
+        val effectiveSni = if (cleanFakeSni.isNotEmpty()) cleanFakeSni else profile.sni
+
+        // 4. Inject native Anti-DPI TLS ClientHello fragmentation into finalMask
+        val effectiveFinalMask = injectAntiDpiFinalMask(profile.finalMask)
+
         return profile.copy(
-            server = cleanConnectIp,
-            sni = cleanFakeSni,
+            server = effectiveServer,
+            sni = effectiveSni,
             host = effectiveHost,
+            finalMask = effectiveFinalMask,
         )
+    }
+
+    internal fun injectAntiDpiFinalMask(existingFinalMask: String?): String {
+        return try {
+            val root = existingFinalMask?.takeIf { it.isNotBlank() }
+                ?.let { JsonUtil.parseString(it)?.takeIf { json -> json.isJsonObject }?.asJsonObject }
+                ?: JsonObject()
+
+            val tcpArray = if (root.has("tcp") && root.get("tcp").isJsonArray) {
+                root.getAsJsonArray("tcp")
+            } else {
+                JsonArray().also { root.add("tcp", it) }
+            }
+
+            val hasFragment = (0 until tcpArray.size()).any { i ->
+                tcpArray.get(i)?.takeIf { it.isJsonObject }?.asJsonObject?.get("type")?.asString == "fragment"
+            }
+
+            if (!hasFragment) {
+                val fragmentObj = JsonObject().apply {
+                    addProperty("type", "fragment")
+                    val settings = JsonObject().apply {
+                        addProperty("packets", "tlshello")
+                        addProperty("length", "50-100")
+                        addProperty("delay", "10-20")
+                        addProperty("maxSplit", "10")
+                    }
+                    add("settings", settings)
+                }
+                tcpArray.add(fragmentObj)
+            }
+            JsonUtil.toJson(root)
+        } catch (_: Exception) {
+            existingFinalMask.orEmpty()
+        }
     }
 
     private val DOMAIN_LABEL_REGEX = Regex("^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")

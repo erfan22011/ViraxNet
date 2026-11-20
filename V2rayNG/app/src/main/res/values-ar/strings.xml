@@ -690,7 +690,9 @@
     <string name="virax_sni_select_servers_hint">اختر الخوادم المستهدفة:</string>
     <string name="virax_sni_select_subs_hint">اختر الاشتراكات المستهدفة:</string>
     <string name="virax_sni_search_servers">البحث عن اسم الخادم...</string>
-    <string name="virax_sni_validation_fields">كلا الحقلين Fake SNI و Connect IP مطلوبان.</string>
+    <string name="virax_sni_validation_fields">صيغة Fake SNI أو Connect IP غير صالحة.</string>
     <string name="virax_sni_validation_target">يرجى اختيار خادم واحد أو اشتراك على الأقل.</string>
+    <string name="virax_sni_default_target">الخادم الأصلي</string>
+    <string name="virax_sni_status_fragment_fmt">تجزئة Anti-DPI TLS (%1$s)</string>
     <string name="virax_save">حفظ</string>
 </resources>

@@ -682,7 +682,9 @@
     <string name="virax_sni_select_servers_hint">سرورهای هدف را انتخاب کنید:</string>
     <string name="virax_sni_select_subs_hint">لینک‌های اشتراک هدف را انتخاب کنید:</string>
     <string name="virax_sni_search_servers">جستجوی نام سرور...</string>
-    <string name="virax_sni_validation_fields">هر دو فیلد Fake SNI و Connect IP الزامی هستند.</string>
+    <string name="virax_sni_validation_fields">فرمت واردشده برای Fake SNI یا Connect IP نامعتبر است.</string>
     <string name="virax_sni_validation_target">لطفاً حداقل یک سرور یا لینک اشتراک انتخاب کنید.</string>
+    <string name="virax_sni_default_target">سرور اصلی</string>
+    <string name="virax_sni_status_fragment_fmt">اسپلیت Anti-DPI TLS (%1$s)</string>
     <string name="virax_save">ذخیره</string>
 </resources>

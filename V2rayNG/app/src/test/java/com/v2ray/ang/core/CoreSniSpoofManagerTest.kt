@@ -15,11 +15,15 @@ import org.junit.jupiter.api.Test
 class CoreSniSpoofManagerTest {
 
     @Test
-    fun testValidationRequiresBothFieldsWhenEnabled() {
+    fun testValidationAllowsDefaultAntiDpiFragmentation() {
         assertFalse(CoreSniSpoofManager.isValidActiveConfig(SniSpoofConfig(enabled = false, fakeSni = "chatgpt.com", connectIp = "104.17.100.50")))
-        assertFalse(CoreSniSpoofManager.isValidActiveConfig(SniSpoofConfig(enabled = true, fakeSni = "", connectIp = "104.17.100.50")))
-        assertFalse(CoreSniSpoofManager.isValidActiveConfig(SniSpoofConfig(enabled = true, fakeSni = "chatgpt.com", connectIp = "  ")))
+        // Valid with empty fields (defaults to native TLS Hello Anti-DPI fragmentation)
+        assertTrue(CoreSniSpoofManager.isValidActiveConfig(SniSpoofConfig(enabled = true, scope = SniSpoofScope.GLOBAL)))
+        // Valid with both fields
         assertTrue(CoreSniSpoofManager.isValidActiveConfig(SniSpoofConfig(enabled = true, fakeSni = "chatgpt.com", connectIp = "104.17.100.50", scope = SniSpoofScope.GLOBAL)))
+        // Invalid syntax checks
+        assertFalse(CoreSniSpoofManager.isValidActiveConfig(SniSpoofConfig(enabled = true, fakeSni = "invalid host space", scope = SniSpoofScope.GLOBAL)))
+        assertFalse(CoreSniSpoofManager.isValidActiveConfig(SniSpoofConfig(enabled = true, connectIp = "999.999.999.999", scope = SniSpoofScope.GLOBAL)))
     }
 
     @Test
@@ -125,5 +129,24 @@ class CoreSniSpoofManagerTest {
         assertFalse(CoreSniSpoofManager.hasValidTargetSelection(SniSpoofConfig(scope = SniSpoofScope.SUBSCRIPTION)))
         assertFalse(CoreSniSpoofManager.hasValidTargetSelection(SniSpoofConfig(scope = SniSpoofScope.SUBSCRIPTION, targetSubscriptionIds = setOf(""))))
         assertTrue(CoreSniSpoofManager.hasValidTargetSelection(SniSpoofConfig(scope = SniSpoofScope.SUBSCRIPTION, targetSubscriptionIds = setOf("sub-1"))))
+    }
+
+    @Test
+    fun testPreservesOriginalDestinationAndInjectsAntiDpiFragmentMask() {
+        val original = ProfileItem(
+            configType = EConfigType.VLESS,
+            server = "vpn.myserver.com",
+            serverPort = "443",
+            security = AppConfig.TLS,
+            sni = "vpn.myserver.com"
+        )
+        // SNI spoof enabled globally with no connectIp / fakeSni (pure anti-DPI mode like V2Box)
+        val defaultCfg = SniSpoofConfig(enabled = true, scope = SniSpoofScope.GLOBAL)
+        val applied = CoreSniSpoofManager.applySpoofIfEligible("g_std", original, defaultCfg)
+
+        assertEquals("vpn.myserver.com", applied.server) // preserved destination!
+        assertEquals("vpn.myserver.com", applied.sni) // preserved SNI!
+        assertTrue(applied.finalMask.orEmpty().contains("\"type\":\"fragment\""))
+        assertTrue(applied.finalMask.orEmpty().contains("\"packets\":\"tlshello\""))
     }
 }

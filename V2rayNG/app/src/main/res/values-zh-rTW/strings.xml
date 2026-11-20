@@ -680,7 +680,9 @@
     <string name="virax_sni_select_servers_hint">選擇目標伺服器：</string>
     <string name="virax_sni_select_subs_hint">選擇目標訂閱：</string>
     <string name="virax_sni_search_servers">搜尋伺服器名稱...</string>
-    <string name="virax_sni_validation_fields">Fake SNI 和 Connect IP 皆為必填。</string>
+    <string name="virax_sni_validation_fields">Fake SNI 或 Connect IP 格式無效。</string>
     <string name="virax_sni_validation_target">請至少選擇一個伺服器或訂閱。</string>
+    <string name="virax_sni_default_target">原始伺服器</string>
+    <string name="virax_sni_status_fragment_fmt">Anti-DPI TLS 分段 (%1$s)</string>
     <string name="virax_save">儲存</string>
 </resources>

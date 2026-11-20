@@ -682,7 +682,9 @@
     <string name="virax_sni_select_servers_hint">টার্গেট সার্ভার নির্বাচন করুন:</string>
     <string name="virax_sni_select_subs_hint">টার্গেট সাবস্ক্রিপশন নির্বাচন করুন:</string>
     <string name="virax_sni_search_servers">সার্ভার খুঁজুন...</string>
-    <string name="virax_sni_validation_fields">Fake SNI এবং Connect IP উভয়ই প্রয়োজন।</string>
+    <string name="virax_sni_validation_fields">ভুল Fake SNI বা Connect IP ফরম্যাট।</string>
     <string name="virax_sni_validation_target">অন্তত একটি সার্ভার বা সাবস্ক্রিপশন নির্বাচন করুন।</string>
+    <string name="virax_sni_default_target">মূল সার্ভার</string>
+    <string name="virax_sni_status_fragment_fmt">Anti-DPI TLS স্প্লিট (%1$s)</string>
     <string name="virax_save">সংরক্ষণ করুন</string>
 </resources>

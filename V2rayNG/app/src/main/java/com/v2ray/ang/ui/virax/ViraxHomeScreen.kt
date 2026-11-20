@@ -1,11 +1,13 @@
 package com.v2ray.ang.ui.virax
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,6 +40,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -248,20 +252,24 @@ fun ViraxHomeScreen(
             }
         } else {
             // Disconnected View State
-            DisconnectedPowerButton(onPowerClick = onPowerClick)
+            DisconnectedPowerButton(
+                isConnecting = isConnecting,
+                onPowerClick = onPowerClick
+            )
 
             Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = stringResource(R.string.virax_connect_selected),
+                text = if (isConnecting) stringResource(R.string.virax_connecting)
+                    else stringResource(R.string.virax_connect_selected),
                 color = colors.textPrimary,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = serverName?.takeIf { it.isNotBlank() }
-                    ?: stringResource(R.string.virax_subtitle_disconnected),
+                text = if (isConnecting) stringResource(R.string.virax_connecting_subtitle)
+                    else (serverName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.virax_subtitle_disconnected)),
                 color = colors.textSecondary,
                 fontSize = 13.sp,
                 maxLines = 1,
@@ -301,7 +309,10 @@ fun ViraxHomeScreen(
 }
 
 @Composable
-private fun DisconnectedPowerButton(onPowerClick: () -> Unit) {
+private fun DisconnectedPowerButton(
+    isConnecting: Boolean,
+    onPowerClick: () -> Unit
+) {
     val colors = ViraxTheme.colors
     val infiniteTransition = rememberInfiniteTransition(label = "power_glow")
     val pulseScale by infiniteTransition.animateFloat(
@@ -313,11 +324,20 @@ private fun DisconnectedPowerButton(onPowerClick: () -> Unit) {
         ),
         label = "pulse"
     )
+    val spinAngle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "spin_angle"
+    )
 
     Box(
         modifier = Modifier
-            .size(190.dp)
-            .scale(pulseScale)
+            .size(196.dp)
+            .scale(if (isConnecting) 1.02f else pulseScale)
             .clip(CircleShape)
             .background(
                 Brush.radialGradient(
@@ -328,17 +348,55 @@ private fun DisconnectedPowerButton(onPowerClick: () -> Unit) {
                     )
                 )
             )
-            .border(2.dp, colors.powerButtonRingBorder, CircleShape)
+            .then(
+                if (isConnecting) {
+                    Modifier.border(
+                        width = 3.dp,
+                        brush = Brush.sweepGradient(
+                            listOf(
+                                colors.primaryPurple,
+                                colors.lightPurple,
+                                Color.Transparent,
+                                colors.lightPurple,
+                                colors.primaryPurple
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+                } else {
+                    Modifier.border(2.dp, colors.powerButtonRingBorder, CircleShape)
+                }
+            )
             .clickable(onClick = onPowerClick)
             .semantics { role = Role.Button },
         contentAlignment = Alignment.Center
     ) {
+        if (isConnecting) {
+            Canvas(
+                modifier = Modifier
+                    .size(174.dp)
+                    .graphicsLayer { rotationZ = spinAngle }
+            ) {
+                drawCircle(
+                    brush = Brush.sweepGradient(
+                        listOf(
+                            colors.lightPurple.copy(alpha = 0.95f),
+                            colors.secondaryPurple.copy(alpha = 0.8f),
+                            Color.Transparent,
+                            colors.lightPurple.copy(alpha = 0.4f),
+                            colors.lightPurple.copy(alpha = 0.95f)
+                        )
+                    ),
+                    style = Stroke(width = 3.dp.toPx())
+                )
+            }
+        }
         Box(
             modifier = Modifier
                 .size(145.dp)
                 .clip(CircleShape)
                 .background(colors.powerButtonGradient)
-                .border(2.dp, colors.lightPurple.copy(alpha = 0.7f), CircleShape),
+                .border(2.dp, if (isConnecting) colors.lightPurple else colors.lightPurple.copy(alpha = 0.7f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(

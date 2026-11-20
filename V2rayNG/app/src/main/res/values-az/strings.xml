@@ -683,7 +683,9 @@
     <string name="virax_sni_select_servers_hint">Hədəf serverləri seçin:</string>
     <string name="virax_sni_select_subs_hint">Hədəf abunəlikləri seçin:</string>
     <string name="virax_sni_search_servers">Server axtar...</string>
-    <string name="virax_sni_validation_fields">Fake SNI və Connect IP sahələri məcburidir.</string>
+    <string name="virax_sni_validation_fields">Yanlış Fake SNI və ya Connect IP formatı.</string>
     <string name="virax_sni_validation_target">Ən azı bir server və ya abunəlik seçin.</string>
+    <string name="virax_sni_default_target">Əsas server</string>
+    <string name="virax_sni_status_fragment_fmt">Anti-DPI TLS Bölünməsi (%1$s)</string>
     <string name="virax_save">Yadda saxla</string>
 </resources>

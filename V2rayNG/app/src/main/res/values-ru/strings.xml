@@ -686,7 +686,9 @@
     <string name="virax_sni_select_servers_hint">Выберите серверы:</string>
     <string name="virax_sni_select_subs_hint">Выберите подписки:</string>
     <string name="virax_sni_search_servers">Поиск сервера...</string>
-    <string name="virax_sni_validation_fields">Заполните оба поля Fake SNI и Connect IP.</string>
+    <string name="virax_sni_validation_fields">Неверный формат Fake SNI или Connect IP.</string>
     <string name="virax_sni_validation_target">Выберите хотя бы один сервер или подписку.</string>
+    <string name="virax_sni_default_target">Исходный сервер</string>
+    <string name="virax_sni_status_fragment_fmt">Разделение Anti-DPI TLS (%1$s)</string>
     <string name="virax_save">Сохранить</string>
 </resources>
