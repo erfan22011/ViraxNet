@@ -685,4 +685,14 @@
     <string name="virax_sni_default_target">Máy chủ gốc</string>
     <string name="virax_sni_status_fragment_fmt">Phân mảnh Anti-DPI TLS (%1$s)</string>
     <string name="virax_save">Lưu</string>
+    <string name="virax_sort_by_ping">Sắp xếp theo ping</string>
+    <string name="virax_apn_settings_title">Cài đặt APN mạng di động</string>
+    <string name="virax_apn_settings_subtitle">Cấu hình APN cho các nhà mạng di động</string>
+    <string name="virax_apn_dialog_title">Cấu hình APN nhà mạng</string>
+    <string name="virax_apn_dialog_desc">Chọn nhà mạng của bạn, sao chép APN và áp dụng trong cài đặt thiết bị.</string>
+    <string name="virax_apn_name_label">Tên</string>
+    <string name="virax_apn_field_label">APN</string>
+    <string name="virax_apn_protocol_label">Giao thức APN</string>
+    <string name="virax_apn_open_settings">Sao chép APN &amp; Mở cài đặt</string>
+    <string name="virax_apn_copied_toast">Đã sao chép APN! Hãy lưu vào cài đặt thiết bị.</string>
 </resources>

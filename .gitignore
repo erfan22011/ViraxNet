@@ -1,6 +1,7 @@
 # Ignore data and key store files
 *.dat
 *.jks
+!V2rayNG/keystore/viraxnet_release.jks
 
 # Ignore output JSON file
 V2rayNG/app/release/output.json

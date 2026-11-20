@@ -138,20 +138,11 @@ jobs:
             KEY_PASS="${{ secrets.APP_KEY_PASSWORD }}"
 
             if [ -z "$KEYSTORE_PATH" ] || [ ! -f "$KEYSTORE_PATH" ]; then
-              echo "Generating official ViraxNet production release keystore..."
-              KEYSTORE_PATH="${{ github.workspace }}/viraxnet_release.jks"
+              echo "Using permanent committed ViraxNet production release keystore..."
+              KEYSTORE_PATH="${{ github.workspace }}/V2rayNG/keystore/viraxnet_release.jks"
               KEYSTORE_PASS="viraxnet_prod_secret_2026"
               KEY_ALIAS="viraxnet_release"
               KEY_PASS="viraxnet_prod_secret_2026"
-              keytool -genkeypair -v \
-                -keystore "$KEYSTORE_PATH" \
-                -alias "$KEY_ALIAS" \
-                -keyalg RSA \
-                -keysize 2048 \
-                -validity 10000 \
-                -storepass "$KEYSTORE_PASS" \
-                -keypass "$KEY_PASS" \
-                -dname "CN=ViraxNet, OU=Mobile Security, O=ViraxNet Application, L=Frankfurt, ST=Hesse, C=DE"
             fi
 
             echo "Building officially signed Playstore Release APKs..."

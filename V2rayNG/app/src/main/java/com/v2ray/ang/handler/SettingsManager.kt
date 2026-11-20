@@ -378,8 +378,12 @@ object SettingsManager {
         return if (second) {
             AppConfig.DELAY_TEST_URL2
         } else {
-            MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL)
-                ?: AppConfig.DELAY_TEST_URL
+            val custom = MmkvManager.decodeSettingsString(AppConfig.PREF_DELAY_TEST_URL)
+            if (custom.isNullOrBlank() || custom == "https://www.gstatic.com/generate_204" || custom == "https://www.google.com/generate_204") {
+                AppConfig.DELAY_TEST_URL
+            } else {
+                custom
+            }
         }
     }
 

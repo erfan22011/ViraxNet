@@ -691,4 +691,14 @@
     <string name="virax_sni_default_target">Исходный сервер</string>
     <string name="virax_sni_status_fragment_fmt">Разделение Anti-DPI TLS (%1$s)</string>
     <string name="virax_save">Сохранить</string>
+    <string name="virax_sort_by_ping">Сортировка по пингу</string>
+    <string name="virax_apn_settings_title">Настройки APN операторов</string>
+    <string name="virax_apn_settings_subtitle">Настройка APN для операторов MCI, Irancell, Rightel и др.</string>
+    <string name="virax_apn_dialog_title">Настройка APN оператора</string>
+    <string name="virax_apn_dialog_desc">Выберите своего оператора, скопируйте имя APN и примените в настройках устройства.</string>
+    <string name="virax_apn_name_label">Имя</string>
+    <string name="virax_apn_field_label">APN</string>
+    <string name="virax_apn_protocol_label">Протокол APN</string>
+    <string name="virax_apn_open_settings">Скопировать APN и открыть настройки</string>
+    <string name="virax_apn_copied_toast">APN скопирован в буфер! Вставьте и сохраните в настройках.</string>
 </resources>

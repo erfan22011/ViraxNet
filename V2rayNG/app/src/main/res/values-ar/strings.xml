@@ -695,4 +695,14 @@
     <string name="virax_sni_default_target">الخادم الأصلي</string>
     <string name="virax_sni_status_fragment_fmt">تجزئة Anti-DPI TLS (%1$s)</string>
     <string name="virax_save">حفظ</string>
+    <string name="virax_sort_by_ping">الترتيب حسب البينغ</string>
+    <string name="virax_apn_settings_title">إعدادات APN للشبكة</string>
+    <string name="virax_apn_settings_subtitle">تهيئة APN لمشغلي الهاتف المحمول</string>
+    <string name="virax_apn_dialog_title">تهيئة نقطة الوصول (APN)</string>
+    <string name="virax_apn_dialog_desc">اختر مشغل الشبكة وانسخ إعدادات APN ثم احفظها في إعدادات الهاتف.</string>
+    <string name="virax_apn_name_label">الاسم</string>
+    <string name="virax_apn_field_label">نقطة الوصول (APN)</string>
+    <string name="virax_apn_protocol_label">بروتوكول APN</string>
+    <string name="virax_apn_open_settings">نسخ APN وفتح الإعدادات</string>
+    <string name="virax_apn_copied_toast">تم نسخ APN إلى الحافظة! قم بحفظه في إعدادات الهاتف.</string>
 </resources>

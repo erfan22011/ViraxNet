@@ -86,6 +86,7 @@ fun ViraxSettingsScreen(
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showSniSpoofDialog by remember { mutableStateOf(false) }
+    var showApnDialog by remember { mutableStateOf(false) }
     var sniSpoofInitialEnabled by remember { mutableStateOf(sniSpoofConfig.enabled) }
 
     Column(
@@ -244,6 +245,62 @@ fun ViraxSettingsScreen(
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = stringResource(R.string.virax_routing_subtitle),
+                            color = colors.textSecondary,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+
+                Icon(
+                    painter = painterResource(R.drawable.ic_virax_arrow_forward),
+                    contentDescription = null,
+                    tint = colors.textMuted,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // 4. Cellular APN Settings
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.cardBackground)
+                .border(1.dp, colors.cardBorder, RoundedCornerShape(16.dp))
+                .clickable { showApnDialog = true }
+                .semantics { role = Role.Button }
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_virax_apn),
+                        contentDescription = null,
+                        tint = colors.primaryPurple,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.virax_apn_settings_title),
+                            color = colors.textPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = stringResource(R.string.virax_apn_settings_subtitle),
                             color = colors.textSecondary,
                             fontSize = 12.sp
                         )
@@ -747,6 +804,10 @@ fun ViraxSettingsScreen(
             },
             onDismiss = { showSniSpoofDialog = false }
         )
+    }
+
+    if (showApnDialog) {
+        ViraxApnDialog(onDismiss = { showApnDialog = false })
     }
 }
 

@@ -149,4 +149,27 @@ class CoreSniSpoofManagerTest {
         assertTrue(applied.finalMask.orEmpty().contains("\"type\":\"fragment\""))
         assertTrue(applied.finalMask.orEmpty().contains("\"packets\":\"tlshello\""))
     }
+
+    @Test
+    fun testFakeSniDecouplesVerifyPeerCertByName() {
+        val original = ProfileItem(
+            configType = EConfigType.VLESS,
+            server = "vpn.myserver.com",
+            serverPort = "443",
+            security = AppConfig.TLS,
+            sni = "vpn.myserver.com"
+        )
+        val cfg = SniSpoofConfig(
+            enabled = true,
+            fakeSni = "chatgpt.com",
+            connectIp = "104.17.100.50",
+            scope = SniSpoofScope.GLOBAL
+        )
+        val applied = CoreSniSpoofManager.applySpoofIfEligible("g_spoof", original, cfg)
+
+        assertEquals("104.17.100.50", applied.server)
+        assertEquals("chatgpt.com", applied.sni)
+        assertTrue(applied.verifyPeerCertByName.orEmpty().contains("vpn.myserver.com"))
+        assertTrue(applied.verifyPeerCertByName.orEmpty().contains("chatgpt.com"))
+    }
 }

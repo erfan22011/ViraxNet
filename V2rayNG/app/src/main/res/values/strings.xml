@@ -688,4 +688,14 @@
     <string name="virax_sni_default_target">Original Server</string>
     <string name="virax_sni_status_fragment_fmt">Anti-DPI TLS Split (%1$s)</string>
     <string name="virax_save">Save</string>
+    <string name="virax_sort_by_ping">Sort by Ping</string>
+    <string name="virax_apn_settings_title">Cellular APN Settings</string>
+    <string name="virax_apn_settings_subtitle">Configure MCI, Irancell, Rightel &amp; other operator APNs</string>
+    <string name="virax_apn_dialog_title">Operator APN Configuration</string>
+    <string name="virax_apn_dialog_desc">Select your mobile operator, copy the APN settings, and apply them in your device settings.</string>
+    <string name="virax_apn_name_label">Name</string>
+    <string name="virax_apn_field_label">APN</string>
+    <string name="virax_apn_protocol_label">APN Protocol</string>
+    <string name="virax_apn_open_settings">Copy APN &amp; Open Settings</string>
+    <string name="virax_apn_copied_toast">APN copied to clipboard! Paste and save it in device settings.</string>
 </resources>

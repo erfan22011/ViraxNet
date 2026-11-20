@@ -130,6 +130,7 @@ object CoreSniSpoofManager {
         val cleanFakeSni = config.fakeSni.trim()
         val cleanConnectIp = config.connectIp.trim()
         val originalServer = profile.server.orEmpty().trim()
+        val originalSni = profile.sni.orEmpty().trim()
 
         // 1. Preserve destination server unless an explicit IP redirect is provided
         val effectiveServer = if (cleanConnectIp.isNotEmpty() && Utils.isPureIpAddress(cleanConnectIp)) {
@@ -152,13 +153,34 @@ object CoreSniSpoofManager {
         // 3. Fake SNI if specified, otherwise keep original SNI
         val effectiveSni = if (cleanFakeSni.isNotEmpty()) cleanFakeSni else profile.sni
 
-        // 4. Inject native Anti-DPI TLS ClientHello fragmentation into finalMask
+        // 4. Decouple SNI from certificate verification so legitimate TLS certificates validate seamlessly
+        val effectiveVerifyPeerCertByName = if (cleanFakeSni.isNotEmpty()) {
+            val names = mutableListOf<String>()
+            if (!profile.verifyPeerCertByName.isNullOrBlank()) {
+                names.addAll(profile.verifyPeerCertByName.orEmpty().split(",", ";").map { it.trim() }.filter { it.isNotEmpty() })
+            }
+            if (originalSni.isNotEmpty() && isDomainHost(originalSni) && originalSni !in names) {
+                names.add(originalSni)
+            }
+            if (originalServer.isNotEmpty() && isDomainHost(originalServer) && originalServer !in names) {
+                names.add(originalServer)
+            }
+            if (cleanFakeSni.isNotEmpty() && isDomainHost(cleanFakeSni) && cleanFakeSni !in names) {
+                names.add(cleanFakeSni)
+            }
+            if (names.isNotEmpty()) names.joinToString(",") else profile.verifyPeerCertByName
+        } else {
+            profile.verifyPeerCertByName
+        }
+
+        // 5. Inject native Anti-DPI TLS ClientHello fragmentation into finalMask
         val effectiveFinalMask = injectAntiDpiFinalMask(profile.finalMask)
 
         return profile.copy(
             server = effectiveServer,
             sni = effectiveSni,
             host = effectiveHost,
+            verifyPeerCertByName = effectiveVerifyPeerCertByName,
             finalMask = effectiveFinalMask,
         )
     }
@@ -184,9 +206,9 @@ object CoreSniSpoofManager {
                     addProperty("type", "fragment")
                     val settings = JsonObject().apply {
                         addProperty("packets", "tlshello")
-                        addProperty("length", "50-100")
-                        addProperty("delay", "10-20")
-                        addProperty("maxSplit", "10")
+                        addProperty("length", "100-200")
+                        addProperty("delay", "1-5")
+                        addProperty("maxSplit", "2")
                     }
                     add("settings", settings)
                 }

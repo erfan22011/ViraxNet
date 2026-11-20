@@ -685,4 +685,14 @@
     <string name="virax_sni_default_target">原始伺服器</string>
     <string name="virax_sni_status_fragment_fmt">Anti-DPI TLS 分段 (%1$s)</string>
     <string name="virax_save">儲存</string>
+    <string name="virax_sort_by_ping">按延遲排序</string>
+    <string name="virax_apn_settings_title">行動網路 APN 設定</string>
+    <string name="virax_apn_settings_subtitle">配置各電信業者行動網路 APN</string>
+    <string name="virax_apn_dialog_title">電信業者 APN 配置</string>
+    <string name="virax_apn_dialog_desc">選擇您的電信業者，複製 APN 名稱並於系統設定中儲存。</string>
+    <string name="virax_apn_name_label">名稱</string>
+    <string name="virax_apn_field_label">APN</string>
+    <string name="virax_apn_protocol_label">APN 協定</string>
+    <string name="virax_apn_open_settings">複製 APN 並開啟設定</string>
+    <string name="virax_apn_copied_toast">APN 已複製！請於系統設定中貼上並儲存。</string>
 </resources>

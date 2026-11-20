@@ -688,4 +688,14 @@
     <string name="virax_sni_default_target">Əsas server</string>
     <string name="virax_sni_status_fragment_fmt">Anti-DPI TLS Bölünməsi (%1$s)</string>
     <string name="virax_save">Yadda saxla</string>
+    <string name="virax_sort_by_ping">Ping-ə görə sırala</string>
+    <string name="virax_apn_settings_title">Mobil Şəbəkə APN Parametrləri</string>
+    <string name="virax_apn_settings_subtitle">MCI, Irancell, Rightel və digər operatorların APN ayarları</string>
+    <string name="virax_apn_dialog_title">Operator APN Konfiqurasiyası</string>
+    <string name="virax_apn_dialog_desc">Operatorunuzu seçin, APN parametrlərini kopyalayın və cihaz parametrlərində tətbiq edin.</string>
+    <string name="virax_apn_name_label">Ad</string>
+    <string name="virax_apn_field_label">APN</string>
+    <string name="virax_apn_protocol_label">APN Protokolu</string>
+    <string name="virax_apn_open_settings">APN-i kopyala və parametrləri aç</string>
+    <string name="virax_apn_copied_toast">APN kopyalandı! Cihaz parametrlərində qeyd edin.</string>
 </resources>

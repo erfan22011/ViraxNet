@@ -13,8 +13,8 @@ android {
         applicationId = "com.viraxnet.app"
         minSdk = 24
         targetSdk = 37
-        versionCode = 756
-        versionName = "1.0.4"
+        versionCode = 757
+        versionName = "1.0.5"
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
         splits {
@@ -38,9 +38,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = rootProject.file("keystore/viraxnet_release.jks")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = "viraxnet_prod_secret_2026"
+                keyAlias = "viraxnet_release"
+                keyPassword = "viraxnet_prod_secret_2026"
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

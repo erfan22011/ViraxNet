@@ -687,4 +687,14 @@
     <string name="virax_sni_default_target">سرور اصلی</string>
     <string name="virax_sni_status_fragment_fmt">اسپلیت Anti-DPI TLS (%1$s)</string>
     <string name="virax_save">ذخیره</string>
+    <string name="virax_sort_by_ping">مرتب‌سازی سر پینگ</string>
+    <string name="virax_apn_settings_title">تنظیمات APN اپراتورل</string>
+    <string name="virax_apn_settings_subtitle">تنظیم و اصلاح APN همراه اول، ایرانسل، رایتل و باقی اپراتورل</string>
+    <string name="virax_apn_dialog_title">تنظیم APN اپراتور</string>
+    <string name="virax_apn_dialog_desc">اپراتورتونه انتخاب بکنین، نوم APN کپی کنین و من تنظیمات گوشی ذخیره بکنین.</string>
+    <string name="virax_apn_name_label">نوم</string>
+    <string name="virax_apn_field_label">نوم APN</string>
+    <string name="virax_apn_protocol_label">پروتکل APN</string>
+    <string name="virax_apn_open_settings">کپی APN و واکردن تنظیمات گوشی</string>
+    <string name="virax_apn_copied_toast">نوم APN کپی وابی! من تنظیمات گوشی ذخیره‌س کنین.</string>
 </resources>

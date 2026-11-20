@@ -3,6 +3,7 @@ package com.v2ray.ang.service
 import android.content.Context
 import com.v2ray.ang.core.CoreConfigManager
 import com.v2ray.ang.core.CoreNativeManager
+import com.v2ray.ang.core.CoreSniSpoofManager
 import com.v2ray.ang.dto.RealPingEvent
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isComplexType
@@ -10,6 +11,7 @@ import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SpeedtestManager
+import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -107,7 +109,10 @@ class RealPingWorkerService(
     private suspend fun startRealPing(guid: String): Long {
         val retFailure = -1L
 
-        val config = MmkvManager.decodeServerConfig(guid) ?: return retFailure
+        val rawConfig = MmkvManager.decodeServerConfig(guid) ?: return retFailure
+        val config = CoreSniSpoofManager.applySpoofIfEligible(
+            guid, rawConfig, CoreSniSpoofManager.decodeConfig()
+        )
         if (!config.configType.isComplexType()
             && config.configType != EConfigType.HYSTERIA2
             && config.configType != EConfigType.WIREGUARD
@@ -117,8 +122,8 @@ class RealPingWorkerService(
         ) {
             val url = config.server.orEmpty()
             val port = config.serverPort.orEmpty().toInt()
-            val tcpTime = SpeedtestManager.socketConnectTime(url, port, 1000)
-            if (tcpTime <= -1L) {
+            val tcpTime = SpeedtestManager.socketConnectTime(url, port, 2500)
+            if (tcpTime <= -1L && Utils.isPureIpAddress(url)) {
                 return retFailure
             }
         }
@@ -135,7 +140,10 @@ class RealPingWorkerService(
     private fun startTcping(guid: String): Long {
         val retFailure = -1L
 
-        val config = MmkvManager.decodeServerConfig(guid) ?: return retFailure
+        val rawConfig = MmkvManager.decodeServerConfig(guid) ?: return retFailure
+        val config = CoreSniSpoofManager.applySpoofIfEligible(
+            guid, rawConfig, CoreSniSpoofManager.decodeConfig()
+        )
         if (!config.configType.isComplexType()
             && config.configType != EConfigType.HYSTERIA2
             && config.configType != EConfigType.WIREGUARD
@@ -145,9 +153,7 @@ class RealPingWorkerService(
         ) {
             val url = config.server.orEmpty()
             val port = config.serverPort.orEmpty().toInt()
-            val tcpTime = SpeedtestManager.socketConnectTime(url, port, 1000)
-
-            return tcpTime
+            return SpeedtestManager.socketConnectTime(url, port, 2500)
         }
 
         return retFailure

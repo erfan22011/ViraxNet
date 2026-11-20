@@ -125,6 +125,7 @@ fun ViraxServersScreen(
     val colors = ViraxTheme.colors
     val haptics = LocalHapticFeedback.current
     var activeFilter by remember { mutableStateOf(ViraxServerFilter.ALL) }
+    var sortByPing by remember { mutableStateOf(false) }
     var isSearchOpen by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var showSubscriptionPicker by remember { mutableStateOf(false) }
@@ -132,8 +133,23 @@ fun ViraxServersScreen(
     var contextTarget by remember { mutableStateOf<ViraxServerItem?>(null) }
     var deleteConfirmTarget by remember { mutableStateOf<ViraxServerItem?>(null) }
 
-    val filteredServers = remember(servers, activeFilter, searchQuery) {
-        filterServers(servers, activeFilter, searchQuery)
+    val filteredServers = remember(servers, activeFilter, searchQuery, sortByPing) {
+        val base = filterServers(servers, activeFilter, searchQuery)
+        if (sortByPing) {
+            base.sortedWith(
+                compareBy<ViraxServerItem> {
+                    when {
+                        it.pingMillis > 0 -> 0
+                        it.pingMillis == 0L -> 1
+                        else -> 2
+                    }
+                }.thenBy {
+                    if (it.pingMillis > 0) it.pingMillis else Long.MAX_VALUE
+                }
+            )
+        } else {
+            base
+        }
     }
 
     val currentGroupTitle = remember(groups, selectedGroupId) {
@@ -531,13 +547,49 @@ fun ViraxServersScreen(
                 )
             }
 
-            // Filter Chips
+            // Filter Chips & Sort
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                item {
+                    val isSortActive = sortByPing
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(if (isSortActive) colors.darkPurple else colors.cardBackground)
+                            .border(
+                                1.dp,
+                                if (isSortActive) colors.primaryPurple else colors.cardBorder,
+                                RoundedCornerShape(16.dp)
+                            )
+                            .clickable {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                sortByPing = !sortByPing
+                            }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_virax_lightning),
+                                contentDescription = null,
+                                tint = if (isSortActive) colors.primaryPurple else colors.textSecondary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = stringResource(R.string.virax_sort_by_ping),
+                                color = if (isSortActive) (if (colors.isDark) Color.White else colors.primaryPurple) else colors.textSecondary,
+                                fontSize = 13.sp,
+                                fontWeight = if (isSortActive) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+
                 items(ViraxServerFilter.entries) { filter ->
                     val isSelected = filter == activeFilter
                     Box(

@@ -687,4 +687,14 @@
     <string name="virax_sni_default_target">মূল সার্ভার</string>
     <string name="virax_sni_status_fragment_fmt">Anti-DPI TLS স্প্লিট (%1$s)</string>
     <string name="virax_save">সংরক্ষণ করুন</string>
+    <string name="virax_sort_by_ping">পিং অনুযায়ী সাজান</string>
+    <string name="virax_apn_settings_title">সেলুলার এপিএন সেটিংস</string>
+    <string name="virax_apn_settings_subtitle">MCI, Irancell, Rightel ও অন্যান্য অপারেটর এপিএন কনফিগার করুন</string>
+    <string name="virax_apn_dialog_title">অপারেটর এপিএন কনফিগারেশন</string>
+    <string name="virax_apn_dialog_desc">আপনার অপারেটর নির্বাচন করুন, এপিএন কপি করুন এবং ফোনের সেটিংসে যুক্ত করুন।</string>
+    <string name="virax_apn_name_label">নাম</string>
+    <string name="virax_apn_field_label">এপিএন</string>
+    <string name="virax_apn_protocol_label">এপিএন প্রোটোকল</string>
+    <string name="virax_apn_open_settings">এপিএন কপি করুন এবং সেটিংস খুলুন</string>
+    <string name="virax_apn_copied_toast">এপিএন কপি করা হয়েছে! ডিভাইস সেটিংসে এটি সংরক্ষণ করুন।</string>
 </resources>
